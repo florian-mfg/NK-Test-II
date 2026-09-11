@@ -28,8 +28,207 @@ const WORK_PROJECTS = [
             "alt": "Ethereal Tides"
           },
           {
+            "type": "text",
+            "text": "Ethereal Tides\n\nAn exploration of surfaces in motion. Texture, light and shifting colour turn familiar landscapes into something less certain.\n\nEach image offers a different distance: from an expansive view to the smallest trace of a material.",
+            "textSize": "s"
+          }
+        ]
+      },
+      {
+        "type": "quarter-quarter-quarter-quarter",
+        "height": "medium",
+        "slots": [
+          {
             "type": "image",
-            "src": "material/_DSF0857.jpg",
+            "src": "material/DSCF6919.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/DSCF6978.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/DSCF7079.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/DSCF7780.jpg",
+            "alt": "Ethereal Tides"
+          }
+        ]
+      },
+      {
+        "type": "third-third-third",
+        "height": "large",
+        "order": "default",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/_DSF5795.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "text",
+            "text": "Between images\n\nThe pause is part of the composition. An open field of text gives the surrounding images room to unfold.",
+            "textSize": "l"
+          },
+          {
+            "type": "image",
+            "src": "material/_DSF6111.jpg",
+            "alt": "Ethereal Tides"
+          }
+        ]
+      },
+      {
+        "type": "half-half",
+        "height": "large",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/_DSF4139.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/_DSF5962.jpg",
+            "alt": "Ethereal Tides"
+          }
+        ]
+      },
+      {
+        "type": "half-quarter-quarter",
+        "height": "large",
+        "order": "default",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/Iceland25_Echo.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "text",
+            "text": "Surface / Detail\n\nA change in scale reveals new rhythms. Edges become contours, and small variations begin to read as landscapes.",
+            "textSize": "m"
+          },
+          {
+            "type": "image",
+            "src": "material/_DSF2669.jpg",
+            "alt": "Ethereal Tides"
+          }
+        ]
+      },
+      {
+        "type": "third-third-third",
+        "height": "large",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/DSCF2880.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/DSCF7807.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/DSCF7858.jpg",
+            "alt": "Ethereal Tides"
+          }
+        ]
+      },
+      {
+        "type": "quarter-quarter-quarter-quarter",
+        "height": "medium",
+        "order": "default",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/DSCF6919.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/DSCF6978.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/DSCF7079.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "text",
+            "text": "Fragments\n\nSeparate views form a loose sequence, connected by colour, texture and the space between them.",
+            "textSize": "s"
+          }
+        ]
+      },
+      {
+        "type": "full",
+        "height": "large",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/_DSF3392.jpg",
+            "alt": "Ethereal Tides"
+          }
+        ]
+      },
+      {
+        "type": "two-thirds-one-third",
+        "height": "large",
+        "order": "default",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/DSCF7858.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "text",
+            "text": "Changing perspectives\n\nA wide view sits beside a closer observation. Together, they invite the eye to move between atmosphere and detail.",
+            "textSize": "m"
+          }
+        ]
+      },
+      {
+        "type": "half-quarter-quarter",
+        "height": "medium",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/Iceland25_Echo.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/_DSF5771.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/_DSF6111.jpg",
+            "alt": "Ethereal Tides"
+          }
+        ]
+      },
+      {
+        "type": "two-thirds-one-third",
+        "height": "large",
+        "slots": [
+          {
+            "type": "image",
+            "src": "material/_DSF0864.jpg",
+            "alt": "Ethereal Tides"
+          },
+          {
+            "type": "image",
+            "src": "material/Strommast_Sundown_RZ.jpg",
             "alt": "Ethereal Tides"
           }
         ]
@@ -121,7 +320,8 @@ const WORK_PROJECTS = [
           }
         ]
       }
-    ]
+    ],
+    "additionalInfo": "Carhartt"
   },
   {
     "id": "silent-witness",
@@ -159,7 +359,8 @@ const WORK_PROJECTS = [
           }
         ]
       }
-    ]
+    ],
+    "additionalInfo": "Miu Miu"
   },
   {
     "id": "urban-memory",
@@ -206,7 +407,8 @@ const WORK_PROJECTS = [
           }
         ]
       }
-    ]
+    ],
+    "additionalInfo": "Jil Sander"
   },
   {
     "id": "blue-hour",
@@ -243,7 +445,8 @@ const WORK_PROJECTS = [
           }
         ]
       }
-    ]
+    ],
+    "additionalInfo": "Saint Laurent"
   },
   {
     "id": "vivid-horizons",

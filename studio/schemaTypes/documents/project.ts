@@ -13,6 +13,12 @@ export const project = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: 'additionalInfo',
+      title: 'Additional info',
+      type: 'string',
+      description: 'Optional client, brand, or other short information shown beside the project title in the overview.',
+    }),
+    defineField({
       name: 'slug',
       title: 'Slug',
       type: 'slug',

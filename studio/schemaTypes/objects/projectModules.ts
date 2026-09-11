@@ -87,7 +87,7 @@ export const projectModules = layouts.map(({name, title, widths}) => {
       }),
       defineField({
         name: 'slots',
-        title: 'Media slots',
+        title: 'Content slots',
         type: 'array',
         description: `Slots in default order: ${widths.map((width, index) => `${index + 1} = ${width}`).join(', ')}. Open a slot to choose its content. Arrangement moves these slots; Empty keeps its width.`,
         of: [defineArrayMember({type: 'mediaSlot'})],

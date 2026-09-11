@@ -1,44 +1,46 @@
-/* Archive entries accept an optional fifth value: "half" or "full". */
+/* Archive entries: title, category, year, images, optional layout, optional additional info.
+   Brand names below are illustrative placeholders. Use null for the default layout. */
 
 const ARCHIVE_PROJECTS = [
-  ["Lichen Studies", "Graphic", "2026", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"]],
-  ["Ethereal Tides", "Video", "2026", ["material/_DSF0857.jpg", "material/_DSF0864.jpg", "material/_DSF2669.jpg"]],
-  ["Rhythms of the City", "Commissioned", "2025", ["material/DSCF6919.jpg", "material/DSCF6978.jpg", "material/DSCF7079.jpg"]],
+  ["Lichen Studies", "Graphic", "2026", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"], null, "Prada"],
+  ["Ethereal Tides", "Video", "2026", ["material/_DSF0857.jpg", "material/_DSF0864.jpg", "material/_DSF2669.jpg"], null, "Palace"],
+  ["Rhythms of the City", "Commissioned", "2025", ["material/DSCF6919.jpg", "material/DSCF6978.jpg", "material/DSCF7079.jpg"], null, "Carhartt"],
   ["Static Landscape", "Video", "2025", ["material/Strommast_Sundown_RZ.jpg", "material/DSCF1339.jpg"]],
-  ["Stone Dreams", "Graphic", "2025", ["material/Stone_Artefakt_9.jpg", "material/MA_GD_Tanzartefakt_7.jpg"]],
-  ["Silent Witness", "Commissioned", "2024", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"]],
-  ["Digital Mirage", "Graphic", "2024", ["material/Mountain_v20003.jpg", "material/Mountain_v20006.jpg"]],
-  ["Crystal Veins", "Graphic", "2024", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/TextureBump_ARC_W_RZ.jpg"]],
-  ["Urban Memory", "Commissioned", "2023", ["material/DSCF7780.jpg", "material/DSCF7807.jpg", "material/DSCF7858.jpg"]],
-  ["Future Forms", "Graphic", "2023", ["material/MA_GD_Tanzartefakt_7.jpg", "material/Stone_Artefakt_9.jpg"]],
+  ["Stone Dreams", "Graphic", "2025", ["material/Stone_Artefakt_9.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Loewe"],
+  ["Silent Witness", "Commissioned", "2024", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"], null, "Miu Miu"],
+  ["Digital Mirage", "Graphic", "2024", ["material/Mountain_v20003.jpg", "material/Mountain_v20006.jpg"], null, "Acne Studios"],
+  ["Crystal Veins", "Graphic", "2024", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/TextureBump_ARC_W_RZ.jpg"], null, "Bottega Veneta"],
+  ["Urban Memory", "Commissioned", "2023", ["material/DSCF7780.jpg", "material/DSCF7807.jpg", "material/DSCF7858.jpg"], null, "Jil Sander"],
+  ["Future Forms", "Graphic", "2023", ["material/MA_GD_Tanzartefakt_7.jpg", "material/Stone_Artefakt_9.jpg"], null, "Maison Margiela"],
   ["Field Notes", "Video", "2023", ["material/_DSF4139.jpg", "material/_DSF5771.jpg"]],
-  ["Blue Hour", "Commissioned", "2022", ["material/Strommast_Sundown_RZ.jpg", "material/Iceland25_Echo.jpg"]],
+  ["Blue Hour", "Commissioned", "2022", ["material/Strommast_Sundown_RZ.jpg", "material/Iceland25_Echo.jpg"], null, "Saint Laurent"],
   ["Mountain Range", "Video", "2022", ["material/MountainRange_raw.jpg", "material/Mountain_v20003.jpg"]]
-  ,["Chromatic Waves", "Graphic", "2022", ["material/TextureBump_ARC_W_RZ.jpg", "material/MA_GD_Tanzartefakt_7.jpg"]]
+  ,["Chromatic Waves", "Graphic", "2022", ["material/TextureBump_ARC_W_RZ.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Comme des Garçons"]
   ,["Pulse of the Night", "Video", "2022", ["material/_DSF2669.jpg", "material/_DSF3392.jpg"]]
-  ,["Digital Reverie", "Graphic", "2021", ["material/Mountain_v20006.jpg", "material/Stone_Artefakt_9.jpg"]]
+  ,["Digital Reverie", "Graphic", "2021", ["material/Mountain_v20006.jpg", "material/Stone_Artefakt_9.jpg"], null, "Prada"]
   ,["Vivid Horizons", "Commissioned", "2021", ["material/DSCF2880.jpg", "material/DSCF6919.jpg", "material/DSCF6978.jpg"]]
   ,["Echo Chamber", "Video", "2021", ["material/Iceland25_Echo.jpg", "material/_DSF6111.jpg"]]
-  ,["Kaleidoscope Dreams", "Graphic", "2021", ["material/MA_GD_Tanzartefakt_7.jpg", "material/TextureBump_ARC_W_RZ.jpg"]]
+  ,["Kaleidoscope Dreams", "Graphic", "2021", ["material/MA_GD_Tanzartefakt_7.jpg", "material/TextureBump_ARC_W_RZ.jpg"], null, "Loewe"]
   ,["Urban Serenade", "Commissioned", "2020", ["material/DSCF7079.jpg", "material/DSCF7780.jpg"]]
   ,["Fragments of Light", "Video", "2020", ["material/_DSF4139.jpg", "material/_DSF5771.jpg"]]
-  ,["Synthetic Garden", "Graphic", "2020", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/Mountain_v20003.jpg"]]
+  ,["Synthetic Garden", "Graphic", "2020", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/Mountain_v20003.jpg"], null, "Palace"]
   ,["Night Passage", "Commissioned", "2020", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"]]
   ,["Remote Signals", "Video", "2019", ["material/Strommast_Sundown_RZ.jpg", "material/DSCF1339.jpg"]]
-  ,["Soft Geometry", "Graphic", "2019", ["material/Stone_Artefakt_9.jpg", "material/MA_GD_Tanzartefakt_7.jpg"]]
+  ,["Soft Geometry", "Graphic", "2019", ["material/Stone_Artefakt_9.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Carhartt"]
   ,["Changing Ground", "Commissioned", "2019", ["material/DSCF7807.jpg", "material/DSCF7858.jpg"]]
   ,["Aerial Static", "Video", "2019", ["material/_DSF0857.jpg", "material/_DSF0864.jpg"]]
-  ,["Blue Residue", "Graphic", "2018", ["material/MountainRange_raw.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"]]
+  ,["Blue Residue", "Graphic", "2018", ["material/MountainRange_raw.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"], null, "Acne Studios"]
   ,["Afterimage", "Commissioned", "2018", ["material/_DSF5771.jpg", "material/_DSF6111.jpg"]]
   ,["Field Transmission", "Video", "2018", ["material/Iceland25_Echo.jpg", "material/Strommast_Sundown_RZ.jpg"]]
-  ,["Material Memory", "Graphic", "2018", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Artefakt_9.jpg", "material/Mountain_v20006.jpg"]]
+  ,["Material Memory", "Graphic", "2018", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Artefakt_9.jpg", "material/Mountain_v20006.jpg"], null, "Miu Miu"]
   ,["Parallel Terrain", "Commissioned", "2017", ["material/DSCF6919.jpg", "material/DSCF7079.jpg"]]
   ,["Low Frequency", "Video", "2017", ["material/_DSF2669.jpg", "material/_DSF3392.jpg", "material/_DSF4139.jpg"]]
-].map(([title, category, year, images, layout], index) => ({
+].map(([title, category, year, images, layout, additionalInfo = ""], index) => ({
   title,
   category,
   year,
   images,
+  additionalInfo,
   // Set the optional fifth value in an entry to "half" or "full" to override.
   layout: layout || (index % 3 === 0 ? "half" : "full")
 }));
@@ -70,7 +72,6 @@ const ARCHIVE_DISPLAY_PROJECTS = arrangeArchive(ARCHIVE_PROJECTS);
 
 const app = document.querySelector("#app");
 const header = document.querySelector(".site-header");
-const brand = document.querySelector(".brand");
 const workMenu = document.querySelector(".work-menu");
 const workToggle = document.querySelector(".work-toggle");
 const workSubmenu = document.querySelector(".work-submenu");
@@ -200,12 +201,18 @@ function renderHome() {
 }
 
 function renderWorkModule(module, project) {
+  const hasText = module.slots.some(slot => slot?.type === "text");
+  const previewModule = {
+    ...module,
+    slots: module.slots.map(slot => slot?.type === "text" ? null : slot)
+  };
+  if (hasText && previewModule.slots.every(slot => slot == null)) return "";
   const title = escapeModuleAttribute(project.title);
   const href = `#project/${encodeURIComponent(project.id)}`;
-  const empty = module.slots.every(slot => slot == null);
+  const empty = previewModule.slots.every(slot => slot == null);
   return `<section class="project-module-preview${empty ? " is-empty" : ""}" aria-label="${title}">
-    <a class="project-title" href="${href}" aria-label="Open ${title}"><span>${title}</span></a>
-    ${renderProjectModule(module, project.title)}
+    <a class="project-title" href="${href}" aria-label="Open ${title}"><span>${title}</span>${project.additionalInfo ? `<span class="project-additional-info">${escapeModuleAttribute(project.additionalInfo)}</span>` : ""}</a>
+    ${renderProjectModule(previewModule, project.title)}
   </section>`;
 }
 
@@ -225,7 +232,7 @@ function renderWork(category = "Graphic") {
 function renderArchive() {
   document.body.className = "is-index";
   setCurrentPage("archive");
-  app.innerHTML = `<section class="archive"><div class="archive-background" aria-hidden="true">${image(ARCHIVE_DISPLAY_PROJECTS[0].images[0])}</div><div class="archive-list">${ARCHIVE_DISPLAY_PROJECTS.map((p, i) => `<button class="archive-row" data-index="${i}"><span>${p.title}</span>${["Graphic", "Commissioned", "Video"].map(category => `<span class="archive-category ${p.category === category ? "has-category" : ""}">${p.category === category ? p.category : ""}</span>`).join("")}</button>`).join("")}</div></section>`;
+  app.innerHTML = `<section class="archive"><div class="archive-background" aria-hidden="true">${image(ARCHIVE_DISPLAY_PROJECTS[0].images[0])}</div><div class="archive-list">${ARCHIVE_DISPLAY_PROJECTS.map((p, i) => `<button class="archive-row" data-index="${i}"><span>${p.title}</span><span class="archive-additional-info">${escapeModuleAttribute(p.additionalInfo)}</span></button>`).join("")}</div></section>`;
   const bg = document.querySelector(".archive-background");
   const bgImage = bg.querySelector("img");
   bgImage.loading = "eager";
@@ -237,9 +244,10 @@ function renderArchive() {
   let frame = 0;
   let scrollFrame;
   const showProjectImage = (project, imageIndex) => {
-    bg.classList.toggle("half", !mobile.matches && project.layout === "half");
-    bg.classList.toggle("full", mobile.matches || project.layout === "full");
-    bgImage.src = project.images[imageIndex];
+    const half = !mobile.matches && (project.layout === "half") !== (imageIndex % 2 === 1);
+    bg.classList.toggle("half", half);
+    bg.classList.toggle("full", !half);
+    bgImage.src = project.images[imageIndex % project.images.length];
     bg.classList.add("visible");
   };
   const updateMobileProject = () => {
@@ -278,7 +286,7 @@ function renderArchive() {
       }
       const rowIndex = Number(row.dataset.index);
       const project = ARCHIVE_DISPLAY_PROJECTS[rowIndex];
-      frame = activeRow === rowIndex ? (frame + 1) % project.images.length : 0;
+      frame = activeRow === rowIndex ? frame + 1 : 0;
       activeRow = rowIndex;
       showProjectImage(project, frame);
     });
@@ -333,20 +341,18 @@ function renderProject(id) {
   const project = WORK_PROJECTS.find(p => p.id === id);
   if (!project) { location.hash = "#work"; return; }
   document.body.className = "is-detail";
-  const projectBrand = `<span class="project-prefix">NK&nbsp;</span>${project.title}`;
-  brand.innerHTML = projectBrand;
+  document.querySelector(".header-overview").href = `#work/${project.category.toLowerCase()}`;
   setCurrentPage(`work/${project.category.toLowerCase()}`);
   const description = `${project.title} explores image, material and movement through a sequence of composed visual studies. The work brings contrasting surfaces and perspectives into a shared visual language, creating an open dialogue between detail and landscape.`;
   app.innerHTML = `<article class="detail">
-    <a class="detail-back" href="#work/${project.category.toLowerCase()}">Back</a>
+    <a class="detail-back" href="#work/${project.category.toLowerCase()}">${escapeModuleAttribute(project.title)}</a>
     <button class="detail-info-label" type="button" data-project-info-open>Info</button>
     <div class="project-modules">${renderProjectModules(project.modules, project.title)}</div>
-    <p class="detail-copy">${description}</p>
     <a class="back" href="#work/${project.category.toLowerCase()}">◁ Project overview</a>
   </article>
   <div class="detail-info-layer" aria-hidden="true">
     <section class="detail-info-popup" role="dialog" aria-modal="true" aria-label="${project.title} information">
-      <button class="detail-info-close" type="button">Close</button>
+      <button class="detail-info-close" type="button">(Close)</button>
       <p>${description}</p>
       <p>Set within a shifting visual environment, the project treats its setting as an active condition—one that obscures, reveals, and unsettles. Individual images form a layered reality in which clarity is deferred and meaning remains fluid, partial, and situational.</p>
       <p>The process becomes a method of introspection and fragmentation, recomposing its subject through a sequence of alternate perspectives. The work questions the coherence of representation and considers how identity, material, and place are mediated and reimagined.</p>
@@ -360,7 +366,6 @@ function route() {
   cleanupPage = () => {};
   hideOpenCursor();
   header.classList.remove("is-hidden");
-  brand.textContent = "Nicolas Kawohl";
   setWorkMenu(false);
   const hash = location.hash.replace(/^#\/?/, "") || "home";
   const [page, id] = hash.split("/");

@@ -2,7 +2,7 @@
 
 Refresh http://localhost:3333 and create a Project. Enter a title, generate its
 slug, and add modules. Drag modules to reorder them or use their menu to delete
-them. Open a media slot and choose Empty, Image, or Video. Images support native
+them. Open a content slot and choose Empty, Image, Video, or Text. Images support native
 uploads, cropping, and hotspot selection. Alt text lives on the slot.
 
 Slots have fixed counts and appear in their original width order, described
@@ -13,7 +13,7 @@ ignored when Content is Empty. Each module can also be entirely empty.
 
 ## Mapping for the future data connection
 
-No frontend connection, migration, deployment, or renderer changes are included.
+The Studio is not yet connected to the frontend; examples are maintained in `projects.js`.
 Sanity documents are not yet directly renderable: native assets are references,
 and Sanity object arrays use typed objects rather than null entries.
 
@@ -29,6 +29,7 @@ and Sanity object arrays use typed objects rather than null entries.
 | `order: middle` | `[1, 0, 2]` for Half + Quarter + Quarter |
 | `slots[]` | Same index positions; never filter or compact |
 | Slot `type: empty` | `null`, even if old image/video fields remain |
+| Slot `type: text` | `{type: 'text', text, textSize}` (s/m/l; defaults to s) (plain text; blank lines separate paragraphs) |
 | Slot `type: image` | `{type: 'image', src: resolvedImageUrl, alt}` |
 | Slot `type: video` | `{type: 'video', src: resolvedFileUrl, alt, poster: resolvedPosterUrl}` |
 
@@ -49,7 +50,7 @@ stacks occupied slots and hides empty slots at 700px and below.
 - `schemaTypes/documents/project.ts`: Project fields and reorderable modules.
 - `schemaTypes/objects/projectModules.ts`: six layouts, shared controls,
   fixed slot counts, defaults, validation, and previews.
-- `schemaTypes/objects/mediaSlot.ts`: Empty/Image/Video, uploads, alt, poster.
+- `schemaTypes/objects/mediaSlot.ts`: Empty/Image/Video/Text, uploads, copy, alt, poster.
 - `schemaTypes/index.ts`: registration, consumed by the existing sanity.config.ts.
 
 Uses native [array controls](https://www.sanity.io/docs/studio/array-type),

@@ -39,6 +39,15 @@ function renderProjectModule(module, title = "") {
     const slot = module.slots[index];
     const style = `style="--slot-span: ${spans[index]}"`;
     if (slot == null) return `<div class="project-slot is-empty" ${style} aria-hidden="true"></div>`;
+    if (slot.type === "text") {
+      if (typeof slot.text !== "string" || !slot.text.trim()) throw new Error("Text slots require text");
+      const textSize = slot.textSize ?? "s";
+      if (!["s", "m", "l"].includes(textSize)) throw new Error("Invalid text size");
+      const paragraphs = slot.text.trim().split(/\n\s*\n/).map(paragraph =>
+        `<p>${escapeModuleAttribute(paragraph).replace(/\n/g, "<br>")}</p>`
+      ).join("");
+      return `<div class="project-slot project-slot-text text-size-${textSize}" ${style}>${paragraphs}</div>`;
+    }
     const src = moduleMediaUrl(slot.src);
     const label = escapeModuleAttribute(slot.alt ?? title);
     let media;
