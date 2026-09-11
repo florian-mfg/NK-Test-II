@@ -71,28 +71,126 @@ const ARCHIVE_DISPLAY_PROJECTS = arrangeArchive(ARCHIVE_PROJECTS);
 const app = document.querySelector("#app");
 const header = document.querySelector(".site-header");
 const brand = document.querySelector(".brand");
-const menuBrand = document.querySelector(".menu-brand");
-const currentPage = document.querySelector(".current-page");
-const menuOverlay = document.querySelector(".menu-overlay");
-const menuToggle = document.querySelector(".menu-toggle");
-const menuClose = document.querySelector(".menu-close");
-let lastScrollY = window.scrollY;
-let headerFrame;
+const workMenu = document.querySelector(".work-menu");
+const workToggle = document.querySelector(".work-toggle");
+const workSubmenu = document.querySelector(".work-submenu");
+const mobileMenu = document.querySelector(".mobile-menu");
+const mobileMenuToggle = document.querySelector(".mobile-menu-toggle");
+const mobileMenuBreakpoint = window.matchMedia("(max-width: 700px)");
 
-function image(src, alt = "") { return `<img src="${src}" alt="${alt}" loading="lazy">`; }
-function setCurrentPage(route, label = "") {
-  currentPage.innerHTML = label;
-  document.querySelectorAll("[data-route]").forEach(link => link.classList.toggle("active", link.dataset.route === route));
+function closeMobileMenu() {
+  if (mobileMenu.open) mobileMenu.close();
+  mobileMenuToggle.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("mobile-menu-open");
 }
 
-function setMenu(open) {
+mobileMenuToggle.addEventListener("click", () => {
+  if (!mobileMenuBreakpoint.matches) return;
+  setWorkMenu(false);
+  hideOpenCursor();
+  mobileMenu.showModal();
+  mobileMenu.scrollTop = 0;
+  mobileMenuToggle.setAttribute("aria-expanded", "true");
+  document.body.classList.add("mobile-menu-open");
+});
+mobileMenu.querySelector(".mobile-menu-close").addEventListener("click", closeMobileMenu);
+mobileMenu.addEventListener("close", closeMobileMenu);
+mobileMenu.addEventListener("cancel", event => {
+  event.preventDefault();
+  closeMobileMenu();
+});
+mobileMenu.addEventListener("click", event => {
+  if (event.target.closest("a")) closeMobileMenu();
+});
+mobileMenuBreakpoint.addEventListener("change", () => {
+  closeMobileMenu();
+  setWorkMenu(false);
+});
+const openCursor = document.createElement("span");
+openCursor.className = "open-cursor";
+openCursor.textContent = "(Open)";
+openCursor.setAttribute("aria-hidden", "true");
+openCursor.hidden = true;
+document.body.append(openCursor);
+
+function hideOpenCursor() {
+  openCursor.hidden = true;
+  document.body.classList.remove("has-open-cursor");
+}
+
+function updateOpenCursor(event) {
+  const projectLink = event.target.closest?.(".is-work .project-link, .is-work .project-title");
+  if (event.pointerType !== "mouse" || !projectLink) {
+    hideOpenCursor();
+    return;
+  }
+  openCursor.hidden = false;
+  const halfWidth = openCursor.offsetWidth / 2;
+  const halfHeight = openCursor.offsetHeight / 2;
+  openCursor.style.left = `${Math.max(halfWidth, Math.min(event.clientX, document.documentElement.clientWidth - halfWidth))}px`;
+  openCursor.style.top = `${Math.max(halfHeight, Math.min(event.clientY, window.innerHeight - halfHeight))}px`;
+  document.body.classList.add("has-open-cursor");
+}
+
+document.addEventListener("pointermove", updateOpenCursor);
+document.addEventListener("pointerover", updateOpenCursor);
+document.documentElement.addEventListener("pointerleave", hideOpenCursor);
+document.addEventListener("keydown", hideOpenCursor);
+window.addEventListener("blur", hideOpenCursor);
+window.addEventListener("scroll", hideOpenCursor, { passive: true });
+let lastScrollY = window.scrollY;
+let headerFrame;
+let cleanupPage = () => {};
+
+function image(src, alt = "") { return `<img src="${src}" alt="${alt}" loading="lazy">`; }
+function setCurrentPage(route) {
+  document.querySelectorAll("[data-route]").forEach(link => {
+    const active = link.dataset.route === route || (link.dataset.route === "work" && route.startsWith("work/"));
+    link.classList.toggle("active", active);
+    if (active) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  });
+}
+
+const menuMeasureContext = document.createElement("canvas").getContext("2d");
+
+function fitWorkMenu() {
+  const style = getComputedStyle(workSubmenu);
+  // Match the visible gaps using upright text widths, so hover cannot move the links.
+  menuMeasureContext.font = `normal ${style.fontWeight} 100px ${style.fontFamily}`;
+  const selectedWidth = menuMeasureContext.measureText(workToggle.textContent).width / 100;
+  const indexWidth = menuMeasureContext.measureText("Index").width / 100;
+  header.style.setProperty("--index-menu-width", `${7 - selectedWidth + indexWidth}em`);
+  const bounds = workSubmenu.getBoundingClientRect();
+  const viewport = document.documentElement;
+  const edge = parseFloat(getComputedStyle(header).right) || 12;
+  const width = Math.max(0, Math.min(bounds.width, viewport.clientWidth - bounds.left - edge));
+  const height = Math.max(0, viewport.clientHeight - bounds.top - parseFloat(style.paddingTop) - edge);
+  let widest = 0;
+  // Reserve room for both font styles, including italic glyph overhang.
+  for (const fontStyle of ["normal", "italic"]) {
+    menuMeasureContext.font = `${fontStyle} ${style.fontWeight} 100px ${style.fontFamily}`;
+    workSubmenu.querySelectorAll("a").forEach(link => {
+      const metrics = menuMeasureContext.measureText(link.textContent);
+      widest = Math.max(widest, metrics.width, Math.max(0, metrics.actualBoundingBoxLeft) + metrics.actualBoundingBoxRight);
+    });
+  }
+  const preferred = parseFloat(style.getPropertyValue("--preferred-menu-size")) * window.innerWidth / 100;
+  const size = Math.max(0, Math.min(preferred, width / (widest / 100 + .12), height / 3.2));
+  workSubmenu.style.setProperty("--fitted-menu-size", `${size}px`);
+}
+
+new ResizeObserver(fitWorkMenu).observe(document.querySelector(".main-nav"));
+window.addEventListener("resize", fitWorkMenu);
+document.fonts.ready.then(fitWorkMenu);
+document.fonts.addEventListener("loadingdone", fitWorkMenu);
+
+function setWorkMenu(open) {
   header.classList.remove("is-hidden");
-  menuOverlay.classList.toggle("open", open);
-  menuOverlay.setAttribute("aria-hidden", String(!open));
-  menuToggle.setAttribute("aria-expanded", String(open));
-  document.body.classList.toggle("menu-open", open);
-  if (open) menuClose.focus();
-  else if (menuOverlay.contains(document.activeElement)) menuToggle.focus();
+  if (open) fitWorkMenu();
+  workMenu.classList.toggle("is-open", open);
+  workToggle.setAttribute("aria-expanded", String(open));
+  workSubmenu.inert = !open;
 }
 
 function renderHome() {
@@ -106,7 +204,7 @@ function renderWorkModule(module, project) {
   const href = `#project/${encodeURIComponent(project.id)}`;
   const empty = module.slots.every(slot => slot == null);
   return `<section class="project-module-preview${empty ? " is-empty" : ""}" aria-label="${title}">
-    <a class="project-title" href="${href}" aria-label="Open ${title}"><span>${title}</span><span>Open</span></a>
+    <a class="project-title" href="${href}" aria-label="Open ${title}"><span>${title}</span></a>
     ${renderProjectModule(module, project.title)}
   </section>`;
 }
@@ -114,7 +212,7 @@ function renderWorkModule(module, project) {
 function renderWork(category = "Graphic") {
   const selectedCategory = ["Graphic", "Commissioned", "Video"].includes(category) ? category : "Graphic";
   document.body.className = `is-work is-work-${selectedCategory.toLowerCase()}`;
-  setCurrentPage(`work/${selectedCategory.toLowerCase()}`, `<span>Work</span><em>${selectedCategory}</em>`);
+  setCurrentPage(`work/${selectedCategory.toLowerCase()}`);
   const projects = WORK_PROJECTS.map((p, i) => `
     <article class="project-preview" data-category="${p.category}" data-project="${p.id}"${p.category === selectedCategory ? "" : " hidden"}>
       ${p.category === "Commissioned" ? "" : `<a class="project-link" href="#project/${p.id}" aria-label="Open ${p.title}"></a>`}
@@ -125,26 +223,59 @@ function renderWork(category = "Graphic") {
 }
 
 function renderArchive() {
-  document.body.className = "";
-  setCurrentPage("archive", `<span aria-hidden="true"></span><em>Index</em>`);
+  document.body.className = "is-index";
+  setCurrentPage("archive");
   app.innerHTML = `<section class="archive"><div class="archive-background" aria-hidden="true">${image(ARCHIVE_DISPLAY_PROJECTS[0].images[0])}</div><div class="archive-list">${ARCHIVE_DISPLAY_PROJECTS.map((p, i) => `<button class="archive-row" data-index="${i}"><span>${p.title}</span>${["Graphic", "Commissioned", "Video"].map(category => `<span class="archive-category ${p.category === category ? "has-category" : ""}">${p.category === category ? p.category : ""}</span>`).join("")}</button>`).join("")}</div></section>`;
   const bg = document.querySelector(".archive-background");
   const bgImage = bg.querySelector("img");
+  bgImage.loading = "eager";
+  const list = document.querySelector(".archive-list");
+  const rows = [...list.querySelectorAll(".archive-row")];
+  const mobile = window.matchMedia("(max-width: 700px)");
+  const events = new AbortController();
   let activeRow = -1;
   let frame = 0;
-  document.querySelectorAll(".archive-row").forEach(row => {
-    const showProjectImage = (project, imageIndex) => {
-      bg.classList.toggle("half", project.layout === "half");
-      bg.classList.toggle("full", project.layout === "full");
-      bgImage.src = project.images[imageIndex];
-      bg.classList.add("visible");
-    };
+  let scrollFrame;
+  const showProjectImage = (project, imageIndex) => {
+    bg.classList.toggle("half", !mobile.matches && project.layout === "half");
+    bg.classList.toggle("full", mobile.matches || project.layout === "full");
+    bgImage.src = project.images[imageIndex];
+    bg.classList.add("visible");
+  };
+  const updateMobileProject = () => {
+    if (!mobile.matches) return;
+    const top = list.getBoundingClientRect().top;
+    const index = rows.findIndex(row => row.getBoundingClientRect().bottom > top + 1);
+    const next = index < 0 ? rows.length - 1 : index;
+    if (next === activeRow) return;
+    rows.forEach((row, i) => {
+      row.classList.toggle("is-active", i === next);
+      if (i === next) row.setAttribute("aria-current", "true");
+      else row.removeAttribute("aria-current");
+    });
+    activeRow = next;
+    showProjectImage(ARCHIVE_DISPLAY_PROJECTS[next], 0);
+  };
+  list.addEventListener("scroll", () => {
+    if (!mobile.matches || scrollFrame) return;
+    scrollFrame = requestAnimationFrame(() => {
+      scrollFrame = null;
+      updateMobileProject();
+    });
+  }, { passive: true, signal: events.signal });
+  rows.forEach(row => {
     row.addEventListener("mouseenter", () => {
+      if (mobile.matches) return;
       activeRow = Number(row.dataset.index);
       frame = 0;
       showProjectImage(ARCHIVE_DISPLAY_PROJECTS[activeRow], frame);
     });
     row.addEventListener("click", () => {
+      if (mobile.matches) {
+        list.scrollTo({ top: row.offsetTop, behavior: "auto" });
+        updateMobileProject();
+        return;
+      }
       const rowIndex = Number(row.dataset.index);
       const project = ARCHIVE_DISPLAY_PROJECTS[rowIndex];
       frame = activeRow === rowIndex ? (frame + 1) % project.images.length : 0;
@@ -152,16 +283,35 @@ function renderArchive() {
       showProjectImage(project, frame);
     });
     row.addEventListener("mouseleave", () => {
+      if (mobile.matches) return;
       bg.classList.remove("visible");
       activeRow = -1;
       frame = 0;
     });
   });
+  const syncLayout = () => {
+    activeRow = -1;
+    frame = 0;
+    rows.forEach(row => {
+      row.classList.remove("is-active");
+      row.removeAttribute("aria-current");
+    });
+    bg.classList.remove("visible");
+    if (mobile.matches) updateMobileProject();
+    else list.scrollTop = 0;
+  };
+  mobile.addEventListener("change", syncLayout, { signal: events.signal });
+  window.addEventListener("resize", updateMobileProject, { signal: events.signal });
+  cleanupPage = () => {
+    events.abort();
+    cancelAnimationFrame(scrollFrame);
+  };
+  syncLayout();
 }
 
 function renderInfo() {
   document.body.className = "is-info";
-  setCurrentPage("info", `<span aria-hidden="true"></span><em>Info</em>`);
+  setCurrentPage("info");
   app.innerHTML = `<section class="info">
     <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of<br>photography, generativity, motion design and cgi.</p>
     <div class="info-columns">
@@ -205,9 +355,13 @@ function renderProject(id) {
 }
 
 function route() {
+  closeMobileMenu();
+  cleanupPage();
+  cleanupPage = () => {};
+  hideOpenCursor();
   header.classList.remove("is-hidden");
   brand.textContent = "Nicolas Kawohl";
-  menuBrand.textContent = "Nicolas Kawohl";
+  setWorkMenu(false);
   const hash = location.hash.replace(/^#\/?/, "") || "home";
   const [page, id] = hash.split("/");
   if (page === "project") renderProject(id);
@@ -224,16 +378,43 @@ window.addEventListener("scroll", () => {
     const currentScrollY = window.scrollY;
     const difference = currentScrollY - lastScrollY;
     if (Math.abs(difference) < 4) return;
-    const hideInterface = difference > 0 && currentScrollY > 20;
+    const hideInterface = difference > 0 && currentScrollY > 20 && !workMenu.classList.contains("is-open") && !header.contains(document.activeElement);
     header.classList.toggle("is-hidden", hideInterface);
     document.querySelectorAll(".detail-info-label, .detail-back").forEach(control => control.classList.toggle("is-hidden", hideInterface));
     lastScrollY = currentScrollY;
   });
 }, { passive: true });
 
-menuToggle.addEventListener("click", () => setMenu(true));
-menuClose.addEventListener("click", () => setMenu(false));
-menuOverlay.querySelectorAll("a").forEach(link => link.addEventListener("click", () => setMenu(false)));
+workMenu.addEventListener("pointerenter", event => {
+  if (event.pointerType !== "touch") setWorkMenu(true);
+});
+workMenu.addEventListener("pointerleave", () => {
+  if (!workMenu.contains(document.activeElement)) setWorkMenu(false);
+});
+workMenu.addEventListener("focusin", () => setWorkMenu(true));
+workMenu.addEventListener("focusout", event => {
+  if (!workMenu.contains(event.relatedTarget)) setWorkMenu(false);
+});
+let touchOpenedMenu = false;
+workToggle.addEventListener("pointerdown", event => {
+  touchOpenedMenu = event.pointerType === "touch" && !workMenu.classList.contains("is-open");
+});
+workToggle.addEventListener("click", event => {
+  if (touchOpenedMenu) {
+    event.preventDefault();
+    setWorkMenu(true);
+    touchOpenedMenu = false;
+  } else setWorkMenu(false);
+});
+workSubmenu.addEventListener("click", event => {
+  if (event.target.closest("a")) {
+    document.activeElement.blur();
+    setWorkMenu(false);
+  }
+});
+document.addEventListener("click", event => {
+  if (!workMenu.contains(event.target)) setWorkMenu(false);
+});
 document.addEventListener("click", event => {
   const layer = document.querySelector(".detail-info-layer");
   if (!layer) return;
@@ -248,7 +429,10 @@ document.addEventListener("click", event => {
 });
 document.addEventListener("keydown", event => {
   if (event.key !== "Escape") return;
-  if (menuOverlay.classList.contains("open")) setMenu(false);
+  if (workMenu.classList.contains("is-open")) {
+    workToggle.focus();
+    setWorkMenu(false);
+  }
   const layer = document.querySelector(".detail-info-layer.open");
   if (layer) {
     layer.classList.remove("open");

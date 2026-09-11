@@ -13,20 +13,36 @@
   <body>
     <header class="site-header" aria-label="Main navigation">
       <a class="brand" href="#home">Nicolas Kawohl</a>
-      <span class="current-page" aria-live="polite"></span>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-overlay">Menu</button>
-    </header>
-    <aside class="menu-overlay" id="menu-overlay" aria-hidden="true">
-      <a class="menu-brand" href="#home">Nicolas Kawohl</a>
-      <button class="menu-close" type="button">Close</button>
-      <nav class="overlay-nav" aria-label="Site pages">
-        <a href="#work/video" data-route="work/video"><span>Work</span><em>Video</em></a>
-        <a href="#work/graphic" data-route="work/graphic"><span>Work</span><em>Graphic</em></a>
-        <a href="#work/commissioned" data-route="work/commissioned"><span>Work</span><em>Commissioned</em></a>
-        <a href="#archive" data-route="archive"><span aria-hidden="true"></span><em>Index</em></a>
-        <a href="#info" data-route="info"><span aria-hidden="true"></span><em>Info</em></a>
+      <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu">Menu</button>
+      <nav class="main-nav" aria-label="Site pages">
+        <div class="work-menu">
+          <a class="work-toggle" href="#work" aria-expanded="false" aria-controls="work-submenu" data-route="work">Selected Work</a>
+          <div class="work-submenu" id="work-submenu" inert>
+            <a href="#work/video" data-route="work/video">Video</a>
+            <a href="#work/commissioned" data-route="work/commissioned">Commissioned</a>
+            <a href="#work/graphic" data-route="work/graphic">Graphic</a>
+          </div>
+        </div>
+        <a href="#archive" data-route="archive">Index</a>
+        <a href="#info" data-route="info">Info</a>
       </nav>
-    </aside>
+    </header>
+    <dialog class="mobile-menu" id="mobile-menu" aria-label="Site menu">
+      <div class="mobile-menu-header">
+        <a href="#home">Nicolas Kawohl</a>
+        <button class="mobile-menu-close" type="button" autofocus>Close</button>
+      </div>
+      <nav aria-label="Mobile site pages">
+        <div class="mobile-menu-work">
+          <a class="mobile-menu-label" href="#work" data-route="work">Selected Work</a>
+          <a href="#work/commissioned" data-route="work/commissioned">Commissioned</a>
+          <a href="#work/graphic" data-route="work/graphic">Graphic</a>
+          <a href="#work/video" data-route="work/video">Video</a>
+        </div>
+        <a class="mobile-menu-section" href="#archive" data-route="archive">Index</a>
+        <a class="mobile-menu-section" href="#info" data-route="info">Info</a>
+      </nav>
+    </dialog>
     <main id="app"></main>
     <noscript>This portfolio requires JavaScript to display its projects.</noscript>
   </body>
