@@ -60,7 +60,14 @@ create line breaks. Content is escaped and treated as plain text. Fixed-height
 text slots scroll if needed; on mobile they grow to fit the copy.
 
 Ethereal Tides includes image/text examples in all five multi-column layouts.
-Project pages end with the overview link; descriptions appear in the Info popup.
+Project descriptions appear in the Info popup.
+Visitors can return to the project's category overview using the Overview link
+below the logo.
+Project pages end with a full-height contact footer. At the scroll limit, its
+links begin at the project title's vertical position. Instagram and Mail use the
+existing contact details. Imprint and Privacy Policy link to `#imprint` and
+`#privacy-policy`; their content in `renderLegal()` in `app.js` is placeholder
+copy awaiting the final legal text.
 
 Set `textSize` on a text slot to `"s"`, `"m"`, or `"l"`. Omitted sizes default
 to S (the original 1rem size). M uses 1.5rem and L uses 2.2rem, with tighter

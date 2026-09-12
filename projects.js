@@ -2,7 +2,7 @@
 const WORK_PROJECTS = [
   {
     "id": "ethereal-tides",
-    "title": "Ethereal Tides",
+    "title": "Bilateral",
     "category": "Video",
     "year": "2026",
     "modules": [
@@ -12,7 +12,7 @@ const WORK_PROJECTS = [
         "slots": [
           {
             "type": "image",
-            "src": "material/_DSF0857.jpg",
+            "src": "material/NK-image-1.jpg",
             "alt": "Ethereal Tides"
           }
         ]
@@ -237,7 +237,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "stone-conserve",
-    "title": "Stone Conserve",
+    "title": "Desire Paths’ Backstage",
     "category": "Commissioned",
     "year": "2025",
     "modules": [
@@ -275,7 +275,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "rhythms-of-the-city",
-    "title": "Rhythms of the City",
+    "title": "SS27 Backstage",
     "category": "Commissioned",
     "year": "2025",
     "modules": [
@@ -325,7 +325,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "silent-witness",
-    "title": "Silent Witness",
+    "title": "Urban Echoes",
     "category": "Commissioned",
     "year": "2024",
     "modules": [
@@ -364,7 +364,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "urban-memory",
-    "title": "Urban Memory",
+    "title": "The Last Light",
     "category": "Commissioned",
     "year": "2023",
     "modules": [
@@ -412,7 +412,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "blue-hour",
-    "title": "Blue Hour",
+    "title": "Fractal Dreams",
     "category": "Commissioned",
     "year": "2022",
     "modules": [
@@ -450,7 +450,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "vivid-horizons",
-    "title": "Vivid Horizons",
+    "title": "Silent Symphony",
     "category": "Commissioned",
     "year": "2021",
     "modules": [
@@ -498,7 +498,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "urban-serenade",
-    "title": "Urban Serenade",
+    "title": "Echoes Of Time",
     "category": "Commissioned",
     "year": "2020",
     "modules": [
@@ -537,7 +537,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "night-passage",
-    "title": "Night Passage",
+    "title": "Nature's Palette",
     "category": "Commissioned",
     "year": "2020",
     "modules": [
@@ -574,7 +574,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "changing-ground",
-    "title": "Changing Ground",
+    "title": "Fragments Of Reality",
     "category": "Commissioned",
     "year": "2019",
     "modules": [
@@ -611,7 +611,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "afterimage",
-    "title": "Afterimage",
+    "title": "The Art Of Memory",
     "category": "Commissioned",
     "year": "2018",
     "modules": [
@@ -647,7 +647,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "parallel-terrain",
-    "title": "Parallel Terrain",
+    "title": "Lost In Translation",
     "category": "Commissioned",
     "year": "2017",
     "modules": [
@@ -685,7 +685,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "signal-horizon",
-    "title": "Signal Horizon",
+    "title": "Waves Of Change",
     "category": "Video",
     "year": "2025",
     "modules": [
@@ -724,7 +724,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "mountain-studies",
-    "title": "Mountain Studies",
+    "title": "Visions Of Tomorrow",
     "category": "Graphic",
     "year": "2024",
     "modules": [
@@ -773,7 +773,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "lichen-studies",
-    "title": "Lichen Studies",
+    "title": "Mystic Landscapes",
     "category": "Graphic",
     "year": "2024",
     "modules": [
@@ -868,7 +868,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "future-forms",
-    "title": "Future Forms",
+    "title": "Kaleidoscope",
     "category": "Graphic",
     "year": "2022",
     "modules": [
@@ -916,7 +916,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "material-memory",
-    "title": "Material Memory",
+    "title": "Infinite Loop",
     "category": "Graphic",
     "year": "2021",
     "modules": [
@@ -966,7 +966,7 @@ const WORK_PROJECTS = [
   },
   {
     "id": "echo",
-    "title": "Echo",
+    "title": "The Sound Of Silence",
     "category": "Video",
     "year": "2024",
     "modules": [

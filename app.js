@@ -2,38 +2,38 @@
    Brand names below are illustrative placeholders. Use null for the default layout. */
 
 const ARCHIVE_PROJECTS = [
-  ["Lichen Studies", "Graphic", "2026", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"], null, "Prada"],
-  ["Ethereal Tides", "Video", "2026", ["material/_DSF0857.jpg", "material/_DSF0864.jpg", "material/_DSF2669.jpg"], null, "Palace"],
-  ["Rhythms of the City", "Commissioned", "2025", ["material/DSCF6919.jpg", "material/DSCF6978.jpg", "material/DSCF7079.jpg"], null, "Carhartt"],
-  ["Static Landscape", "Video", "2025", ["material/Strommast_Sundown_RZ.jpg", "material/DSCF1339.jpg"]],
-  ["Stone Dreams", "Graphic", "2025", ["material/Stone_Artefakt_9.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Loewe"],
-  ["Silent Witness", "Commissioned", "2024", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"], null, "Miu Miu"],
+  ["Mystic Landscapes", "Graphic", "2026", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"], null, "Prada"],
+  ["Bilateral", "Video", "2026", ["material/_DSF0857.jpg", "material/_DSF0864.jpg", "material/_DSF2669.jpg"], null, "Palace"],
+  ["SS27 Backstage", "Commissioned", "2025", ["material/DSCF6919.jpg", "material/DSCF6978.jpg", "material/DSCF7079.jpg"], null, "Carhartt"],
+  ["Unseen Connections", "Video", "2025", ["material/Strommast_Sundown_RZ.jpg", "material/DSCF1339.jpg"]],
+  ["A Journey Within", "Graphic", "2025", ["material/Stone_Artefakt_9.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Loewe"],
+  ["Urban Echoes", "Commissioned", "2024", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"], null, "Miu Miu"],
   ["Digital Mirage", "Graphic", "2024", ["material/Mountain_v20003.jpg", "material/Mountain_v20006.jpg"], null, "Acne Studios"],
-  ["Crystal Veins", "Graphic", "2024", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/TextureBump_ARC_W_RZ.jpg"], null, "Bottega Veneta"],
-  ["Urban Memory", "Commissioned", "2023", ["material/DSCF7780.jpg", "material/DSCF7807.jpg", "material/DSCF7858.jpg"], null, "Jil Sander"],
-  ["Future Forms", "Graphic", "2023", ["material/MA_GD_Tanzartefakt_7.jpg", "material/Stone_Artefakt_9.jpg"], null, "Maison Margiela"],
-  ["Field Notes", "Video", "2023", ["material/_DSF4139.jpg", "material/_DSF5771.jpg"]],
-  ["Blue Hour", "Commissioned", "2022", ["material/Strommast_Sundown_RZ.jpg", "material/Iceland25_Echo.jpg"], null, "Saint Laurent"],
-  ["Mountain Range", "Video", "2022", ["material/MountainRange_raw.jpg", "material/Mountain_v20003.jpg"]]
-  ,["Chromatic Waves", "Graphic", "2022", ["material/TextureBump_ARC_W_RZ.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Comme des Garçons"]
-  ,["Pulse of the Night", "Video", "2022", ["material/_DSF2669.jpg", "material/_DSF3392.jpg"]]
-  ,["Digital Reverie", "Graphic", "2021", ["material/Mountain_v20006.jpg", "material/Stone_Artefakt_9.jpg"], null, "Prada"]
-  ,["Vivid Horizons", "Commissioned", "2021", ["material/DSCF2880.jpg", "material/DSCF6919.jpg", "material/DSCF6978.jpg"]]
-  ,["Echo Chamber", "Video", "2021", ["material/Iceland25_Echo.jpg", "material/_DSF6111.jpg"]]
-  ,["Kaleidoscope Dreams", "Graphic", "2021", ["material/MA_GD_Tanzartefakt_7.jpg", "material/TextureBump_ARC_W_RZ.jpg"], null, "Loewe"]
-  ,["Urban Serenade", "Commissioned", "2020", ["material/DSCF7079.jpg", "material/DSCF7780.jpg"]]
-  ,["Fragments of Light", "Video", "2020", ["material/_DSF4139.jpg", "material/_DSF5771.jpg"]]
-  ,["Synthetic Garden", "Graphic", "2020", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/Mountain_v20003.jpg"], null, "Palace"]
-  ,["Night Passage", "Commissioned", "2020", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"]]
+  ["The Hidden Layers", "Graphic", "2024", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/TextureBump_ARC_W_RZ.jpg"], null, "Bottega Veneta"],
+  ["The Last Light", "Commissioned", "2023", ["material/DSCF7780.jpg", "material/DSCF7807.jpg", "material/DSCF7858.jpg"], null, "Jil Sander"],
+  ["Kaleidoscope", "Graphic", "2023", ["material/MA_GD_Tanzartefakt_7.jpg", "material/Stone_Artefakt_9.jpg"], null, "Maison Margiela"],
+  ["Shadows Of The Past", "Video", "2023", ["material/_DSF4139.jpg", "material/_DSF5771.jpg"]],
+  ["Fractal Dreams", "Commissioned", "2022", ["material/Strommast_Sundown_RZ.jpg", "material/Iceland25_Echo.jpg"], null, "Saint Laurent"],
+  ["The Edge Of Reality", "Video", "2022", ["material/MountainRange_raw.jpg", "material/Mountain_v20003.jpg"]]
+  ,["Cognitive Dissonance", "Graphic", "2022", ["material/TextureBump_ARC_W_RZ.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Comme des Garçons"]
+  ,["Moments In Time", "Video", "2022", ["material/_DSF2669.jpg", "material/_DSF3392.jpg"]]
+  ,["After The Rain", "Graphic", "2021", ["material/Mountain_v20006.jpg", "material/Stone_Artefakt_9.jpg"], null, "Prada"]
+  ,["Silent Symphony", "Commissioned", "2021", ["material/DSCF2880.jpg", "material/DSCF6919.jpg", "material/DSCF6978.jpg"]]
+  ,["The Fabric Of Dreams", "Video", "2021", ["material/Iceland25_Echo.jpg", "material/_DSF6111.jpg"]]
+  ,["Colorful Whispers", "Graphic", "2021", ["material/MA_GD_Tanzartefakt_7.jpg", "material/TextureBump_ARC_W_RZ.jpg"], null, "Loewe"]
+  ,["Echoes Of Time", "Commissioned", "2020", ["material/DSCF7079.jpg", "material/DSCF7780.jpg"]]
+  ,["Fragments Of Light", "Video", "2020", ["material/_DSF4139.jpg", "material/_DSF5771.jpg"]]
+  ,["Reflections Of The Soul", "Graphic", "2020", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/Mountain_v20003.jpg"], null, "Palace"]
+  ,["Nature's Palette", "Commissioned", "2020", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"]]
   ,["Remote Signals", "Video", "2019", ["material/Strommast_Sundown_RZ.jpg", "material/DSCF1339.jpg"]]
   ,["Soft Geometry", "Graphic", "2019", ["material/Stone_Artefakt_9.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Carhartt"]
-  ,["Changing Ground", "Commissioned", "2019", ["material/DSCF7807.jpg", "material/DSCF7858.jpg"]]
+  ,["Fragments Of Reality", "Commissioned", "2019", ["material/DSCF7807.jpg", "material/DSCF7858.jpg"]]
   ,["Aerial Static", "Video", "2019", ["material/_DSF0857.jpg", "material/_DSF0864.jpg"]]
   ,["Blue Residue", "Graphic", "2018", ["material/MountainRange_raw.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"], null, "Acne Studios"]
-  ,["Afterimage", "Commissioned", "2018", ["material/_DSF5771.jpg", "material/_DSF6111.jpg"]]
+  ,["The Art Of Memory", "Commissioned", "2018", ["material/_DSF5771.jpg", "material/_DSF6111.jpg"]]
   ,["Field Transmission", "Video", "2018", ["material/Iceland25_Echo.jpg", "material/Strommast_Sundown_RZ.jpg"]]
-  ,["Material Memory", "Graphic", "2018", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Artefakt_9.jpg", "material/Mountain_v20006.jpg"], null, "Miu Miu"]
-  ,["Parallel Terrain", "Commissioned", "2017", ["material/DSCF6919.jpg", "material/DSCF7079.jpg"]]
+  ,["Infinite Loop", "Graphic", "2018", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Artefakt_9.jpg", "material/Mountain_v20006.jpg"], null, "Miu Miu"]
+  ,["Lost In Translation", "Commissioned", "2017", ["material/DSCF6919.jpg", "material/DSCF7079.jpg"]]
   ,["Low Frequency", "Video", "2017", ["material/_DSF2669.jpg", "material/_DSF3392.jpg", "material/_DSF4139.jpg"]]
 ].map(([title, category, year, images, layout, additionalInfo = ""], index) => ({
   title,
@@ -178,7 +178,7 @@ function fitWorkMenu() {
   }
   const preferred = parseFloat(style.getPropertyValue("--preferred-menu-size")) * window.innerWidth / 100;
   const size = Math.max(0, Math.min(preferred, width / (widest / 100 + .12), height / 3.2));
-  workSubmenu.style.setProperty("--fitted-menu-size", `${size}px`);
+  document.documentElement.style.setProperty("--fitted-menu-size", `${size}px`);
 }
 
 new ResizeObserver(fitWorkMenu).observe(document.querySelector(".main-nav"));
@@ -324,17 +324,35 @@ function renderInfo() {
     <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of<br>photography, generativity, motion design and cgi.</p>
     <div class="info-columns">
       <div class="info-cv">
-        <section><h2>Teaching</h2><p>FH Potsdam<br>HS Hannover</p></section>
-        <section><h2>CV</h2><h3>Studies</h3><p>2014 – 2021<br>Academy of Fine Arts</p></section>
-        <section><h3>Work</h3><p>2026<br>EPS51<br>2024 - 2026<br>Berlin<br>2022 - 2025<br>Artistic Director of Der Fahrende Raum<br>2017 - 2021<br>Buchhandlung Walther König at Haus der Kunst, Munich</p></section>
-        <section><h3>Mail</h3><p><a href="mailto:mail@nicolas-kawohl.com">mail@nicolas-kawohl.com</a></p><h3>Instagram</h3><p><a href="https://instagram.com/nicokawo">nicokawo</a></p><h3>Phone</h3><p><a href="tel:+491234567892345">0123 4567892345</a></p></section>
+        <section><h2>CV</h2><p>2022 – 2025 Work at Eps51<br>2014 – 2021 Academy of Fine Arts</p></section>
+        <section><h2>Work</h2><p>EPS51<br>Berlin<br>Artistic Director of Der Fahrende Raum<br>Buchhandlung Walther König at Haus der Kunst, Munich</p></section>
+        <section><h2>Skills</h2><p>Video<br>Graphic<br>Animation</p></section>
+        <section><h2>Contact</h2><p><a href="mailto:mail@nicolas-kawohl.com">Mail</a><br><a href="https://www.instagram.com/nicocaw/">Instagram</a><br><a href="tel:+491234567892345">Call</a></p></section>
       </div>
       <section class="info-clients">
-        <h2>Selected Clientes and Collaborators</h2>
+        <h2>Selected Clients</h2>
         <p>Eps51<br>Welt<br>William Fan<br>DNA Club Munich<br>Fachhochschule Potsdam<br>Rethink<br>Icon Magazine<br>Richert Beil<br>European Month of Photography<br>Ahlberg ME<br>Gectalt Jewelry<br>German Press Days<br>Dawid Tomaszewski<br>Horror Vacui<br>On time PR<br>Uhren Magazin<br>CLAV<br>BFW<br>Henkel<br>Some Magazine<br>S/O Berlin Das Stue<br>Bacq Berlin<br>The Alqemist<br>Runtime<br>Friedman Berlin<br>Frederik Constantin Victor<br>MGUN Berlin<br>Zinnober Blumen<br>Suprema<br>Hong Bock<br>The Green Bean<br>Perfect Skin<br>Necklacy</p>
       </section>
     </div>
   </section>`;
+}
+
+function renderLegal(page) {
+  const isImprint = page === "imprint";
+  const title = isImprint ? "Imprint" : "Privacy Policy";
+  document.body.className = "is-legal";
+  setCurrentPage(page);
+  app.innerHTML = `<article class="legal-page">
+    <h1>${title}</h1>
+    <div class="legal-copy">
+      ${isImprint ? `<section><h2>Contact</h2><p>Nicolas Kawohl<br><a href="mailto:mail@nicolas-kawohl.com">mail@nicolas-kawohl.com</a></p></section>` : ""}
+      <p class="legal-placeholder">${isImprint ? "Imprint details will be added here." : "The privacy policy will be added here."}</p>
+      <nav aria-label="Legal pages">
+        <a href="#imprint"${isImprint ? ' aria-current="page"' : ""}>Imprint</a>
+        <a href="#privacy-policy"${!isImprint ? ' aria-current="page"' : ""}>Privacy Policy</a>
+      </nav>
+    </div>
+  </article>`;
 }
 
 function renderProject(id) {
@@ -348,7 +366,6 @@ function renderProject(id) {
     <a class="detail-back" href="#work/${project.category.toLowerCase()}">${escapeModuleAttribute(project.title)}</a>
     <button class="detail-info-label" type="button" data-project-info-open>Info</button>
     <div class="project-modules">${renderProjectModules(project.modules, project.title)}</div>
-    <a class="back" href="#work/${project.category.toLowerCase()}">◁ Project overview</a>
   </article>
   <div class="detail-info-layer" aria-hidden="true">
     <section class="detail-info-popup" role="dialog" aria-modal="true" aria-label="${project.title} information">
@@ -357,7 +374,15 @@ function renderProject(id) {
       <p>Set within a shifting visual environment, the project treats its setting as an active condition—one that obscures, reveals, and unsettles. Individual images form a layered reality in which clarity is deferred and meaning remains fluid, partial, and situational.</p>
       <p>The process becomes a method of introspection and fragmentation, recomposing its subject through a sequence of alternate perspectives. The work questions the coherence of representation and considers how identity, material, and place are mediated and reimagined.</p>
     </section>
-  </div>`;
+  </div>
+  <footer class="project-footer" aria-label="Contact and legal information">
+    <nav class="project-footer-links" aria-label="Footer">
+      <a href="https://www.instagram.com/nicocaw/">Instagram</a>
+      <a href="mailto:mail@nicolas-kawohl.com">Mail</a>
+      <a href="#imprint">Imprint</a>
+      <a href="#privacy-policy">Privacy Policy</a>
+    </nav>
+  </footer>`;
 }
 
 function route() {
@@ -370,6 +395,7 @@ function route() {
   const hash = location.hash.replace(/^#\/?/, "") || "home";
   const [page, id] = hash.split("/");
   if (page === "project") renderProject(id);
+  else if (page === "imprint" || page === "privacy-policy") renderLegal(page);
   else if (page === "work") renderWork(id ? id[0].toUpperCase() + id.slice(1) : "Graphic");
   else ({ home: renderHome, archive: renderArchive, info: renderInfo }[page] || renderHome)();
   window.scrollTo(0, 0);
@@ -383,7 +409,9 @@ window.addEventListener("scroll", () => {
     const currentScrollY = window.scrollY;
     const difference = currentScrollY - lastScrollY;
     if (Math.abs(difference) < 4) return;
-    const hideInterface = difference > 0 && currentScrollY > 20 && !workMenu.classList.contains("is-open") && !header.contains(document.activeElement);
+    const footer = document.querySelector(".project-footer");
+    const footerVisible = footer && footer.getBoundingClientRect().top <= window.innerHeight / 2;
+    const hideInterface = !footerVisible && difference > 0 && currentScrollY > 20 && !workMenu.classList.contains("is-open") && !header.contains(document.activeElement);
     header.classList.toggle("is-hidden", hideInterface);
     document.querySelectorAll(".detail-info-label, .detail-back").forEach(control => control.classList.toggle("is-hidden", hideInterface));
     lastScrollY = currentScrollY;
