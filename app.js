@@ -2,18 +2,18 @@
    Brand names below are illustrative placeholders. Use null for the default layout. */
 
 const ARCHIVE_PROJECTS = [
-  ["Mystic Landscapes", "Graphic", "2026", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"], null, "Prada"],
+  ["Mystic Landscapes", "Graphic", "2026", ["material/TextureBump_ARC_W_RZ.jpg", "material/Stone_Conserve_Blau_RZ_v2.jpg"]],
   ["Bilateral", "Video", "2026", ["material/_DSF0857.jpg", "material/_DSF0864.jpg", "material/_DSF2669.jpg"], null, "Palace"],
-  ["SS27 Backstage", "Commissioned", "2025", ["material/DSCF6919.jpg", "material/DSCF6978.jpg", "material/DSCF7079.jpg"], null, "Carhartt"],
+  ["SS27 Backstage", "Commissioned", "2025", ["material/DSCF6919.jpg", "material/DSCF6978.jpg", "material/DSCF7079.jpg"]],
   ["Unseen Connections", "Video", "2025", ["material/Strommast_Sundown_RZ.jpg", "material/DSCF1339.jpg"]],
   ["A Journey Within", "Graphic", "2025", ["material/Stone_Artefakt_9.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Loewe"],
-  ["Urban Echoes", "Commissioned", "2024", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"], null, "Miu Miu"],
+  ["Urban Echoes", "Commissioned", "2024", ["material/_DSF5795.jpg", "material/_DSF5962.jpg"]],
   ["Digital Mirage", "Graphic", "2024", ["material/Mountain_v20003.jpg", "material/Mountain_v20006.jpg"], null, "Acne Studios"],
   ["The Hidden Layers", "Graphic", "2024", ["material/Stone_Conserve_Blau_RZ_v2.jpg", "material/TextureBump_ARC_W_RZ.jpg"], null, "Bottega Veneta"],
-  ["The Last Light", "Commissioned", "2023", ["material/DSCF7780.jpg", "material/DSCF7807.jpg", "material/DSCF7858.jpg"], null, "Jil Sander"],
+  ["The Last Light", "Commissioned", "2023", ["material/DSCF7780.jpg", "material/DSCF7807.jpg", "material/DSCF7858.jpg"]],
   ["Kaleidoscope", "Graphic", "2023", ["material/MA_GD_Tanzartefakt_7.jpg", "material/Stone_Artefakt_9.jpg"], null, "Maison Margiela"],
   ["Shadows Of The Past", "Video", "2023", ["material/_DSF4139.jpg", "material/_DSF5771.jpg"]],
-  ["Fractal Dreams", "Commissioned", "2022", ["material/Strommast_Sundown_RZ.jpg", "material/Iceland25_Echo.jpg"], null, "Saint Laurent"],
+  ["Fractal Dreams", "Commissioned", "2022", ["material/Strommast_Sundown_RZ.jpg", "material/Iceland25_Echo.jpg"]],
   ["The Edge Of Reality", "Video", "2022", ["material/MountainRange_raw.jpg", "material/Mountain_v20003.jpg"]]
   ,["Cognitive Dissonance", "Graphic", "2022", ["material/TextureBump_ARC_W_RZ.jpg", "material/MA_GD_Tanzartefakt_7.jpg"], null, "Comme des Garçons"]
   ,["Moments In Time", "Video", "2022", ["material/_DSF2669.jpg", "material/_DSF3392.jpg"]]
@@ -321,17 +321,17 @@ function renderInfo() {
   document.body.className = "is-info";
   setCurrentPage("info");
   app.innerHTML = `<section class="info">
-    <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of<br>photography, generativity, motion design and cgi.</p>
+    <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of photography, generativity, motion design and cgi.</p>
     <div class="info-columns">
-      <div class="info-cv">
-        <section><h2>CV</h2><p>2022 – 2025 Work at Eps51<br>2014 – 2021 Academy of Fine Arts</p></section>
-        <section><h2>Work</h2><p>EPS51<br>Berlin<br>Artistic Director of Der Fahrende Raum<br>Buchhandlung Walther König at Haus der Kunst, Munich</p></section>
-        <section><h2>Skills</h2><p>Video<br>Graphic<br>Animation</p></section>
-        <section><h2>Contact</h2><p><a href="mailto:mail@nicolas-kawohl.com">Mail</a><br><a href="https://www.instagram.com/nicocaw/">Instagram</a><br><a href="tel:+491234567892345">Call</a></p></section>
+      <div class="info-column info-details">
+        <section class="info-contact"><h2>Contact</h2><p>For further information or collaborative inquieries please get in touch: <a href="mailto:mail@nicolas-kawohl.com">mail@nicolas-kawohl.com</a></p><p class="info-social"><a href="https://www.instagram.com/nicocaw/">Instagram</a></p></section>
+        <section class="info-teaching"><h2>Teaching</h2><p>FH Potsdam<br>HS Hannover</p></section>
+        <section class="info-skills"><h2>Skills</h2><p>Video<br>Graphic<br>Animation</p></section>
+        <section class="info-cv"><h2>CV</h2><p>2022 – 2025 Eps51<br>2021 - 2022 Apple<br>2022– 2019 Udk</p></section>
       </div>
-      <section class="info-clients">
+      <section class="info-column info-clients">
         <h2>Selected Clients</h2>
-        <p>Eps51<br>Welt<br>William Fan<br>DNA Club Munich<br>Fachhochschule Potsdam<br>Rethink<br>Icon Magazine<br>Richert Beil<br>European Month of Photography<br>Ahlberg ME<br>Gectalt Jewelry<br>German Press Days<br>Dawid Tomaszewski<br>Horror Vacui<br>On time PR<br>Uhren Magazin<br>CLAV<br>BFW<br>Henkel<br>Some Magazine<br>S/O Berlin Das Stue<br>Bacq Berlin<br>The Alqemist<br>Runtime<br>Friedman Berlin<br>Frederik Constantin Victor<br>MGUN Berlin<br>Zinnober Blumen<br>Suprema<br>Hong Bock<br>The Green Bean<br>Perfect Skin<br>Necklacy</p>
+        <p>Eps51<br>Welt<br>William Fan<br>DNA Club Munich<br>Fachhochschule Potsdam<br>Rethink<br>Icon Magazine<br>Richert Beil<br>European Month of Photography<br>Ahlberg ME<br>Gectalt Jewelry<br>German Press Days<br>Dawid Tomaszewski<br>Horror Vacui<br>On time PR<br>Uhren Magazin<br>CLAV<br>BFW<br>Henkel<br>Some Magazine<br>S/O Berlin</p>
       </section>
     </div>
   </section>`;
@@ -413,7 +413,7 @@ window.addEventListener("scroll", () => {
     const footerVisible = footer && footer.getBoundingClientRect().top <= window.innerHeight / 2;
     const hideInterface = !footerVisible && difference > 0 && currentScrollY > 20 && !workMenu.classList.contains("is-open") && !header.contains(document.activeElement);
     header.classList.toggle("is-hidden", hideInterface);
-    document.querySelectorAll(".detail-info-label, .detail-back").forEach(control => control.classList.toggle("is-hidden", hideInterface));
+    document.querySelectorAll(".detail-back").forEach(control => control.classList.toggle("is-hidden", hideInterface));
     lastScrollY = currentScrollY;
   });
 }, { passive: true });
