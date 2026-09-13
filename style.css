@@ -48,7 +48,8 @@ button { font: inherit; }
 .mobile-menu { display: none; }
 body.mobile-menu-open { overflow: hidden; }
 
-.site-header {
+.site-header,
+.mobile-menu-header {
   position: fixed;
   z-index: 50;
   inset: var(--pad) var(--pad) auto var(--pad);
@@ -291,9 +292,11 @@ noscript {
 @media (max-width: 700px) {
   :root { --pad: 8px; --menu-font-size: .88rem; }
   .detail-info-label { font-size: var(--menu-font-size); }
-  .site-header { grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; font-size: var(--menu-font-size); }
+  .site-header,
+  .mobile-menu-header { grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; font-size: var(--menu-font-size); }
   .site-header.is-hidden { opacity: 1; transform: none; pointer-events: auto; }
-  .site-header .brand { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .site-header .brand,
+  .mobile-menu-header .brand { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .main-nav { display: none; }
   .mobile-menu-toggle,
   .mobile-menu-close { border: 0; padding: 0; background: transparent; color: inherit; cursor: pointer; }
@@ -308,20 +311,22 @@ noscript {
     max-height: none;
     margin: 0;
     border: 0;
-    padding: max(3vw, env(safe-area-inset-top)) 3vw max(3vw, env(safe-area-inset-bottom));
+    padding: calc(var(--pad) + 1.1 * var(--menu-font-size)) var(--pad) max(3vw, env(safe-area-inset-bottom));
     overflow-y: auto;
     overscroll-behavior: contain;
-    color: var(--ink);
-    background: transparent;
+    font-family: "Times New Roman", Times, serif;
+    font-weight: 400;
+    color: #000;
+    background: #fff;
   }
   .mobile-menu::backdrop { background: rgba(0, 0, 0, .4); }
   .mobile-menu-open .site-header { visibility: hidden; }
-  .mobile-menu-header { display: flex; justify-content: space-between; gap: 1em; font-size: var(--menu-font-size); line-height: 1.1; padding-bottom: 6vw; }
-  .mobile-menu nav { font-size: 13vw; line-height: 1.08; }
+  .mobile-menu-header { font-family: "WF Raglan Neue", Georgia, "Times New Roman", serif; font-weight: 300; color: #000; background: #fff; }
+  .mobile-menu nav { font-size: 13.77vw; line-height: .93; }
   .mobile-menu nav a { display: block; width: fit-content; max-width: 100%; white-space: nowrap; }
-  .mobile-menu-work { border-top: 1px solid currentColor; padding-top: 1.5vw; padding-bottom: 4vw; }
-  .mobile-menu nav .mobile-menu-label { font-size: 6vw; margin-bottom: 2vw; }
-  .mobile-menu nav .mobile-menu-section { width: 100%; border-top: 1px solid currentColor; padding: 3vw 0; }
+  .mobile-menu-work { padding-bottom: 12.8vw; }
+  .mobile-menu nav .mobile-menu-label { font-family: "WF Raglan Neue", Georgia, "Times New Roman", serif; font-weight: 300; font-size: var(--menu-font-size); line-height: 1.1; margin-bottom: 2.5vw; }
+  .mobile-menu nav .mobile-menu-section { width: 100%; }
   .mobile-menu a:hover,
   .mobile-menu a:focus-visible,
   .mobile-menu button:hover,
