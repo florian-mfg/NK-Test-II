@@ -324,14 +324,14 @@ function renderInfo() {
     <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of photography, generativity, motion design and cgi.</p>
     <div class="info-columns">
       <div class="info-column info-details">
-        <section class="info-contact"><h2>Contact</h2><p>For further information or collaborative inquieries please get in touch: <a href="mailto:mail@nicolas-kawohl.com">mail@nicolas-kawohl.com</a></p><p class="info-social"><a href="https://www.instagram.com/nicocaw/">Instagram</a></p></section>
-        <section class="info-teaching"><h2>Teaching</h2><p>FH Potsdam<br>HS Hannover</p></section>
+        <section class="info-cv"><h2>CV</h2><p>2022 – 2025 Work at Eps51<br>2014 – 2021 Academy of Fine Arts</p></section>
+        <section class="info-work"><h2>Work</h2><p>EPS51<br>Berlin<br>Artistic Director of Der Fahrende Raum<br>Buchhandlung Walther König at Haus der Kunst, Munich</p></section>
         <section class="info-skills"><h2>Skills</h2><p>Video<br>Graphic<br>Animation</p></section>
-        <section class="info-cv"><h2>CV</h2><p>2022 – 2025 Eps51<br>2021 - 2022 Apple<br>2022– 2019 Udk</p></section>
+        <section class="info-contact"><h2>Contact</h2><p><a href="mailto:mail@nicolas-kawohl.com">Mail</a><br><a href="https://www.instagram.com/nicocaw/">Instagram</a></p></section>
       </div>
       <section class="info-column info-clients">
         <h2>Selected Clients</h2>
-        <p>Eps51<br>Welt<br>William Fan<br>DNA Club Munich<br>Fachhochschule Potsdam<br>Rethink<br>Icon Magazine<br>Richert Beil<br>European Month of Photography<br>Ahlberg ME<br>Gectalt Jewelry<br>German Press Days<br>Dawid Tomaszewski<br>Horror Vacui<br>On time PR<br>Uhren Magazin<br>CLAV<br>BFW<br>Henkel<br>Some Magazine<br>S/O Berlin</p>
+        <p>Eps51<br>Welt<br>William Fan<br>DNA Club Munich<br>Fachhochschule Potsdam<br>Rethink<br>Icon Magazine<br>Richert Beil<br>European Month of Photography<br>Ahlberg ME<br>Gectalt Jewelry<br>German Press Days<br>Dawid Tomaszewski<br>Horror Vacui<br>On time PR<br>Uhren Magazin<br>CLAV<br>BFW<br>Henkel<br>Some Magazine<br>S/O Berlin Das Stue<br>Bacq Berlin<br>The Alqemist<br>Runtime<br>Friedman Berlin<br>Frederik Constantin Victor<br>MGUN Berlin<br>Zinnober Blumen<br>Suprema<br>Hong Bock<br>The Green Bean<br>Perfect Skin<br>Necklacy</p>
       </section>
     </div>
   </section>`;
