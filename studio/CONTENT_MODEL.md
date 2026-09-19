@@ -1,5 +1,29 @@
 # Project content model
 
+## Permanent Free-plan requirement
+
+All current and future Nicolas Kawohl portfolio development must work on Sanity's
+Free plan after the Growth trial ends. Use only the existing public `production`
+dataset in project `ck6xe2er`, standard documents/schemas/references, image/file
+assets, GROQ, and ordinary draft editing and manual publishing.
+
+Do not introduce dependencies on private datasets, custom roles or advanced access
+control, Scheduled Drafts, Comments/Tasks workflows, Content Releases, AI Assist,
+or other paid AI features. Do not add paid plugins or services without an explicit
+user request. Singleton UI controls and schema validation are not access-control
+roles. Use Free-plan roles and stay within Free-plan storage, bandwidth, document,
+and request quotas; do not assume paid overages. Check current
+[Sanity plan availability](https://www.sanity.io/pricing) before adding features.
+
+Review on 2026-09-19: no paid-feature dependency was found in the Studio config or
+schemas; an unauthenticated query confirmed public access to `production`.
+Trial-only controls may appear through Sanity defaults, but must not become part
+of the workflow. No configuration or dataset changes were needed. Hosted member
+roles and account usage were not audited; future plan or quota changes require
+rechecking compatibility rather than assuming permanent vendor terms.
+
+## Editing projects
+
 Refresh http://localhost:3333 and create a Project. Enter a title, generate its
 slug, and add modules. Drag modules to reorder them or use their menu to delete
 them. Open a content slot and choose Empty, Image, Video, or Text. Images support native
@@ -56,3 +80,12 @@ stacks occupied slots and hides empty slots at 700px and below.
 Uses native [array controls](https://www.sanity.io/docs/studio/array-type),
 [image fields](https://www.sanity.io/docs/studio/image-type), and
 [predefined string choices](https://www.sanity.io/docs/studio/string-type).
+
+## Expanded Studio architecture
+
+See [STUDIO_ARCHITECTURE.md](STUDIO_ARCHITECTURE.md) for page singletons,
+Selected Work curation, independent Index entries, shared contacts, navigation,
+legal content, compatibility rules, and verification commands. The module mapping
+above remains unchanged. Project `description` is plain popup text;
+`detailPageEnabled` defaults to true for new documents and must also be interpreted
+as true when absent on older documents. Nothing is connected to the public site yet.

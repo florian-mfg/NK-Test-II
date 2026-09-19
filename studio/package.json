@@ -5,6 +5,11 @@
   "main": "package.json",
   "license": "UNLICENSED",
   "scripts": {
+    "check": "tsc --noEmit --incremental false",
+    "lint": "eslint .",
+    "test:architecture": "node --import tsx --test tests/content-model.test.mjs",
+    "schema:validate": "sanity schema validate",
+    "schema:extract": "sanity schema extract --path tmp/schema.json",
     "build": "sanity build",
     "deploy": "sanity deploy",
     "deploy-graphql": "sanity graphql deploy",
@@ -15,10 +20,10 @@
     "sanity"
   ],
   "dependencies": {
-    "@sanity/vision": "^6.13.0",
+    "@sanity/vision": "^6.15.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "sanity": "^6.13.0",
+    "sanity": "^6.15.0",
     "styled-components": "^6.1.18"
   },
   "devDependencies": {

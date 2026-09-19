@@ -71,6 +71,9 @@ function arrangeArchive(projects) {
 const ARCHIVE_DISPLAY_PROJECTS = arrangeArchive(ARCHIVE_PROJECTS);
 
 const app = document.querySelector("#app");
+// Only Info consumes this snapshot. All other routes retain their local data.
+let sanityContent = null;
+const hydratedInfoPages = new WeakSet();
 const header = document.querySelector(".site-header");
 const workMenu = document.querySelector(".work-menu");
 const workToggle = document.querySelector(".work-toggle");
@@ -317,6 +320,49 @@ function renderArchive() {
   syncLayout();
 }
 
+function applySanityInfo() {
+  const section = app.querySelector(".info");
+  const info = sanityContent?.infoPage;
+  if (!section || !info || hydratedInfoPages.has(section)) return;
+  const issues = sanityContent.issues || [];
+  const needsSettings = info.contactLinks.length > 0 || issues.some(issue =>
+    issue.path.startsWith("infoPage.contactLinks") && issue.code === "missing_contact");
+  if (needsSettings && !sanityContent.siteSettings) return;
+  // Malformed content is different from intentionally empty published arrays.
+  if (issues.some(issue => issue.path.startsWith("infoPage") && issue.code !== "missing_contact")) return;
+  const lines = values => values.map(value => escapeModuleAttribute(value).replace(/\r?\n/g, "<br>")).join("<br>");
+  const content = {
+    ".info-intro": lines([info.introduction]),
+    ".info-cv p": lines(info.cv.map(entry => [entry.period, entry.text].filter(Boolean).join(" "))),
+    ".info-work p": lines(info.work),
+    ".info-skills p": lines(info.skills),
+    ".info-contact p": info.contactLinks.map(link =>
+      `<a href="${escapeModuleAttribute(link.href)}">${escapeModuleAttribute(link.label)}</a>`).join("<br>"),
+    ".info-clients p": lines(info.selectedClients)
+  };
+  for (const [selector, html] of Object.entries(content)) {
+    const paragraph = section.querySelector(selector);
+    if (paragraph.innerHTML !== html) paragraph.innerHTML = html;
+  }
+  hydratedInfoPages.add(section);
+}
+
+async function loadInfoContent() {
+  try {
+    if (!globalThis.SanityData) return;
+    const result = await SanityData.load();
+    if (!result.ok) return;
+    sanityContent = result.data;
+    const section = app.querySelector(".info");
+    // Never rerun route() after the request: it resets scrolling and closes menus.
+    // If the visitor has scrolled or focused Info content, use the snapshot on
+    // their next Info visit instead of changing the page under them.
+    if (section && window.scrollY === 0 && !section.contains(document.activeElement)) applySanityInfo();
+  } catch {
+    // The existing local Info markup remains the fallback, including offline use.
+  }
+}
+
 function renderInfo() {
   document.body.className = "is-info";
   setCurrentPage("info");
@@ -335,6 +381,7 @@ function renderInfo() {
       </section>
     </div>
   </section>`;
+  applySanityInfo();
 }
 
 function renderLegal(page) {
@@ -474,3 +521,4 @@ document.addEventListener("keydown", event => {
 });
 window.addEventListener("hashchange", route);
 route();
+loadInfoContent();
