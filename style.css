@@ -299,7 +299,8 @@ noscript {
   .mobile-menu-close { border: 0; padding: 0; background: transparent; color: inherit; cursor: pointer; }
   .mobile-menu-toggle { display: block; }
   .mobile-menu[open] {
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: fixed;
     inset: 0;
     width: 100%;
@@ -308,7 +309,7 @@ noscript {
     max-height: none;
     margin: 0;
     border: 0;
-    padding: calc(var(--pad) + 1.1 * var(--menu-font-size)) var(--pad) max(3vw, env(safe-area-inset-bottom));
+    padding: max(4.25vw, env(safe-area-inset-top)) 2.6vw max(4vw, env(safe-area-inset-bottom));
     overflow-y: auto;
     overscroll-behavior: contain;
     font-family: "Times New Roman", Times, serif;
@@ -318,12 +319,13 @@ noscript {
   }
   .mobile-menu::backdrop { background: rgba(0, 0, 0, .4); }
   .mobile-menu-open .site-header { visibility: hidden; }
-  .mobile-menu-header { font-family: "WF Raglan Neue", Georgia, "Times New Roman", serif; font-weight: 300; color: #000; background: #fff; }
-  .mobile-menu nav { font-size: 13.77vw; line-height: .93; }
+  .mobile-menu-header { position: static; flex-shrink: 0; font-family: inherit; font-weight: 400; font-size: 4vw; line-height: 1.1; color: #000; background: #fff; }
+  .mobile-menu nav { flex-shrink: 0; margin-top: 8.5vw; font-size: 12.8vw; line-height: 1; }
   .mobile-menu nav a { display: block; width: fit-content; max-width: 100%; white-space: nowrap; }
-  .mobile-menu-work { padding-bottom: 12.8vw; }
-  .mobile-menu nav .mobile-menu-label { font-family: "WF Raglan Neue", Georgia, "Times New Roman", serif; font-weight: 300; font-size: var(--menu-font-size); line-height: 1.1; margin-bottom: 2.5vw; }
+  .mobile-menu-work { padding-bottom: 12.5vw; }
+  .mobile-menu nav .mobile-menu-label { font-family: inherit; font-weight: 400; font-size: 4vw; line-height: 1.1; margin-bottom: .5vw; }
   .mobile-menu nav .mobile-menu-section { width: 100%; }
+  .mobile-menu-mail { flex-shrink: 0; align-self: flex-start; margin-top: auto; padding: 4vw 1.6vw 0; font-size: 4vw; line-height: 1.1; }
   .mobile-menu a:hover,
   .mobile-menu a:focus-visible,
   .mobile-menu button:hover,
