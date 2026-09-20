@@ -1,5 +1,5 @@
 /*
- * Free-plan Sanity adapter. Only Info currently consumes it in app.js.
+ * Free-plan Sanity adapter. Only Info and Frontpage currently consume it in app.js.
  * Loading this file only exposes SanityData; it never fetches or touches the DOM.
  *
  * SanityData.load({timeoutMs?, signal?}) -> Promise<{ok, data, error}>

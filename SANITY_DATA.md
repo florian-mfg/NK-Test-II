@@ -2,8 +2,8 @@
 
 `index.html` loads `sanity-data.js` before `app.js`. The adapter itself has no
 side effects; `app.js` calls `load()` once at startup and caches the result. Only
-Info consumes the snapshot, using Site Settings to resolve its contact links.
-Projects, Selected Work, Index, Frontpage, Navigation and Legal retain local content.
+Info and Frontpage consume the snapshot. Info uses Site Settings for contact links.
+Projects, Selected Work, Index, Navigation and Legal retain local content.
 Site Settings does not change global branding, metadata, navigation or footers.
 
 ## Interface
@@ -130,6 +130,34 @@ An explicitly empty additionalInfo string suppresses inheritance, while an absen
 field inherits. Existing schema/editor behavior may unset an empty string; adding
 an explicit suppress-inheritance control would be a separate schema decision.
 
+## Frontpage integration
+
+`renderHome()` and the existing one-time content load apply the normalized
+`homePage` singleton (Studio title: Frontpage) to the existing `.home-media` iframe.
+`backgroundVideoUrl` is already projected and normalized by the adapter; the
+renderer uses its validated Vimeo embed URL, including any unlisted privacy hash.
+It enforces the existing background/autoplay/muted/loop settings, disables controls
+and badges, and retains autopause=0, player_id=0 and app_id=58479. `videoTitle`
+sets the iframe title; an empty title retains the local accessible title.
+A matching source is not assigned again, so the current video does not restart.
+
+Optional normalized poster data becomes a cover background behind the iframe,
+using its crop-resolved URL and hotspot position when available. It is decorative;
+the iframe title supplies the accessible description. Vimeo does not have a native
+iframe poster attribute, and its player may cover this background while loading.
+An empty poster adds no styling or DOM nodes.
+
+Missing documents, failed requests, missing/invalid videos and non-Vimeo sources
+retain the exact local homepage. The adapter still recognizes direct video files
+for backward compatibility, but this Frontpage integration only adopts Vimeo.
+CSS, fullscreen geometry, orange overlay, iframe permissions and responsive rules
+remain unchanged. Async completion changes only an active Home or Info page;
+it does not reroute, reset scroll, or touch other routes. Later visits reuse the
+same snapshot. No new request, token, dependency or hosting/build requirement is added.
+
+See `studio/CONTENT_MODEL.md` for the mandatory Vimeo-only project media plan.
+Project schema, query/normalization and module rendering changes are deferred.
+
 ## Info rendering and fallback
 
 The existing Info section, columns, headings and paragraphs remain in place;
@@ -151,7 +179,7 @@ Run from the repository root:
 - `node --check app.js`
 - `node --check sanity-data.js`
 - `node --test tests/*.test.cjs`
-- `INFO_LIVE_SMOKE=1 node --test tests/info-page.test.cjs` (requires network)
+- `INFO_LIVE_SMOKE=1 node --test tests/*.test.cjs` (requires network)
 
 Adapter tests use Node’s built-in runner and a VM with mocked fetch. Info tests
 use the existing `studio/node_modules/jsdom` installation. They exercise all six layouts against the unchanged project renderer,
@@ -168,3 +196,11 @@ Manual browser testing remains: confirm CORS from the actual serving origin,
 reload directly at `#info`, navigate to Info from another route, and check desktop
 and mobile layout with a delayed response. The automated DOM tests do not measure
 browser layout or prove that a deployed page has the latest JavaScript.
+
+Frontpage tests also cover source/title adoption, identical-source reload avoidance,
+forced background playback parameters, privacy hashes, optional posters, fallback,
+late navigation and one-time loading. The opt-in live test checks the published
+Vimeo source and “Nicolas Kawohl — Background Video” title, then confirms the
+three published Info values using that same response. Manual browser verification
+is still required for actual Vimeo playback/autoplay, origin restrictions and
+fullscreen appearance on desktop/mobile; JSDOM does not play embedded videos.

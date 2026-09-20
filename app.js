@@ -71,7 +71,7 @@ function arrangeArchive(projects) {
 const ARCHIVE_DISPLAY_PROJECTS = arrangeArchive(ARCHIVE_PROJECTS);
 
 const app = document.querySelector("#app");
-// Only Info consumes this snapshot. All other routes retain their local data.
+// Only Info and Frontpage consume this snapshot. Other routes retain local data.
 let sanityContent = null;
 const hydratedInfoPages = new WeakSet();
 const header = document.querySelector(".site-header");
@@ -197,10 +197,35 @@ function setWorkMenu(open) {
   workSubmenu.inert = !open;
 }
 
+function applySanityHome() {
+  const section = app.querySelector(".home");
+  const home = sanityContent?.homePage;
+  if (!section || home?.video?.type !== "vimeo") return;
+  const frame = section.querySelector("iframe.home-media");
+  // The adapter validates the Vimeo host/id and retains an unlisted privacy hash.
+  // Playback policy belongs here; editorial URL parameters cannot enable UI/audio.
+  const url = new URL(home.video.embedUrl);
+  const background = {background: "1", autoplay: "1", autopause: "0", muted: "1",
+    loop: "1", controls: "0", badge: "0", player_id: "0", app_id: "58479"};
+  for (const [key, value] of Object.entries(background)) url.searchParams.set(key, value);
+  // Avoid restarting the existing player when Sanity supplies the same video.
+  if (frame.getAttribute("src") !== url.href) frame.setAttribute("src", url.href);
+  frame.title = home.videoTitle.trim() || "Selfscan_RZ";
+  if (home.poster) {
+    // An iframe has no poster attribute. Show the decorative poster behind it;
+    // the iframe title provides the accessible description, avoiding duplicate alt.
+    section.style.backgroundImage = `url("${home.poster.src}")`;
+    section.style.backgroundSize = "cover";
+    section.style.backgroundPosition = home.poster.hotspot
+      ? `${home.poster.hotspot.x * 100}% ${home.poster.hotspot.y * 100}%` : "center";
+  }
+}
+
 function renderHome() {
   document.body.className = "is-home";
   setCurrentPage("");
   app.innerHTML = `<section class="home"><iframe class="home-media" src="https://player.vimeo.com/video/1223949127?background=1&autoplay=1&autopause=0&muted=1&loop=1&controls=0&badge=0&player_id=0&app_id=58479" title="Selfscan_RZ" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe></section>`;
+  applySanityHome();
 }
 
 function renderWorkModule(module, project) {
@@ -357,8 +382,9 @@ async function loadInfoContent() {
     // Update the existing paragraphs even after interaction. Rerunning route()
     // would reset scrolling and menus; applySanityInfo only touches active Info.
     applySanityInfo();
+    applySanityHome();
   } catch {
-    // The existing local Info markup remains the fallback, including offline use.
+    // Existing local Info and Frontpage markup remain the fallback, including offline use.
   }
 }
 

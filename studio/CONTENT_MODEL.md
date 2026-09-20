@@ -37,7 +37,8 @@ ignored when Content is Empty. Each module can also be entirely empty.
 
 ## Mapping for the future data connection
 
-The Studio is not yet connected to the frontend; examples are maintained in `projects.js`.
+Project content is not yet connected to the frontend; examples remain in `projects.js`.
+Info and Frontpage are connected separately through the public adapter.
 Sanity documents are not yet directly renderable: native assets are references,
 and Sanity object arrays use typed objects rather than null entries.
 
@@ -88,4 +89,60 @@ Selected Work curation, independent Index entries, shared contacts, navigation,
 legal content, compatibility rules, and verification commands. The module mapping
 above remains unchanged. Project `description` is plain popup text;
 `detailPageEnabled` defaults to true for new documents and must also be interpreted
-as true when absent on older documents. Nothing is connected to the public site yet.
+as true when absent on older documents. Projects and Selected Work remain local; Info and Frontpage are now connected.
+
+
+## Mandatory Vimeo-only direction (2026-09-20)
+
+All website video content must ultimately use Vimeo URLs, not uploaded Sanity
+video files. The file-based project mapping described above documents the current
+implementation, not the approved future workflow. Do not connect Projects or
+Selected Work until the following changes are explicitly authorized and completed.
+
+- Frontpage: Vimeo background with autoplay, muted playback, looping and no visible
+  Vimeo UI. This renderer is connected. The existing `homePage.backgroundVideoUrl`
+  schema still advertises direct MP4/WebM as well as Vimeo and only validates HTTPS;
+  later tighten its description and validation to Vimeo URLs to match the renderer.
+- Selected Work/project overviews: image or Vimeo teaser in media slots; teasers
+  must support autoplay + muted + loop + hidden controls and use exactly the same
+  layout geometry as image teasers.
+- Project details: image or Vimeo video in every media slot across Full,
+  Half + Half, Half + Quarter + Quarter, Quarter + Quarter + Quarter + Quarter,
+  Third + Third + Third, and Two Thirds + One Third. Preserve all widths, slot
+  positions, arrangement, heights, empty-slot behavior and responsive stacking.
+  Text and intentional empty slots remain supported.
+
+### Current gaps and required later work
+
+1. `schemaTypes/objects/mediaSlot.ts` currently defines `video` as a Sanity file
+   upload, requires `video.asset`, and describes native controls with no autoplay.
+   All six layouts in `objects/projectModules.ts` use this shared slot type, so
+   none currently accepts a Vimeo URL. Add a `vimeoUrl` URL field with validation
+   of supported HTTPS Vimeo/player URLs and unlisted privacy hashes, required when
+   type is video; replace the upload requirement and upload-oriented help text.
+   Keep optional poster and accessible slot text. Migrate any existing uploaded
+   video references to editorially supplied Vimeo URLs before removing old fields;
+   do not auto-invent Vimeo equivalents or silently discard stored content.
+2. `sanity-data.js` currently projects `video{asset->{_id,url}}` and normalizes only
+   project-owned MP4/WebM assets. Project `moduleValue()` must later project/read
+   `vimeoUrl` and emit a validated Vimeo descriptor (source, embed URL, privacy hash,
+   accessible text, optional poster) instead of a file source. Reuse or extract the
+   existing Frontpage Vimeo parsing with tests; keep invalid-slot isolation and
+   exact slot positions/arrangements. Never treat URL parameters as playback policy.
+3. `project-modules.js` currently emits native `<video controls playsinline
+   preload="metadata">`. Add Vimeo iframe rendering and an explicit overview/detail
+   playback context. Overviews require background teaser settings; detail playback
+   can expose appropriate interactive controls. Extend the existing media sizing
+   rules to iframes without altering module geometry. Verify project link overlays
+   still open details while teaser iframes do not intercept clicks.
+4. Selected Work in `documents/pages.ts` only stores ordered project references;
+   it has no separate teaser media fields. Existing overviews use project module
+   slots, so shared-slot Vimeo support covers both overview and detail locations.
+   No separate Selected Work media schema is required for this existing approach.
+5. Before connecting projects, test all six compositions, heights, arrangements,
+   empty slots, posters, unlisted URLs, accessible titles, teaser behavior and
+   detail interaction, including desktop/mobile browser playback and image/video
+   geometry parity. Keep the public dataset, tokenless reads and Free-plan setup.
+
+This step only records the plan. Project/Selected Work schemas, normalization and
+renderers have not been changed to implement it.
