@@ -327,7 +327,6 @@ function applySanityInfo() {
   const issues = sanityContent.issues || [];
   const needsSettings = info.contactLinks.length > 0 || issues.some(issue =>
     issue.path.startsWith("infoPage.contactLinks") && issue.code === "missing_contact");
-  if (needsSettings && !sanityContent.siteSettings) return;
   // Malformed content is different from intentionally empty published arrays.
   if (issues.some(issue => issue.path.startsWith("infoPage") && issue.code !== "missing_contact")) return;
   const lines = values => values.map(value => escapeModuleAttribute(value).replace(/\r?\n/g, "<br>")).join("<br>");
@@ -341,6 +340,8 @@ function applySanityInfo() {
     ".info-clients p": lines(info.selectedClients)
   };
   for (const [selector, html] of Object.entries(content)) {
+    // A settings failure affects contacts only, never valid published Info text.
+    if (selector === ".info-contact p" && needsSettings && !sanityContent.siteSettings) continue;
     const paragraph = section.querySelector(selector);
     if (paragraph.innerHTML !== html) paragraph.innerHTML = html;
   }
@@ -353,11 +354,9 @@ async function loadInfoContent() {
     const result = await SanityData.load();
     if (!result.ok) return;
     sanityContent = result.data;
-    const section = app.querySelector(".info");
-    // Never rerun route() after the request: it resets scrolling and closes menus.
-    // If the visitor has scrolled or focused Info content, use the snapshot on
-    // their next Info visit instead of changing the page under them.
-    if (section && window.scrollY === 0 && !section.contains(document.activeElement)) applySanityInfo();
+    // Update the existing paragraphs even after interaction. Rerunning route()
+    // would reset scrolling and menus; applySanityInfo only touches active Info.
+    applySanityInfo();
   } catch {
     // The existing local Info markup remains the fallback, including offline use.
   }

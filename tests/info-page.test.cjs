@@ -63,11 +63,10 @@ test('Info updates only existing paragraphs and respects published empty arrays'
   } finally {app.dom.window.close();}
 });
 
-test('failed requests, missing Info and required settings retain the exact local fallback', async () => {
+test('failed requests and missing or malformed Info retain the exact local fallback', async () => {
   for (const result of [
     {ok: false, data: null, error: {code: 'timeout'}},
     success(content({infoPage: null})),
-    success(content({siteSettings: null})),
     success(content({infoPage: doc('infoPage', {work: 'malformed'})}))
   ]) {
     const app = setup();
@@ -85,6 +84,18 @@ test('failed requests, missing Info and required settings retain the exact local
   } finally {app.dom.window.close();}
 });
 
+test('missing settings retain only local contacts while published Info wins', async () => {
+  const app = setup();
+  try {
+    const contacts = app.window.document.querySelector('.info-contact p').innerHTML;
+    await app.settle(success(content({siteSettings: null})));
+    assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
+    assert.equal(app.window.document.querySelector('.info-work p').textContent, 'Eps51');
+    assert.equal(app.window.document.querySelector('.info-skills p').textContent, 'Tattooboss');
+    assert.equal(app.window.document.querySelector('.info-contact p').innerHTML, contacts);
+  } finally {app.dom.window.close();}
+});
+
 test('CMS contact emptiness is respected; settings are optional when no contacts need them', async () => {
   const app = setup();
   try {
@@ -94,16 +105,19 @@ test('CMS contact emptiness is respected; settings are optional when no contacts
   } finally {app.dom.window.close();}
 });
 
-test('late response cannot reset scrolling or replace focused Info content', async () => {
+test('late published content wins after scrolling or focus without resetting scrolling', async () => {
   for (const interaction of ['scroll', 'focus']) {
     const app = setup();
     try {
-      const initial = app.window.document.querySelector('.info').outerHTML;
+      const section = app.window.document.querySelector('.info');
       if (interaction === 'scroll') app.window.scrollY = 150;
       else app.window.document.querySelector('.info-contact a').focus();
       const calls = app.scrollCalls.length;
       await app.settle(success(content()));
-      assert.equal(app.window.document.querySelector('.info').outerHTML, initial);
+      assert.equal(app.window.document.querySelector('.info'), section);
+      assert.equal(section.querySelector('.info-intro').textContent, 'Berliner Boy');
+      assert.equal(section.querySelector('.info-work p').textContent, 'Eps51');
+      assert.equal(section.querySelector('.info-skills p').textContent, 'Tattooboss');
       assert.equal(app.scrollCalls.length, calls);
       if (interaction === 'scroll') assert.equal(app.window.scrollY, 150);
       // A later explicit visit uses the cached snapshot, without another fetch.

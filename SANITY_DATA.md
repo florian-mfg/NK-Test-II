@@ -1,8 +1,10 @@
-# Standalone Sanity data adapter
+# Sanity data adapter and Info integration
 
-`sanity-data.js` is deliberately **not loaded by index.html**. It performs no work
-on page load and changes no DOM, route, style, event handler, or existing content.
-The website still uses projects.js and the hard-coded content in app.js/index.html.
+`index.html` loads `sanity-data.js` before `app.js`. The adapter itself has no
+side effects; `app.js` calls `load()` once at startup and caches the result. Only
+Info consumes the snapshot, using Site Settings to resolve its contact links.
+Projects, Selected Work, Index, Frontpage, Navigation and Legal retain local content.
+Site Settings does not change global branding, metadata, navigation or footers.
 
 ## Interface
 
@@ -29,8 +31,8 @@ both the request and JSON body. An AbortSignal can cancel it. Error codes are
 `http`, `request_failed`, `invalid_response`, `timeout`, and `aborted`.
 
 Every explicit load call performs one metadata request; there are no background
-requests, polling, asset downloads, or persistent caches. A future integration
-should load once and reuse the returned content during hash navigation. Sanity’s
+requests, polling, asset downloads, or persistent caches. The Info integration
+loads once and reuses the returned content during hash navigation. Sanity’s
 API CDN handles HTTP content caching. No frontend token, private dataset, paid
 feature, dependency installation, or build pipeline is introduced.
 
@@ -128,19 +130,41 @@ An explicitly empty additionalInfo string suppresses inheritance, while an absen
 field inherits. Existing schema/editor behavior may unset an empty string; adding
 an explicit suppress-inheritance control would be a separate schema decision.
 
+## Info rendering and fallback
+
+The existing Info section, columns, headings and paragraphs remain in place;
+only paragraph contents are updated. CSS and responsive rules are unchanged.
+Published empty fields stay empty. Request failures, missing/invalid Info documents
+and malformed Info content retain local Info. Missing Site Settings retains only
+local contacts when shared addresses are required; valid Info text still wins.
+
+A successful response updates an active Info page even if the visitor has scrolled
+or focused it. The previous interaction gate deferred this update until another
+Info visit, leaving local content visible despite a successful request. Updates
+do not rerun routing or explicitly reset scroll. Responses received on another
+route are cached for the next Info visit and do not alter that route.
+
 ## Verification
 
 Run from the repository root:
 
+- `node --check app.js`
 - `node --check sanity-data.js`
-- `node --test tests/sanity-data.test.cjs`
+- `node --test tests/*.test.cjs`
+- `INFO_LIVE_SMOKE=1 node --test tests/info-page.test.cjs` (requires network)
 
-Tests use Node’s built-in runner and a VM with mocked fetch; no network or packages
-are needed. They exercise all six layouts against the unchanged project renderer,
+Adapter tests use Node’s built-in runner and a VM with mocked fetch. Info tests
+use the existing `studio/node_modules/jsdom` installation. They exercise all six layouts against the unchanged project renderer,
 all height presets and supported arrangements, media, references, page mappings,
 invalid content, published-only requests, timeout, and cancellation.
 
-A separate read-only production smoke test on 2026-09-19 succeeded with no token
-and no normalization issues. Most page singletons are not yet published. No content
-was written. Browser CORS and visual integration remain for the next authorized
-stage; this adapter has intentionally not been added to index.html.
+The read-only live test on 2026-09-20 retrieved “Berliner Boy”, “Eps51” and
+“Tattooboss” from the published production documents and verified them in the
+Info renderer's DOM. No CMS content was written. Regression tests cover late
+responses after scroll/focus, document/request failures, contact fallback,
+published empty arrays, DOM identity, escaping and unchanged local routes.
+
+Manual browser testing remains: confirm CORS from the actual serving origin,
+reload directly at `#info`, navigate to Info from another route, and check desktop
+and mobile layout with a delayed response. The automated DOM tests do not measure
+browser layout or prove that a deployed page has the latest JavaScript.
