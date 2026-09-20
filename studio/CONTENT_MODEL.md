@@ -226,7 +226,13 @@ See `SANITY_DATA.md` for full loading, fallback, metadata and validation behavio
 
 Selected Work integration uses the existing normalized ordered reference lists,
 with fixed category sequence Video → Commissioned → Graphic. No schema was changed.
-Index, Navigation and Legal remain local. The detail renderer and Vimeo player
+Navigation and Site Settings now drive global labels/order, branding, metadata and
+shared contact/footer links through the existing public read. Legal bodies now use their published Display title and restricted formatted text,
+with per-document local fallback only when unavailable.
+Index now consumes its independently ordered
+entries and own preview images; enabled project titles link to details. Missing
+Index documents retain local fallback, while valid empty lists stay empty.
+The detail renderer and Vimeo player
 implementation were not changed during the Selected Work connection.
 
 

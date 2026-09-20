@@ -165,6 +165,11 @@ test('Index-only entries, overrides and images remain independent of projects', 
   assert.equal(entries.length, 4);
   assert.deepEqual(entries.map(e => e.title), ['Independent', 'one', 'Custom', 'Still usable']);
   assert.equal(entries[0].projectId, null);
+  assert.equal(entries[0].detailHref, null);
+  assert.equal(entries[1].detailHref, '#project/one');
+  assert.equal(entries[3].detailHref, null);
+  const disabled = data.normalize(fixture({projects: [project('one', 'Video', {detailPageEnabled: false})], indexPage: doc('indexPage', {entries: [{project: {_ref: 'one'}, previewImages: [preview]}]})}));
+  assert.equal(disabled.indexPage.entries[0].detailHref, null);
   assert.equal(entries[0].layout, 'half');
   assert.equal(entries[1].additionalInfo, 'Client');
   assert.equal(entries[1].year, '2026');

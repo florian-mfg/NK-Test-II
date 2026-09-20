@@ -42,8 +42,8 @@ test('Info updates only existing paragraphs and respects published empty arrays'
     const {document} = app.window;
     const root = document.querySelector('.info');
     const wrappers = [...root.querySelectorAll('section, div, h2, p')];
-    const header = document.querySelector('.site-header').outerHTML;
-    const menu = document.querySelector('.mobile-menu').outerHTML;
+    const header = document.querySelector('.main-nav').outerHTML;
+    const menu = document.querySelector('.mobile-menu nav').outerHTML;
     const scrollCount = app.scrollCalls.length;
     await app.settle(success(content()));
     assert.equal(document.querySelector('.info-intro').textContent, 'Berliner Boy');
@@ -53,8 +53,8 @@ test('Info updates only existing paragraphs and respects published empty arrays'
     assert.equal(document.querySelector('.info-clients p').innerHTML, '');
     assert.equal(document.querySelector('.info-contact a').href, 'mailto:published@example.com');
     assert.deepEqual([...root.querySelectorAll('section, div, h2, p')], wrappers);
-    assert.equal(document.querySelector('.site-header').outerHTML, header);
-    assert.equal(document.querySelector('.mobile-menu').outerHTML, menu);
+    assert.equal(document.querySelector('.main-nav').outerHTML, header);
+    assert.equal(document.querySelector('.mobile-menu nav').outerHTML, menu);
     assert.equal(app.scrollCalls.length, scrollCount);
     assert.equal(app.requests(), 1);
     app.window.renderInfo();
@@ -129,7 +129,7 @@ test('late published content wins after scrolling or focus without resetting scr
 });
 
 test('other routes keep their local DOM and direct project routing during async loading', async () => {
-  for (const hash of ['#home', '#archive', '#imprint', '#privacy-policy']) {
+  for (const hash of ['#home', '#imprint', '#privacy-policy']) {
     const app = setup(hash);
     try {
       const initial = app.window.document.querySelector('#app').innerHTML;

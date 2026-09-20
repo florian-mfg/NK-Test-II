@@ -82,6 +82,11 @@ Ethereal Tides demonstrates all three sizes.
 
 ## Index additional info
 
+Published Sanity Index entries control the list and its order. Their own preview
+images drive the existing hover/click and mobile interactions. Linked project
+titles open details; the rest of each row keeps its preview/selection action.
+The following local data remains only as a request/document failure fallback.
+
 The sixth value of an `ARCHIVE_PROJECTS` entry in `app.js` is optional free text
 shown beside its title, such as a client or brand name. Omit it or use an empty
 string to leave the field blank. The fifth value remains the layout override;

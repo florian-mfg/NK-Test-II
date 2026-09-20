@@ -127,7 +127,7 @@ test('disabled detail projects remain visible without detail links; malformed co
 });
 
 test('late Selected Work response respects the active category and does not replace unrelated routes', async () => {
-  for (const hash of ['#info', '#home', '#archive', '#imprint', '#privacy-policy']) {
+  for (const hash of ['#info', '#home', '#imprint', '#privacy-policy']) {
     const app = setup();
     try {
       app.window.location.hash=hash; app.window.route();
@@ -145,7 +145,7 @@ test('late Selected Work response respects the active category and does not repl
   } finally {app.dom.window.close();}
 });
 
-test('live Selected Work Video resolves Ethereal Tides and opens its Sanity detail', {skip:!process.env.INFO_LIVE_SMOKE}, async () => {
+test('live Selected Work uses the published explicit image preview and opens its Sanity detail', {skip:!process.env.INFO_LIVE_SMOKE}, async () => {
   const result=await adapter.load();
   assert.equal(result.ok,true,JSON.stringify(result.error));
   assert.deepEqual(result.data.selectedWork?.video,['ethereal-tides']);
@@ -154,20 +154,23 @@ test('live Selected Work Video resolves Ethereal Tides and opens its Sanity deta
   const app=setup();
   try {
     await app.settle(result);
-    const expected=result.data.selectedWork.video.filter(id=>result.data.projectsById[id]?.modulesValid);
+    const expected=result.data.selectedWork.video.filter(id=>{
+      const project=result.data.projectsById[id];
+      return project && (project.selectedWorkPreview || project.modulesValid);
+    });
     assert.deepEqual(ids(app),expected);
     const article=app.window.document.querySelector('[data-project="ethereal-tides"]');
     assert.ok(article);
     assert.equal(app.window.document.querySelectorAll('[data-project="ethereal-tides"]').length,1);
     assert.equal(article.querySelectorAll('.project-module-preview').length,1);
     assert.equal(article.querySelectorAll('.project-title').length,1);
-    const video=article.querySelector('iframe');
-    assert.ok(video?.src.includes('/video/1226319421'));
-    const url=new URL(video.src);
-    assert.equal(url.searchParams.get('autoplay'),'1');
-    assert.equal(url.searchParams.get('muted'),'1');
-    assert.equal(url.searchParams.get('loop'),'1');
-    assert.equal(url.searchParams.get('controls'),'0');
+    const preview=result.data.projectsById['ethereal-tides'].selectedWorkPreview;
+    assert.equal(preview?.type,'image');
+    const image=article.querySelector('.project-module-preview img');
+    assert.ok(image);
+    assert.equal(image.getAttribute('src'),preview.src);
+    assert.equal(image.getAttribute('alt'),preview.alt ?? 'Ethereal Tides');
+    assert.equal(article.querySelector('iframe'),null);
     assert.equal(article.querySelector('button'),null);
     app.window.location.hash=article.querySelector('.project-link').hash;
     app.window.route(); await flush();

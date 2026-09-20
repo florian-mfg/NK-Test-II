@@ -71,11 +71,12 @@ function arrangeArchive(projects) {
 const ARCHIVE_DISPLAY_PROJECTS = arrangeArchive(ARCHIVE_PROJECTS);
 
 const app = document.querySelector("#app");
-// Connected pages share one snapshot; Index, Navigation and Legal stay local.
+// Connected pages and global settings share one public content snapshot.
 let sanityContent = null;
 let sanityLoadSettled = false;
 const renderedDetailProjects = new WeakMap();
 const renderedWorkPages = new WeakMap();
+const renderedIndexPages = new WeakMap();
 const WORK_CATEGORIES = ["Video", "Commissioned", "Graphic"];
 const hydratedInfoPages = new WeakSet();
 const header = document.querySelector(".site-header");
@@ -151,7 +152,9 @@ let headerFrame;
 let cleanupPage = () => {};
 
 function image(src, alt = "") { return `<img src="${src}" alt="${alt}" loading="lazy">`; }
+let currentPageRoute = "";
 function setCurrentPage(route) {
+  currentPageRoute = route;
   document.querySelectorAll("[data-route]").forEach(link => {
     const active = link.dataset.route === route || (link.dataset.route === "work" && route.startsWith("work/"));
     link.classList.toggle("active", active);
@@ -167,8 +170,17 @@ function fitWorkMenu() {
   // Match the visible gaps using upright text widths, so hover cannot move the links.
   menuMeasureContext.font = `normal ${style.fontWeight} 100px ${style.fontFamily}`;
   const selectedWidth = menuMeasureContext.measureText(workToggle.textContent).width / 100;
-  const indexWidth = menuMeasureContext.measureText("Index").width / 100;
-  header.style.setProperty("--index-menu-width", `${7 - selectedWidth + indexWidth}em`);
+  const indexWidth = menuMeasureContext.measureText(document.querySelector('.main-nav [data-route="archive"]')?.textContent || "").width / 100;
+  header.style.setProperty("--index-menu-width", `${Math.max(indexWidth, 7 - selectedWidth + indexWidth)}em`);
+  if (sanityContent?.availability?.navigation === "present") {
+    const nav = document.querySelector(".main-nav");
+    nav.style.gridTemplateColumns = [...nav.children].filter(node => !node.hidden).map(node => {
+      const link = node === workMenu ? workToggle : node;
+      const width = menuMeasureContext.measureText(link.textContent).width / 100;
+      return node === workMenu ? `${Math.max(7, width)}em` : link.dataset.route === "archive"
+        ? "var(--index-menu-width, 2.6em)" : `${Math.max(2, width)}em`;
+    }).join(" ");
+  }
   const bounds = workSubmenu.getBoundingClientRect();
   const viewport = document.documentElement;
   const edge = parseFloat(getComputedStyle(header).right) || 12;
@@ -199,6 +211,104 @@ function setWorkMenu(open) {
   workMenu.classList.toggle("is-open", open);
   workToggle.setAttribute("aria-expanded", String(open));
   workSubmenu.inert = !open;
+}
+
+// Global bindings update only existing interface nodes, never the active page/player.
+function applySanityFooter() {
+  const settings = sanityContent?.siteSettings;
+  const footer = app.querySelector(".project-footer-links");
+  if (!settings || !footer) return;
+  // These four destinations belong to the fixed project footer, independently of
+  // the optional editorial footerLinks array. Missing contacts are safely omitted.
+  const links = [
+    {href: settings.contacts.email?.href, label: "Mail"},
+    {href: settings.contacts.instagram?.href, label: "Instagram", newTab: true},
+    {href: "#imprint", label: "Imprint"},
+    {href: "#privacy-policy", label: "Privacy Policy"}
+  ].filter(link => link.href);
+  footer.replaceChildren(...links.map(link => {
+    const anchor = document.createElement("a");
+    anchor.href = link.href;
+    anchor.textContent = link.label;
+    if (link.newTab) {
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+    }
+    return anchor;
+  }));
+}
+
+function applySanityGlobals() {
+  const settings = sanityContent?.siteSettings;
+  const navigation = sanityContent?.navigation;
+  const hasNavigation = sanityContent?.availability?.navigation === "present";
+  const brand = hasNavigation ? navigation.home.label : settings?.brandName;
+  // With neither document available the original HTML remains the fallback.
+  if (brand !== undefined && (settings || brand)) {
+    document.querySelectorAll(".brand").forEach(node => { node.textContent = brand; });
+  }
+  if (settings) {
+    document.title = settings.defaultPageTitle;
+    document.querySelector('meta[name="description"]').content = settings.defaultDescription;
+    let social = document.querySelector('meta[property="og:image"]');
+    if (settings.socialImage) {
+      if (!social) {
+        social = document.createElement("meta");
+        social.setAttribute("property", "og:image");
+        document.head.append(social);
+      }
+      social.content = settings.socialImage.src;
+    } else social?.remove();
+    applySanityFooter();
+  }
+  const contact = mobileMenu.querySelector(".mobile-menu-mail");
+  // Missing settings alone retain the local contact; published emptiness removes it.
+  if (settings || (hasNavigation && !navigation.mobileContact &&
+      !sanityContent.issues.some(issue => issue.path === "navigation.mobileContact" && issue.code === "missing_contact"))) {
+    const link = hasNavigation ? navigation.mobileContact : settings.contacts.email &&
+      {href: settings.contacts.email.href, label: contact.textContent};
+    contact.hidden = !link;
+    contact.style.display = link ? "" : "none";
+    if (link) { contact.href = link.href; contact.textContent = link.label; }
+    else contact.removeAttribute("href");
+  }
+  if (!hasNavigation) return;
+  for (const container of [document.querySelector(".main-nav"), mobileMenu.querySelector("nav")]) {
+    const desktop = container.classList.contains("main-nav");
+    const group = container.querySelector(desktop ? ".work-menu" : ".mobile-menu-work");
+    const nodes = new Map([...container.children].map(node =>
+      [node === group ? "work" : node.dataset.route, node]));
+    const seen = new Set();
+    for (const item of navigation.items) {
+      if (seen.has(item.destination)) continue;
+      seen.add(item.destination);
+      let node = nodes.get(item.destination);
+      if (!node) {
+        node = document.createElement("a");
+        node.dataset.route = item.destination;
+        if (!desktop) node.className = "mobile-menu-section";
+        nodes.set(item.destination, node);
+      }
+      const anchor = node === group ? node.querySelector('[data-route="work"]') : node;
+      anchor.textContent = item.label;
+      anchor.href = item.href;
+      node.hidden = false;
+      node.style.display = "";
+      container.append(node);
+    }
+    for (const [destination, node] of nodes) {
+      if (!seen.has(destination)) { node.hidden = true; node.style.display = "none"; }
+    }
+    const categories = desktop ? workSubmenu : group;
+    for (const category of navigation.categories) {
+      const link = categories.querySelector(`[data-route="${category.destination}"]`);
+      link.textContent = category.label;
+      categories.append(link);
+    }
+
+  }
+  setCurrentPage(currentPageRoute);
+  fitWorkMenu();
 }
 
 function applySanityHome() {
@@ -296,18 +406,47 @@ function renderWork(category = "Video") {
 function renderArchive() {
   document.body.className = "is-index";
   setCurrentPage("archive");
-  app.innerHTML = `<section class="archive"><div class="archive-background" aria-hidden="true">${image(ARCHIVE_DISPLAY_PROJECTS[0].images[0])}</div><div class="archive-list">${ARCHIVE_DISPLAY_PROJECTS.map((p, i) => `<button class="archive-row" data-index="${i}"><span>${p.title}</span><span class="archive-additional-info">${escapeModuleAttribute(p.additionalInfo)}</span></button>`).join("")}</div></section>`;
+  const unavailable = !sanityContent?.indexPage || sanityContent.issues.some(issue =>
+    issue.path === "indexPage.entries" && issue.code === "invalid_array");
+  // The legacy category arrangement applies only to the local fallback.
+  const entries = unavailable ? ARCHIVE_DISPLAY_PROJECTS : sanityContent.indexPage.entries;
+  const current = app.querySelector(".archive");
+  if (renderedIndexPages.get(current) === entries) return;
+  if (!sanityLoadSettled) {
+    app.innerHTML = `<section class="archive" aria-busy="true" aria-label="Loading Index"><div class="archive-background" aria-hidden="true"></div><div class="archive-list"></div></section>`;
+    return;
+  }
+  const entryMarkup = (entry, index) => {
+    const title = escapeModuleAttribute(entry.title);
+    const info = `<span class="archive-additional-info">${escapeModuleAttribute(entry.additionalInfo || "")}</span>`;
+    const attributes = `class="archive-row" data-index="${index}" data-year="${escapeModuleAttribute(entry.year || "")}"`;
+    return entry.detailHref
+      ? `<div ${attributes} role="group"><span><a href="${escapeModuleAttribute(entry.detailHref)}">${title}</a></span><button class="archive-preview-cycle" type="button" aria-label="Next preview for ${title}">${info}</button></div>`
+      : `<button ${attributes} type="button"><span>${title}</span>${info}</button>`;
+  };
+  app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true">${entries[0]?.images?.[0] ? image(entries[0].images[0]) : ""}</div><div class="archive-list">${entries.map(entryMarkup).join("")}</div></section>`;
+  renderedIndexPages.set(app.querySelector(".archive"), entries);
   const bg = document.querySelector(".archive-background");
   const bgImage = bg.querySelector("img");
-  bgImage.loading = "eager";
+  if (bgImage) bgImage.loading = "eager";
   const list = document.querySelector(".archive-list");
   const rows = [...list.querySelectorAll(".archive-row")];
+  if (!rows.length) return;
   const mobile = window.matchMedia("(max-width: 700px)");
   const events = new AbortController();
   let activeRow = -1;
   let frame = 0;
   let scrollFrame;
   const showProjectImage = (project, imageIndex) => {
+    if (!bgImage || !project?.images?.length) {
+      bg.classList.remove("visible");
+      return;
+    }
+    const media = project.previewImages?.[imageIndex % project.images.length];
+    bgImage.alt = media?.alt ?? "";
+    // Reuse the module image crop/hotspot mapping without changing Index sizing.
+    const position = moduleImagePosition(media);
+    bgImage.style.cssText = position ? position.slice(' style="'.length, -1) : "";
     const half = !mobile.matches && (project.layout === "half") !== (imageIndex % 2 === 1);
     bg.classList.toggle("half", half);
     bg.classList.toggle("full", !half);
@@ -326,7 +465,7 @@ function renderArchive() {
       else row.removeAttribute("aria-current");
     });
     activeRow = next;
-    showProjectImage(ARCHIVE_DISPLAY_PROJECTS[next], 0);
+    showProjectImage(entries[next], 0);
   };
   list.addEventListener("scroll", () => {
     if (!mobile.matches || scrollFrame) return;
@@ -340,16 +479,17 @@ function renderArchive() {
       if (mobile.matches) return;
       activeRow = Number(row.dataset.index);
       frame = 0;
-      showProjectImage(ARCHIVE_DISPLAY_PROJECTS[activeRow], frame);
+      showProjectImage(entries[activeRow], frame);
     });
-    row.addEventListener("click", () => {
+    row.addEventListener("click", event => {
+      if (event.target.closest("a")) return;
       if (mobile.matches) {
         list.scrollTo({ top: row.offsetTop, behavior: "auto" });
         updateMobileProject();
         return;
       }
       const rowIndex = Number(row.dataset.index);
-      const project = ARCHIVE_DISPLAY_PROJECTS[rowIndex];
+      const project = entries[rowIndex];
       frame = activeRow === rowIndex ? frame + 1 : 0;
       activeRow = rowIndex;
       showProjectImage(project, frame);
@@ -415,10 +555,12 @@ async function loadInfoContent() {
     const result = await SanityData.load();
     if (!result.ok) return;
     sanityContent = result.data;
+    applySanityGlobals();
     // Update the existing paragraphs even after interaction. Rerunning route()
     // would reset scrolling and menus; applySanityInfo only touches active Info.
     applySanityInfo();
     applySanityHome();
+    applySanityLegal();
   } catch {
     // Existing local content remains the fallback, including offline use.
   } finally {
@@ -429,6 +571,7 @@ async function loadInfoContent() {
     if (pending && page === "project" && pending.dataset.projectId === (id || "")) renderProject(id);
     const pendingWork = app.querySelector(".work[aria-busy='true']");
     if (pendingWork && page === "work" && pendingWork.dataset.category === workCategory(id)) renderWork(id);
+    if (page === "archive" && app.querySelector(".archive[aria-busy='true']")) renderArchive();
   }
 }
 
@@ -453,12 +596,78 @@ function renderInfo() {
   applySanityInfo();
 }
 
+// Render only the adapter's restricted Portable Text model using DOM text nodes.
+function renderLegalBody(blocks) {
+  const fragment = document.createDocumentFragment();
+  const lists = [];
+  for (const block of blocks) {
+    let parent = fragment;
+    if (block.listItem) {
+      const tag = block.listItem === "number" ? "ol" : "ul";
+      // Normalize skipped levels without allocating arbitrary-depth empty lists.
+      const level = Math.min(block.level || 1, lists.length + 1);
+      while (lists.length > level) lists.pop();
+      if (lists.length === level && lists.at(-1).tag !== tag) lists.pop();
+      if (lists.length < level) {
+        const list = document.createElement(tag);
+        (lists.at(-1)?.node.lastElementChild || fragment).append(list);
+        lists.push({tag, node: list});
+      }
+      parent = document.createElement("li");
+      lists.at(-1).node.append(parent);
+    } else lists.length = 0;
+    const element = document.createElement(block.style === "h2" ? "h2" : block.listItem ? "span" : "p");
+    for (const span of block.children) {
+      let node = document.createDocumentFragment();
+      span.text.split(/\r?\n/).forEach((line, index) => {
+        if (index) node.append(document.createElement("br"));
+        node.append(document.createTextNode(line));
+      });
+      let linked = false;
+      for (const mark of [...new Set(span.marks)]) {
+        let wrapper;
+        if (mark === "strong" || mark === "em") wrapper = document.createElement(mark);
+        else {
+          const definition = block.markDefs.find(item => item._key === mark);
+          if (!definition || linked) continue;
+          // Defence in depth: never accept executable or credential-bearing URLs.
+          let url;
+          try { url = new URL(definition.href); } catch { continue; }
+          if (!["http:", "https:", "mailto:", "tel:"].includes(url.protocol) || url.username || url.password) continue;
+          wrapper = document.createElement("a");
+          wrapper.href = url.href;
+          linked = true;
+        }
+        wrapper.append(node);
+        node = wrapper;
+      }
+      element.append(node);
+    }
+    parent.append(element);
+  }
+  return fragment;
+}
+
+const hydratedLegalPages = new WeakSet();
+function applySanityLegal() {
+  const article = app.querySelector(".legal-page");
+  const page = article && sanityContent?.legalPages?.[article.dataset.legalPage];
+  if (!page || hydratedLegalPages.has(article)) return;
+  article.querySelector("h1").textContent = page.title;
+  const copy = article.querySelector(".legal-copy");
+  const navigation = copy.querySelector('nav[aria-label="Legal pages"]');
+  // Keep the existing navigation node and listeners, replacing only editorial text.
+  [...copy.childNodes].forEach(node => { if (node !== navigation) node.remove(); });
+  copy.insertBefore(renderLegalBody(page.body), navigation);
+  hydratedLegalPages.add(article);
+}
+
 function renderLegal(page) {
   const isImprint = page === "imprint";
   const title = isImprint ? "Imprint" : "Privacy Policy";
   document.body.className = "is-legal";
   setCurrentPage(page);
-  app.innerHTML = `<article class="legal-page">
+  app.innerHTML = `<article class="legal-page" data-legal-page="${page}">
     <h1>${title}</h1>
     <div class="legal-copy">
       ${isImprint ? `<section><h2>Contact</h2><p>Nicolas Kawohl<br><a href="mailto:mail@nicolas-kawohl.com">mail@nicolas-kawohl.com</a></p></section>` : ""}
@@ -469,6 +678,7 @@ function renderLegal(page) {
       </nav>
     </div>
   </article>`;
+  applySanityLegal();
 }
 
 function renderProject(id) {
@@ -515,12 +725,13 @@ function renderProject(id) {
   </div>
   <footer class="project-footer" aria-label="Contact and legal information">
     <nav class="project-footer-links" aria-label="Footer">
-      <a href="https://www.instagram.com/nicocaw/">Instagram</a>
       <a href="mailto:mail@nicolas-kawohl.com">Mail</a>
+      <a href="https://www.instagram.com/nicocaw/" target="_blank" rel="noopener noreferrer">Instagram</a>
       <a href="#imprint">Imprint</a>
       <a href="#privacy-policy">Privacy Policy</a>
     </nav>
   </footer>`;
+  applySanityFooter();
   renderedDetailProjects.set(app.querySelector(".detail"), project);
   cleanupPage = initProjectVideos(app);
 }
@@ -532,6 +743,7 @@ function route() {
   if (activePage === "project" && detail?.dataset.projectId === activeId && renderedDetailProjects.has(detail)) return;
   const work = app.querySelector(".work");
   if (activePage === "work" && work?.dataset.category === workCategory(activeId) && renderedWorkPages.has(work)) return;
+  if (activePage === "archive" && renderedIndexPages.has(app.querySelector(".archive"))) return;
   closeMobileMenu();
   cleanupPage();
   cleanupPage = () => {};

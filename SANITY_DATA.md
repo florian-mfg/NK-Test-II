@@ -2,10 +2,10 @@
 
 `index.html` loads `sanity-data.js` before `app.js`. The adapter itself has no
 side effects; `app.js` calls `load()` once at startup and caches the result. Only
-Info, Frontpage, project details and Selected Work consume the snapshot. Info uses Site
-Settings for contact links. Index, Navigation and Legal retain local content.
+Info, Frontpage, project details, Selected Work, Index, Navigation and Site Settings
+consume the snapshot. Legal pages use the same snapshot.
 Local projects remain available as migration fallbacks.
-Site Settings does not change global branding, metadata, navigation or footers.
+Site Settings supplies global branding, browser metadata, shared contacts and project footer links.
 
 ## Interface
 
@@ -116,23 +116,33 @@ privacy hash, while playback parameters and visual presentation remain frontend
 responsibilities. Unsupported video URLs yield video:null with an issue; the poster
 is retained. Other video hosts/URL formats require a later explicit decision.
 
-## Navigation and Index decisions
+## Navigation and Site Settings integration
 
-Navigation exposes a single shared category list for desktop and mobile. Its
-initial/fallback order is Video → Commissioned → Graphic. A valid published CMS
-list controls future ordering and labels; destinations remain work/video,
-work/commissioned, and work/graphic. Missing categories are appended in default
-order; duplicate or unknown destinations are omitted with diagnostics.
+The shared one-time public read updates existing desktop/mobile menu nodes in place.
+Published main-menu order and labels are authoritative; destinations and hash routes
+remain fixed. Duplicate destinations are ignored. Both menus share normalized category
+order: Video → Commissioned → Graphic unless explicitly ordered in CMS. Missing
+categories are appended in that default order. Menu measurement uses actual labels,
+not the literal “Index”; existing dropdown, dialog and active-state handlers remain.
 
-The existing Studio navigation schema still initializes new documents in its
-previous order (Commissioned, Graphic, Video). This step does not change schemas
-or documents. Before activating CMS navigation, set/publish the approved initial
-order in the navigation document; an explicitly stored CMS order is never silently
-overridden by the adapter. Visible navigation has not changed.
+Site Settings updates the two brand links (Navigation homeLabel can override them),
+browser title, description, optional og:image, mobile contact, and project footer links.
+Info continues using its existing shared contact selectors. Blank browser titles use
+CMS brandName as specified by the schema. Empty optional contacts, description, social
+image and footer arrays do not restore local examples. Missing documents or failed
+requests retain their local fallback independently. No new visible contact sections
+are added. Legal bodies independently use their published documents.
 
-Shared contact selectors resolve through Site Settings; invalid/missing contact
-addresses omit the link with a diagnostic. Home label falls back to the brand name.
-The adapter does not invent local brand/contact content when settings are absent.
+Social metadata is applied client-side; social crawlers that do not execute JavaScript
+may not see the CMS image. No build-time publishing system is introduced.
+
+Tests: `node --test tests/navigation-settings.test.cjs`; add `INFO_LIVE_SMOKE=1`
+for read-only published-data validation. At implementation, Site Settings was present
+and Navigation was missing. Publish Navigation manually to test real editorial labels
+and ordering. No content or schema changes were made. The Studio's existing initial
+category order is preserved; once published, explicit CMS ordering wins.
+
+## Index decisions
 
 Index entries never derive preview images from project modules and never pass
 through the old archive sorting algorithm. They can stand alone. Missing related
@@ -142,6 +152,25 @@ omitted with an issue. Missing title/year/info inherit from a valid related proj
 An explicitly empty additionalInfo string suppresses inheritance, while an absent
 field inherits. Existing schema/editor behavior may unset an empty string; adding
 an explicit suppress-inheritance control would be a separate schema decision.
+
+## Index integration
+
+`#archive` uses the normalized `indexPage.entries` in exact CMS order. It waits
+for the shared load before displaying entries. A valid empty list stays empty;
+request failures, missing documents and malformed entry arrays use the existing
+arranged local archive. Entries without usable titles or preview images are omitted.
+
+Linked titles open enabled project details through the existing hash route; the
+rest of each row retains desktop preview cycling and mobile selection/scrolling.
+Independent and detail-disabled entries have no detail link. Own preview images
+retain alt text, crop and hotspot. Repeated routing preserves the current Index DOM;
+a late response cannot replace another active page. Legal uses the same shared snapshot.
+
+Validation uses `node --test tests/index-page.test.cjs tests/sanity-data.test.cjs`.
+Set `INFO_LIVE_SMOKE=1` to additionally check the current published response. During
+this integration the live response contained no published Index document, so the
+live check exercised the genuine missing-document fallback. Publish Index manually
+to verify its actual entries in the browser. No CMS content was changed.
 
 ## Frontpage integration
 
@@ -334,3 +363,23 @@ No preview is automatically populated or published. Nicolas can add an image or
 Vimeo URL under Projects → Selected Work Preview, above Project Modules. The object
 reuses media-slot image/Vimeo/poster/alt fields and validation but offers only Image
 or Vimeo Video, without text, empty, upload-video or composition controls.
+
+## Legal integration
+
+`#imprint` and `#privacy-policy` hydrate only the existing Legal heading and copy
+from their corresponding published documents. The existing Legal navigation node,
+route, scroll position and layout stay intact; later route visits use cached data.
+A missing document or failed request leaves that page's local fallback intact.
+Published bodies replace all local text/contact placeholders, including when empty.
+Blank or absent Display title remains blank; no local title is injected.
+
+The dependency-free DOM renderer supports only paragraphs, h2, strong, em, bullet
+and numbered lists (including nesting), line breaks and http/https/mailto/tel links.
+It uses text nodes, restricted element names and validated URLs. Unsupported content
+is omitted by the adapter. The Legal-only strong rule permits synthetic bold because
+the existing font assets contain only light weights; other typography is unchanged.
+
+Run `node --test tests/legal-pages.test.cjs`, optionally with `INFO_LIVE_SMOKE=1`.
+Read-only live validation retrieved “This is the test imprint from Sanity.” and
+“This is the test privacy policy from Sanity.” No CMS documents were changed.
+All planned page connections are now implemented; missing documents still use fallback.

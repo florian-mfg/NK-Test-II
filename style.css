@@ -206,6 +206,7 @@ body.mobile-menu-open { overflow: hidden; }
 .archive-background.visible img { opacity: 1; }
 .archive-list { width: 100%; position: relative; z-index: 2; }
 .archive-row { display: grid; grid-template-columns: 51% minmax(0, 1fr); width: 100%; border: 0; padding: .12em 0; color: inherit; background: transparent; text-align: left; cursor: pointer; line-height: 1.28; }
+.archive-preview-cycle { border: 0; padding: 0; background: transparent; color: inherit; font: inherit; line-height: inherit; text-align: left; cursor: pointer; }
 .archive-row:hover { color: var(--ink); }
 .archive-row:hover span { font-style: italic; }
 .is-index,
@@ -230,6 +231,7 @@ body.mobile-menu-open { overflow: hidden; }
 .legal-copy { max-width: 38rem; min-width: 0; line-height: 1.3; overflow-wrap: anywhere; }
 .legal-copy h2 { margin: 0 0 .5rem; font: inherit; }
 .legal-copy p { margin: 0 0 2rem; }
+.legal-copy strong { font-synthesis: weight; }
 .legal-copy nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 4rem; }
 .legal-copy a:hover, .legal-copy a[aria-current="page"] { font-style: italic; }
 .legal-copy a:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
@@ -376,6 +378,7 @@ noscript {
   .archive-row span,
   .archive-row:hover span { font-style: normal; }
   .archive-row.is-active > span { font-style: italic; }
+  .archive-preview-cycle,
   .archive-additional-info,
   .archive-additional-info.has-category { display: none; }
   .info-intro { max-width: none; }

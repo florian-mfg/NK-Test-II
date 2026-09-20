@@ -227,7 +227,7 @@
   }
   function legalBody(value, issues, path) {
     // Return a restricted Portable Text tree, never HTML. List grouping and DOM
-    // creation belong to the later legal renderer.
+    // creation belong to the restricted frontend legal renderer.
     return array(value, issues, path).flatMap((block, index) => {
       if (!record(block) || block._type !== 'block' || !Array.isArray(block.children)) {
         issue(issues, `${path}[${index}]`, 'invalid_block', 'Unsupported legal block omitted.'); return [];
@@ -381,6 +381,7 @@
       const layout = ['full', 'half'].includes(entry.initialLayout) ? entry.initialLayout : 'full';
       if (entry.initialLayout != null && entry.initialLayout !== layout) issue(issues, `${path}.initialLayout`, 'invalid_layout', 'Invalid initial layout replaced with full.');
       return [{key: text(entry._key) || `entry-${index}`, projectId: project?.id ?? null, title,
+        detailHref: project && project.detailPageEnabled !== false ? `#project/${project.id}` : null,
         year: year(entry.yearOverride) || project?.year || '',
         additionalInfo: typeof entry.additionalInfo === 'string' ? entry.additionalInfo : project?.additionalInfo || '',
         layout, images: previews.map(preview => preview.src), previewImages: previews}];
@@ -392,7 +393,7 @@
       if (!record(page) || !own(legalPages, page.pageType) || page._id !== `legal-${page.pageType}` || page._type !== 'legalPage') {
         issue(issues, 'legalPages', 'invalid_legal_page', 'Unknown or mismatched legal page omitted.'); continue;
       }
-      legalPages[page.pageType] = {id: page.pageType, title: text(page.title) || (page.pageType === 'imprint' ? 'Imprint' : 'Privacy Policy'), body: legalBody(page.body, issues, `legalPages.${page.pageType}.body`)};
+      legalPages[page.pageType] = {id: page.pageType, title: string(page.title), body: legalBody(page.body, issues, `legalPages.${page.pageType}.body`)};
     }
     return {homePage, siteSettings, navigation, infoPage, projects, projectsById, selectedWork, indexPage, legalPages, availability, issues};
   }
