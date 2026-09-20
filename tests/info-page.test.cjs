@@ -28,7 +28,7 @@ function setup(hash = '#info') {
   let resolve, reject, requests = 0;
   const pending = new Promise((yes, no) => {resolve = yes; reject = no;});
   window.SanityData = {load: () => {requests++; return pending;}};
-  for (const file of ['projects.js', 'project-modules.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
+  for (const file of ['projects.js', 'vimeo-media.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
   window.fitWorkMenu();
   const flush = () => new Promise(yes => setImmediate(yes));
   return {window, dom, scrollCalls, requests: () => requests, reject: async () => {reject(new Error('offline')); await flush();},
@@ -129,7 +129,7 @@ test('late published content wins after scrolling or focus without resetting scr
 });
 
 test('other routes keep their local DOM and direct project routing during async loading', async () => {
-  for (const hash of ['#home', '#work/video', '#work/commissioned', '#work/graphic', '#project/ethereal-tides', '#archive', '#imprint', '#privacy-policy']) {
+  for (const hash of ['#home', '#work/video', '#work/commissioned', '#work/graphic', '#archive', '#imprint', '#privacy-policy']) {
     const app = setup(hash);
     try {
       const initial = app.window.document.querySelector('#app').innerHTML;

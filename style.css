@@ -159,6 +159,15 @@ body.mobile-menu-open { overflow: hidden; }
 .project-slot { grid-column: span var(--slot-span); min-width: 0; min-height: 0; margin: 0; overflow: hidden; }
 .project-slot > img, .project-slot > video { display: block; width: 100%; height: 100%; object-fit: cover; }
 .height-auto > .project-slot > img, .height-auto > .project-slot > video { height: auto; }
+/* Vimeo uses the existing slot dimensions. Only the video is scaled to cover. */
+.project-vimeo { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--dark); }
+.height-auto > .project-slot > .project-vimeo { height: auto; aspect-ratio: var(--video-ratio, 16 / 9); }
+.project-vimeo iframe { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; transform: translate(-50%, -50%); border: 0; pointer-events: none; }
+.project-video-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.project-video-toggle { position: absolute; z-index: 1; bottom: var(--pad); right: var(--pad); border: 0; padding: 0; background: transparent; cursor: pointer; }
+.project-video-toggle > img { display: block; width: 60px; height: 59px; }
+.project-video-toggle:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
+.project-video-toggle:disabled { cursor: default; }
 .project-slot-text {
   padding: var(--pad);
   background: var(--dark);

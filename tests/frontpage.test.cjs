@@ -23,7 +23,7 @@ function setup(hash = '#home') {
   let resolve, reject, requests = 0;
   const pending = new Promise((yes, no) => {resolve = yes; reject = no;});
   window.SanityData = {load: () => {requests++; return pending;}};
-  for (const file of ['projects.js', 'project-modules.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
+  for (const file of ['projects.js', 'vimeo-media.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
   window.fitWorkMenu();
   const flush = () => new Promise(yes => setImmediate(yes));
   return {window, dom, scrollCalls, requests: () => requests, reject: async () => {reject(new Error('offline')); await flush();},
@@ -113,7 +113,7 @@ test('request/document/video failures retain the exact local homepage', async ()
 });
 
 test('late Frontpage response leaves every other route intact and is cached for Home', async () => {
-  for (const hash of ['#info', '#work/video', '#work/commissioned', '#work/graphic', '#archive', '#project/ethereal-tides', '#imprint', '#privacy-policy']) {
+  for (const hash of ['#info', '#work/video', '#work/commissioned', '#work/graphic', '#archive', '#imprint', '#privacy-policy']) {
     const app = setup(hash);
     try {
       const initial = app.window.document.querySelector('#app').innerHTML;

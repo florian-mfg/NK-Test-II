@@ -71,8 +71,10 @@ function arrangeArchive(projects) {
 const ARCHIVE_DISPLAY_PROJECTS = arrangeArchive(ARCHIVE_PROJECTS);
 
 const app = document.querySelector("#app");
-// Only Info and Frontpage consume this snapshot. Other routes retain local data.
+// Info, Frontpage and project details consume this snapshot. Overviews stay local.
 let sanityContent = null;
+let sanityLoadSettled = false;
+const renderedDetailProjects = new WeakMap();
 const hydratedInfoPages = new WeakSet();
 const header = document.querySelector(".site-header");
 const workMenu = document.querySelector(".work-menu");
@@ -240,7 +242,7 @@ function renderWorkModule(module, project) {
   const empty = previewModule.slots.every(slot => slot == null);
   return `<section class="project-module-preview${empty ? " is-empty" : ""}" aria-label="${title}">
     <a class="project-title" href="${href}" aria-label="Open ${title}"><span>${title}</span>${project.additionalInfo ? `<span class="project-additional-info">${escapeModuleAttribute(project.additionalInfo)}</span>` : ""}</a>
-    ${renderProjectModule(previewModule, project.title)}
+    ${renderProjectModule(previewModule, project.title, "overview")}
   </section>`;
 }
 
@@ -255,6 +257,7 @@ function renderWork(category = "Graphic") {
       ${i === WORK_PROJECTS.length - 1 ? `<span class="project-kind">${p.category}</span>` : ""}
     </article>`).join("");
   app.innerHTML = `<section class="work"><div class="projects">${projects}</div></section>`;
+  cleanupPage = initProjectVideos(app);
 }
 
 function renderArchive() {
@@ -384,7 +387,13 @@ async function loadInfoContent() {
     applySanityInfo();
     applySanityHome();
   } catch {
-    // Existing local Info and Frontpage markup remain the fallback, including offline use.
+    // Existing local content remains the fallback, including offline use.
+  } finally {
+    sanityLoadSettled = true;
+    const pending = app.querySelector(".detail[aria-busy='true']");
+    const [page, id] = location.hash.replace(/^#\/?/, "").split("/");
+    // Complete only the active pending detail. Never reroute or reset scrolling.
+    if (pending && page === "project" && pending.dataset.projectId === (id || "")) renderProject(id);
   }
 }
 
@@ -428,23 +437,45 @@ function renderLegal(page) {
 }
 
 function renderProject(id) {
-  const project = WORK_PROJECTS.find(p => p.id === id);
+  const localProject = WORK_PROJECTS.find(p => p.id === id);
+  if (!sanityLoadSettled) {
+    // Keep direct CMS-only hashes while the one shared request is pending. Do not
+    // create fallback players that would have to be replaced when it completes.
+    document.body.className = "is-detail";
+    setCurrentPage(localProject ? `work/${localProject.category.toLowerCase()}` : "work");
+    document.querySelector(".header-overview").href = localProject ? `#work/${localProject.category.toLowerCase()}` : "#work";
+    app.innerHTML = `<article class="detail" data-project-id="${escapeModuleAttribute(id || "")}" aria-busy="true" aria-label="Loading project"></article>`;
+    return;
+  }
+  const publishedProject = sanityContent?.projectsById?.[id];
+  const project = publishedProject || localProject;
   if (!project) { location.hash = "#work"; return; }
+  if (project.detailPageEnabled === false) { location.hash = `#work/${project.category.toLowerCase()}`; return; }
+  if (renderedDetailProjects.get(app.querySelector(".detail")) === project) return;
+  const modules = publishedProject ? project.detailModules || project.modules : project.modules;
+  const moduleMarkup = publishedProject
+    ? modules.map(module => module ? renderProjectModule(module, project.title, "detail") : "").join("")
+    : renderProjectModules(modules, project.title, "detail");
+  const paragraphs = value => value.trim() ? value.trim().split(/\r?\n\s*\r?\n/).map(paragraph =>
+    `<p>${escapeModuleAttribute(paragraph).replace(/\r?\n/g, "<br>")}</p>`).join("") : "";
   document.body.className = "is-detail";
   document.querySelector(".header-overview").href = `#work/${project.category.toLowerCase()}`;
   setCurrentPage(`work/${project.category.toLowerCase()}`);
   const description = `${project.title} explores image, material and movement through a sequence of composed visual studies. The work brings contrasting surfaces and perspectives into a shared visual language, creating an open dialogue between detail and landscape.`;
-  app.innerHTML = `<article class="detail">
+  const infoMarkup = publishedProject || typeof project.description === "string"
+    ? paragraphs(project.description || "")
+    : `<p>${escapeModuleAttribute(description)}</p>
+      <p>Set within a shifting visual environment, the project treats its setting as an active condition—one that obscures, reveals, and unsettles. Individual images form a layered reality in which clarity is deferred and meaning remains fluid, partial, and situational.</p>
+      <p>The process becomes a method of introspection and fragmentation, recomposing its subject through a sequence of alternate perspectives. The work questions the coherence of representation and considers how identity, material, and place are mediated and reimagined.</p>`;
+  app.innerHTML = `<article class="detail" data-project-id="${escapeModuleAttribute(project.id)}" data-project-source="${publishedProject ? "sanity" : "local"}" data-project-category="${escapeModuleAttribute(project.category)}" data-project-year="${escapeModuleAttribute(project.year || "")}" data-project-additional-info="${escapeModuleAttribute(project.additionalInfo || "")}">
     <a class="detail-back" href="#work/${project.category.toLowerCase()}">${escapeModuleAttribute(project.title)}</a>
     <button class="detail-info-label" type="button" data-project-info-open>Info</button>
-    <div class="project-modules">${renderProjectModules(project.modules, project.title)}</div>
+    <div class="project-modules">${moduleMarkup}</div>
   </article>
   <div class="detail-info-layer" aria-hidden="true">
-    <section class="detail-info-popup" role="dialog" aria-modal="true" aria-label="${project.title} information">
+    <section class="detail-info-popup" role="dialog" aria-modal="true" aria-label="${escapeModuleAttribute(project.title)} information">
       <button class="detail-info-close" type="button">(Close)</button>
-      <p>${description}</p>
-      <p>Set within a shifting visual environment, the project treats its setting as an active condition—one that obscures, reveals, and unsettles. Individual images form a layered reality in which clarity is deferred and meaning remains fluid, partial, and situational.</p>
-      <p>The process becomes a method of introspection and fragmentation, recomposing its subject through a sequence of alternate perspectives. The work questions the coherence of representation and considers how identity, material, and place are mediated and reimagined.</p>
+      ${infoMarkup}
     </section>
   </div>
   <footer class="project-footer" aria-label="Contact and legal information">
@@ -455,9 +486,15 @@ function renderProject(id) {
       <a href="#privacy-policy">Privacy Policy</a>
     </nav>
   </footer>`;
+  renderedDetailProjects.set(app.querySelector(".detail"), project);
+  cleanupPage = initProjectVideos(app);
 }
 
 function route() {
+  const activeHash = location.hash.replace(/^#\/?/, "") || "home";
+  const [activePage, activeId] = activeHash.split("/");
+  const detail = app.querySelector(".detail");
+  if (activePage === "project" && detail?.dataset.projectId === activeId && renderedDetailProjects.has(detail)) return;
   closeMobileMenu();
   cleanupPage();
   cleanupPage = () => {};

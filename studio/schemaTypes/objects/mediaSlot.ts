@@ -1,4 +1,10 @@
 import {defineField, defineType} from 'sanity'
+import '../../../vimeo-media.js'
+
+// This shared classic-script helper exposes a global, not an ESM default export.
+const vimeoMedia = (globalThis as typeof globalThis & {
+  VimeoMedia: typeof import('../../../vimeo-media.js')
+}).VimeoMedia
 
 export const mediaSlot = defineType({
   name: 'mediaSlot',
@@ -78,18 +84,23 @@ export const mediaSlot = defineType({
         ),
     }),
     defineField({
-      name: 'video',
-      title: 'Video',
-      type: 'file',
-      options: {accept: 'video/mp4,video/webm'},
-      description: 'Upload a browser-playable MP4 or WebM file. Plays with controls; no autoplay.',
+      name: 'vimeoUrl',
+      title: 'Vimeo URL',
+      type: 'url',
+      description: 'Paste an HTTPS vimeo.com or player.vimeo.com video URL, including its privacy hash for unlisted videos. No file upload needed.',
       hidden: ({parent}) => parent?.type !== 'video',
-      validation: (rule) =>
-        rule.custom((value, context) =>
-          (context.parent as {type?: string})?.type === 'video' && !value?.asset
-            ? 'Upload a video, or choose Empty.'
-            : true,
-        ),
+      validation: (rule) => rule.custom((value, context) =>
+        (context.parent as {type?: string})?.type !== 'video' || vimeoMedia.parseVimeoUrl(value)
+          ? true : 'Paste a valid HTTPS Vimeo video URL, or choose another media type.',
+      ),
+    }),
+    defineField({
+      name: 'video',
+      title: 'Legacy uploaded video (migration only)',
+      type: 'file',
+      readOnly: true,
+      description: 'Preserved existing upload. Paste its replacement Vimeo URL above; this file is no longer used for project playback. No data is deleted automatically.',
+      hidden: ({value}) => !value?.asset,
     }),
     defineField({
       name: 'poster',

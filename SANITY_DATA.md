@@ -1,15 +1,17 @@
-# Sanity data adapter and Info integration
+# Sanity data adapter and staged frontend integration
 
 `index.html` loads `sanity-data.js` before `app.js`. The adapter itself has no
 side effects; `app.js` calls `load()` once at startup and caches the result. Only
-Info and Frontpage consume the snapshot. Info uses Site Settings for contact links.
-Projects, Selected Work, Index, Navigation and Legal retain local content.
+Info, Frontpage and project detail routes consume the snapshot. Info uses Site
+Settings for contact links. Selected Work overviews, Index, Navigation and Legal
+retain local content. Local projects remain available as detail fallbacks.
 Site Settings does not change global branding, metadata, navigation or footers.
 
 ## Interface
 
 When explicitly loaded as a classic script, it exposes `globalThis.SanityData`.
-Node tests can use `require('./sanity-data.js')`. No packages are required.
+Node tests can use `require('./sanity-data.js')`. Browsers load `vimeo-media.js`
+before this adapter. No packages are required for the adapter.
 
 - `load({timeoutMs?, signal?})`: fetch and normalize the published public content.
   Returns `{ok: true, data, error: null}` or
@@ -76,16 +78,26 @@ Portable Text into HTML. Rich-text rendering remains a later integration task.
 - Text slots remain present; the existing overview renderer owns text suppression.
 - Invalid module/slot content flags the entire project composition as
   modulesValid:false and returns modules:[], retaining project metadata. This
-  avoids silently rendering a shortened composition. Consumers must check this flag.
+  strict contract remains available to future overview consumers. `detailModules`
+  separately preserves valid rows and replaces malformed rows with empty frames
+  only when their layout, height and order are valid. Unknown/malformed layouts
+  become null and are omitted by details without reordering healthy rows.
+  Diagnostics remain in `issues`; no local rows are mixed into CMS compositions.
 - Undefined modules are permitted as an empty collection, as in the Studio schema.
-  An enabled detail project with no modules still needs a future empty-page policy.
+  An enabled detail project with no modules renders its existing header/info/footer
+  with an empty module area, without injecting unrelated local modules.
 - Missing, duplicate, or wrong-category overview references are omitted with issues.
   A project can appear in Selected Work with its detail page disabled.
 
 Native asset references and query-expanded assets are supported. The production
 query dereferences assets, so deleted/missing assets become null and are diagnosed.
-URLs are restricted to the project’s public Sanity asset paths. Project video files
-must be MP4/WebM. Video controls and playback behavior remain renderer concerns.
+Image URLs are restricted to the project’s public Sanity asset paths. Project
+video slots require `vimeoUrl` and normalize to `{type: "video", src, vimeo, alt,
+poster?, posterImage?}`; `vimeo` contains the validated ID and canonical embed URL.
+The shared `vimeo-media.js` parser preserves privacy hashes and strips editorial
+playback parameters from the embed URL. Controls/playback are renderer concerns.
+Legacy upload-only slots produce `legacy_video_requires_migration` and invalidate
+the composition while retaining project metadata. No stored data is deleted.
 Module alt text comes from the slot: omitted stays undefined, explicitly empty stays
 empty. Posters retain their independent image metadata.
 
@@ -93,9 +105,10 @@ empty. Posters retain their independent image metadata.
 
 Image descriptors contain src, assetUrl, alt, original width/height, crop, cropRect,
 and hotspot. Valid editorial crop is applied to src with the Sanity rect parameter.
-Hotspot metadata is preserved without choosing a target aspect ratio or changing
-frontend geometry. Applying hotspot-aware cropping for actual desktop/mobile slot
-sizes is **not implemented in this adapter-only step**. No image resizing is forced.
+The module renderer maps hotspot center coordinates into the cropped image and
+uses CSS object-position for cover placement. The existing object-fit, dimensions
+and responsive geometry remain unchanged. Poster images use the same mapping.
+No image resizing or layout aspect ratio is forced.
 
 Homepage video descriptors support ordinary Vimeo URLs, player.vimeo.com URLs,
 unlisted privacy hashes, and direct HTTPS MP4/WebM URLs. Vimeo embedUrl retains the
@@ -156,7 +169,8 @@ it does not reroute, reset scroll, or touch other routes. Later visits reuse the
 same snapshot. No new request, token, dependency or hosting/build requirement is added.
 
 See `studio/CONTENT_MODEL.md` for the mandatory Vimeo-only project media plan.
-Project schema, query/normalization and module rendering changes are deferred.
+Project Vimeo schema, query/normalization and module rendering preparation is
+implemented. Detail routes now use published projects; Selected Work remains local.
 
 ## Info rendering and fallback
 
@@ -204,3 +218,53 @@ Vimeo source and “Nicolas Kawohl — Background Video” title, then confirms 
 three published Info values using that same response. Manual browser verification
 is still required for actual Vimeo playback/autoplay, origin restrictions and
 fullscreen appearance on desktop/mobile; JSDOM does not play embedded videos.
+
+Project Vimeo tests are in `tests/project-vimeo.test.cjs`; Studio validators are
+covered by `studio/tests/content-model.test.mjs`. They test URL forms/privacy,
+invalid/legacy media, every composition/height/arrangement, overview/detail policy,
+button state and API errors, cleanup, hidden categories and retained image/text
+behavior. The Vimeo SDK is separate from the one-time Sanity request; Frontpage
+and Info do not initialize project players. See `studio/CONTENT_MODEL.md` for the
+public upload audit, migration limits and required Vimeo browser checks.
+
+
+## Project detail integration
+
+`#project/<slug>` resolves `projectsById[slug]` from the existing one-time snapshot,
+independently of Selected Work membership. Published metadata/modules win; only
+explicit `detailPageEnabled === false` returns to the project's local category
+route. Missing published projects or request failure can use `WORK_PROJECTS`.
+Only a route absent from both sources returns to `#work` after loading completes.
+
+Initial detail visits retain the hash and render a minimal existing `.detail`
+container with `aria-busy` while waiting (up to the adapter's request timeout).
+No local fallback player is started while waiting, avoiding replacement/restarts.
+Completion fills only an active pending detail; it never invokes routing or
+scrollTo. Navigating away prevents a late response from replacing another page.
+Repeated renders of the same cached project preserve the live DOM/player; actual
+navigation destroys players through the existing cleanup callback.
+
+Title/category bind to the existing header and return links. Slug, source, year
+and additionalInfo are exposed as detail data attributes without introducing new
+visible metadata UI. Published Project Info is escaped plain text: blank lines
+make paragraphs, single line breaks become `<br>`. Empty published descriptions
+stay empty. Local fallback descriptions preserve the pre-integration placeholder
+when a local description is absent. Footer/contact/navigation sources are unchanged.
+
+Validation on 2026-09-20: live Ethereal Tides (`ethereal-tides`, title Ethereal Tides,
+year 2026) reached the real detail DOM with four modules in published order:
+Full/auto, Two Thirds + One Third/medium/reverse, Half + Half/medium,
+Half + Half/auto. The last contains Vimeo `1226319421`; the detail iframe receives
+its source with autoplay=0 and controls=0. The published description is currently
+empty. No content was edited to test this.
+
+All 48 frontend tests (including three live Sanity tests), 9 Studio tests, syntax
+checks and Studio TypeScript checks passed. Chrome confirmed a direct detail
+visit and overview/detail navigation using one request, published image alt/URLs,
+desktop widths and mobile stacking/empty-slot hiding. Overview content stayed local. A further 900 Chrome slot comparisons passed
+across all six layouts, five heights, both modes and three aspect ratios on
+desktop/mobile (mocked Vimeo dimensions, real CSS).
+The real Vimeo player timed out before readiness in this environment; SDK-backed
+SVG Play/Pause wiring is covered with mocked playback events, but actual playback
+must still be checked in the user's browser. Verify Play/Pause/resume, sound,
+portrait/landscape cover, posters and slow/offline navigation before deployment.

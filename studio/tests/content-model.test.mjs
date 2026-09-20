@@ -153,3 +153,24 @@ test('structure opens fixed documents with explicit legal initial values', () =>
     assert.ok(template?.value.pageType)
   }
 })
+
+test('shared video slots accept Vimeo URLs and preserve uploads only for migration', () => {
+  const slot = schemaTypes.find(type => type.name === 'mediaSlot')
+  const [validate] = validators(field(slot, 'vimeoUrl'))
+  for (const url of ['https://vimeo.com/12345', 'https://vimeo.com/12345/secret', 'https://player.vimeo.com/video/12345?h=secret&autoplay=1']) {
+    assert.equal(validate(url, {parent: {type: 'video'}}), true)
+  }
+  for (const url of [undefined, '', 'https://example.com/12345', 'https://vimeo.com/not-a-video', 'http://vimeo.com/12345']) {
+    assert.notEqual(validate(url, {parent: {type: 'video'}}), true)
+  }
+  assert.equal(validate(undefined, {parent: {type: 'empty'}}), true)
+  assert.equal(validate('bad retained value', {parent: {type: 'image'}}), true)
+  const legacy = field(slot, 'video')
+  assert.equal(legacy.readOnly, true)
+  assert.equal(legacy.hidden({value: undefined}), true)
+  assert.equal(legacy.hidden({value: {asset: {_ref: 'file-old-mp4'}}}), false)
+  assert.equal(legacy.validation, undefined)
+  for (const name of ['full', 'half-half', 'half-quarter-quarter', 'quarter-quarter-quarter-quarter', 'third-third-third', 'two-thirds-one-third']) {
+    assert.equal(field(schemaTypes.find(type => type.name === name), 'slots').of[0].type, 'mediaSlot')
+  }
+})

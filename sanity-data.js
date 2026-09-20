@@ -1,5 +1,5 @@
 /*
- * Free-plan Sanity adapter. Only Info and Frontpage currently consume it in app.js.
+ * Free-plan Sanity adapter. Info, Frontpage and project details consume it in app.js.
  * Loading this file only exposes SanityData; it never fetches or touches the DOM.
  *
  * SanityData.load({timeoutMs?, signal?}) -> Promise<{ok, data, error}>
@@ -13,12 +13,14 @@
  * empty arrays stay empty. This adapter never merges in local website content.
  * Projects use slug IDs; selectedWork contains ordered IDs, not copied projects.
  * A malformed module invalidates that project's composition (modulesValid:false,
- * modules:[]), while retaining metadata for Index fallbacks. Consumers must check
- * this flag. Image crop is applied to src; hotspot/dimensions are retained for the
- * later responsive image integration. No dimensions or CSS are imposed here.
+ * modules:[]). detailModules preserves valid rows and safe empty row frames for
+ * defensive detail rendering; unknown layouts remain null. Metadata is retained.
+ * Image crop is applied to src; hotspot/dimensions are retained for rendering.
+ * No dimensions or CSS are imposed here.
  */
 (function (root) {
   'use strict';
+  const vimeo = typeof module !== 'undefined' && module.exports ? require('./vimeo-media.js') : root.VimeoMedia;
 
   const config = Object.freeze({
     projectId: 'ck6xe2er', dataset: 'production', apiVersion: '2025-02-19',
@@ -45,7 +47,7 @@
     "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,cv[]{period,text},work,skills,contactLinks[]{label,destination},selectedClients},
     "projects": *[_type == "project" && ${published}] | order(_id asc) {
       _id,_type,title,slug,category,year,additionalInfo,description,detailPageEnabled,
-      modules[]{_type,type,height,order,slots[]{type,text,textSize,alt,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
+      modules[]{_type,type,height,order,slots[]{type,text,textSize,alt,vimeoUrl,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
     "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,project{_ref},displayTitle,yearOverride,additionalInfo,initialLayout,previewImages[]${imageFields}}},
@@ -157,12 +159,14 @@
         if (media) return {type: 'image', src: media.src, alt: typeof slot.alt === 'string' ? slot.alt : undefined, image: media};
       }
       if (record(slot) && slot.type === 'video') {
-        const media = asset(slot.video?.asset, 'files');
-        if (media && /\.(mp4|webm)$/i.test(new URL(media.src).pathname)) {
+        const media = vimeo.parseVimeoUrl(slot.vimeoUrl);
+        if (media) {
           const posterImage = slot.poster ? image(slot.poster, issues, `${slotPath}.poster`) : null;
-          return {type: 'video', src: media.src, alt: typeof slot.alt === 'string' ? slot.alt : undefined,
+          return {type: 'video', src: media.src, vimeo: media, alt: typeof slot.alt === 'string' ? slot.alt : undefined,
             ...(posterImage ? {poster: posterImage.src, posterImage} : {})};
         }
+        issue(issues, slotPath, slot.video?.asset ? 'legacy_video_requires_migration' : 'invalid_vimeo',
+          slot.video?.asset ? 'Uploaded video retained in Sanity; supply a Vimeo URL before connecting this project.' : 'Expected an HTTPS Vimeo video URL.');
       }
       valid = false;
       issue(issues, slotPath, 'invalid_slot', 'Non-empty slot has invalid or missing content.');
@@ -330,7 +334,12 @@
       const modulesValid = (value.modules == null || Array.isArray(value.modules)) && modules.every(Boolean);
       const project = {id, documentId: value._id, title: value.title, category: value.category,
         year: year(value.year), additionalInfo: string(value.additionalInfo), description: string(value.description),
-        detailPageEnabled: value.detailPageEnabled !== false, modulesValid, modules: modulesValid ? modules : []};
+        detailPageEnabled: value.detailPageEnabled !== false, modulesValid, modules: modulesValid ? modules : [],
+        // Details can keep healthy rows without rebalancing malformed compositions.
+        // A valid layout/height/order gets its original empty frame; unknown layouts
+        // stay null. Keep the strict modules contract for future overview consumers.
+        detailModules: modules.map((module, rowIndex) => module ||
+          (record(rows[rowIndex]) ? moduleValue({...rows[rowIndex], slots: []}, [], `${path}.modules[${rowIndex}]`) : null))};
       projects.push(project); projectsById[id] = project; byDocumentId.set(value._id, project);
     }
     const workDoc = singleton(raw, 'selectedWork', issues, availability);

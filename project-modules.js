@@ -22,7 +22,16 @@ function moduleMediaUrl(value) {
   return escapeModuleAttribute(value);
 }
 
-function renderProjectModule(module, title = "") {
+function moduleImagePosition(image) {
+  if (!image?.hotspot) return "";
+  const crop = image.crop || {left: 0, right: 0, top: 0, bottom: 0};
+  const x = Math.max(0, Math.min(1, (image.hotspot.x - crop.left) / (1 - crop.left - crop.right)));
+  const y = Math.max(0, Math.min(1, (image.hotspot.y - crop.top) / (1 - crop.top - crop.bottom)));
+  return ` style="object-position: ${x * 100}% ${y * 100}%"`;
+}
+
+function renderProjectModule(module, title = "", mode = "detail") {
+  if (!["overview", "detail"].includes(mode)) throw new Error("Invalid project playback mode");
   const spans = Object.hasOwn(PROJECT_MODULE_TYPES, module.type) && PROJECT_MODULE_TYPES[module.type];
   const height = module.height ?? "auto";
   if (!spans || !PROJECT_MODULE_HEIGHTS.includes(height)) throw new Error("Invalid project module type or height");
@@ -48,12 +57,24 @@ function renderProjectModule(module, title = "") {
       ).join("");
       return `<div class="project-slot project-slot-text text-size-${textSize}" ${style}>${paragraphs}</div>`;
     }
-    const src = moduleMediaUrl(slot.src);
     const label = escapeModuleAttribute(slot.alt ?? title);
     let media;
-    if (slot.type === "image") media = `<img src="${src}" alt="${label}" loading="lazy" decoding="async">`;
+    if (slot.type === "image") media = `<img src="${moduleMediaUrl(slot.src)}" alt="${label}" loading="lazy" decoding="async"${moduleImagePosition(slot.image)}>`;
     else if (slot.type === "video") {
-      media = `<video src="${src}" aria-label="${label}" controls playsinline preload="metadata"${slot.poster ? ` poster="${moduleMediaUrl(slot.poster)}"` : ""}></video>`;
+      const video = VimeoMedia.parseVimeoUrl(slot.vimeoUrl ?? slot.src);
+      if (!video) throw new Error("Project videos require a Vimeo URL");
+      const url = new URL(video.embedUrl);
+      const teaser = mode === "overview";
+      const options = {background: teaser ? "1" : "0", autoplay: teaser ? "1" : "0",
+        muted: teaser ? "1" : "0", loop: teaser ? "1" : "0", controls: "0",
+        autopause: "0", title: "0", byline: "0", portrait: "0", badge: "0",
+        keyboard: "0", playsinline: "1", dnt: "1"};
+      for (const [key, value] of Object.entries(options)) url.searchParams.set(key, value);
+      media = `<div class="project-vimeo" data-playback="${mode}">
+        ${slot.poster ? `<img class="project-video-poster" src="${moduleMediaUrl(slot.poster)}" alt="" aria-hidden="true"${moduleImagePosition(slot.posterImage)}>` : ""}
+        <iframe data-project-video-src="${escapeModuleAttribute(url.href)}" title="${label || "Project video"}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe>
+        ${teaser ? "" : `<button class="project-video-toggle" type="button" aria-label="Play ${label || "video"}" disabled><img src="material/play.svg" width="60" height="59" alt="" aria-hidden="true"></button>`}
+      </div>`;
     } else throw new Error("Unsupported project media type");
     return `<figure class="project-slot" ${style}>${media}</figure>`;
   }).join("");
@@ -61,6 +82,6 @@ function renderProjectModule(module, title = "") {
   return `<div class="project-module height-${height}${empty ? " is-empty" : ""}" data-module-type="${module.type}">${slots}</div>`;
 }
 
-function renderProjectModules(modules, title = "") {
-  return modules.map(module => renderProjectModule(module, title)).join("");
+function renderProjectModules(modules, title = "", mode = "detail") {
+  return modules.map(module => renderProjectModule(module, title, mode)).join("");
 }

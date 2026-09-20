@@ -17,7 +17,7 @@ const fixture = (extra = {}) => ({projects: [], ...extra});
 const plain = value => JSON.parse(JSON.stringify(value));
 
 function isolated(fetch) {
-  const sandbox = {URL, AbortController, setTimeout, clearTimeout, fetch};
+  const sandbox = {URL, AbortController, setTimeout, clearTimeout, fetch, VimeoMedia: require('../vimeo-media.js')};
   vm.runInNewContext(adapterSource, sandbox);
   return sandbox.SanityData;
 }
@@ -116,9 +116,10 @@ test('native image references and resolved assets map equally; crop/hotspot surv
   assert.equal(data.normalizeImage({asset: {url: 'https://cdn.sanity.io/images/other/private/a.jpg'}}).image, null);
 });
 
-test('video files and posters normalize without introducing autoplay settings', () => {
-  const result = data.normalizeModule(row('full', [{type: 'video', video: {asset: {_ref: 'file-video123-webm'}}, poster: img('Poster'), alt: 'Video'}]));
-  assert.equal(result.module.slots[0].src, 'https://cdn.sanity.io/files/ck6xe2er/production/video123.webm');
+test('Vimeo slots and posters normalize without introducing playback policy', () => {
+  const result = data.normalizeModule(row('full', [{type: 'video', vimeoUrl: 'https://vimeo.com/12345/private', poster: img('Poster'), alt: 'Video'}]));
+  assert.equal(result.module.slots[0].src, 'https://vimeo.com/12345/private');
+  assert.equal(result.module.slots[0].vimeo.embedUrl, 'https://player.vimeo.com/video/12345?h=private');
   assert.equal(result.module.slots[0].poster, 'https://cdn.sanity.io/images/ck6xe2er/production/abc123-1200x800.jpg');
   assert.equal(result.module.slots[0].alt, 'Video');
   assert.equal('autoplay' in result.module.slots[0], false);

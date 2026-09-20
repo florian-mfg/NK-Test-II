@@ -1,8 +1,9 @@
 # Project content
 
-Edit `WORK_PROJECTS` in `projects.js`. Both work listings and detail routes render
-the project's `modules` array in its stored order. A CMS can supply the same plain
-data; no renderer changes or per-project HTML are required.
+Selected Work listings still use `WORK_PROJECTS` in `projects.js`. Detail routes
+prefer published Sanity projects by slug and use local projects as fallback when
+Sanity fails or the published project is absent. Both use the same module renderer
+and stored composition order; Selected Work is not connected to Sanity.
 
 ```js
 {
@@ -12,7 +13,7 @@ data; no renderer changes or per-project HTML are required.
   slots: [
     { type: "image", src: "material/example.jpg", alt: "Description" },
     null,
-    { type: "video", src: "material/example.mp4", poster: "material/poster.jpg" }
+    { type: "video", src: "https://vimeo.com/12345", poster: "material/poster.jpg" }
   ]
 }
 ```
@@ -44,7 +45,9 @@ Each work module has a `.project-module-preview` wrapper containing the existing
 sticks within that row and leaves at its boundary; the next module has its own
 title and Open link for the same project. Empty rows and their titles disappear
 on mobile. Do not add overflow scrolling or transforms to their ancestors.
-The project's existing link overlay still opens the project; video controls are accessible on detail pages.
+The project's existing link overlay still opens the project. Vimeo teasers use
+autoplay/muted/loop playback without native UI. Details use a custom Play/Pause
+icon button and never autoplay; Vimeo native UI remains hidden.
 Header, category filtering, archive data, and detail controls are independent.
 
 The migrated content retains each project's original opening composition on
@@ -92,3 +95,31 @@ Project overviews also accept an optional `additionalInfo` string on each
 `WORK_PROJECTS` project. It appears beside each module’s title, aligned with
 Selected Work. Omit it or leave it empty to hide the label. The Studio Project
 schema includes the same field for the future data connection.
+
+## Vimeo project media
+
+Use a normal Vimeo or player.vimeo.com URL for `src` (or `vimeoUrl`), including
+any unlisted privacy hash. Uploaded video file URLs are no longer accepted for
+project playback. `renderProjectModule(module, title, mode)` and
+`renderProjectModules(modules, title, mode)` accept `overview` or `detail`
+(default). Both use exactly the same grid/slot renderer. After inserting markup,
+call `initProjectVideos(root)` and retain its cleanup callback for route changes.
+The app does this for local overviews and Sanity/local detail content.
+
+The SDK is loaded on demand only for visible Vimeo slots. Fixed-height videos
+cover their slot; auto-height follows native video ratio after metadata, initially
+16:9. CSS changes are scoped to project Vimeo wrappers. The Play/Pause button uses the supplied `material/play.svg` and
+`material/pause.svg` unchanged at their original 60×59 dimensions. Accessible
+labels follow playback state; Vimeo native controls stay hidden. For schema/migration rules and remaining browser
+checks, see `studio/CONTENT_MODEL.md`. Selected Work remains local; project details prefer published Sanity data.
+
+
+## Detail migration behavior
+
+Detail hashes wait for the one-time content request before deciding between
+published and local data. Only explicit false disables a published detail page.
+No Selected Work reference is required. Cached revisits do not fetch again.
+Published description text supplies the existing Project Info popup, safely
+preserving paragraphs. Empty CMS descriptions/modules remain empty. Known malformed
+module frames stay empty; unknown layouts are omitted with adapter diagnostics.
+Healthy rows remain in order. See `SANITY_DATA.md` for verification and limitations.
