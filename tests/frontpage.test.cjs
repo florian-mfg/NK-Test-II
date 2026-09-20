@@ -113,7 +113,7 @@ test('request/document/video failures retain the exact local homepage', async ()
 });
 
 test('late Frontpage response leaves every other route intact and is cached for Home', async () => {
-  for (const hash of ['#info', '#work/video', '#work/commissioned', '#work/graphic', '#archive', '#imprint', '#privacy-policy']) {
+  for (const hash of ['#info', '#archive', '#imprint', '#privacy-policy']) {
     const app = setup(hash);
     try {
       const initial = app.window.document.querySelector('#app').innerHTML;

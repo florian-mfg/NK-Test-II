@@ -1,9 +1,9 @@
 # Project content
 
-Selected Work listings still use `WORK_PROJECTS` in `projects.js`. Detail routes
-prefer published Sanity projects by slug and use local projects as fallback when
-Sanity fails or the published project is absent. Both use the same module renderer
-and stored composition order; Selected Work is not connected to Sanity.
+Selected Work listings use the published Selected Work reference arrays in CMS
+order. Detail routes prefer published projects by slug. `WORK_PROJECTS` remains a
+migration fallback for unavailable CMS data; valid empty overview categories stay
+empty. Both routes use the same module renderer and stored composition order.
 
 ```js
 {
@@ -40,10 +40,13 @@ empty auto row uses `--module-empty-auto`. Fixed-height media uses `object-fit:
 cover`. At 700px and below, occupied slots stack in configured order and empty
 slots disappear. Each stacked slot uses the selected height; auto stays natural.
 
-Each work module has a `.project-module-preview` wrapper containing the existing
-`.project-title`, with the same positioning, appearance, and stacking. The title
-sticks within that row and leaves at its boundary; the next module has its own
-title and Open link for the same project. Empty rows and their titles disappear
+Each Selected Work reference renders one `.project-module-preview` and one
+`.project-title`. A valid Project **Selected Work Preview** takes precedence, using the existing
+full-width, auto-height single-media layout. Otherwise the preview uses the first
+Vimeo-containing detail module, then the first image-containing module (or the
+first module if neither exists).
+Its composition, height and arrangement remain unchanged. The title sticks within
+that single preview row; detail pages still render the full module sequence. Empty rows and their titles disappear
 on mobile. Do not add overflow scrolling or transforms to their ancestors.
 The project's existing link overlay still opens the project. Vimeo teasers use
 autoplay/muted/loop playback without native UI. Details use a custom Play/Pause
@@ -104,14 +107,14 @@ project playback. `renderProjectModule(module, title, mode)` and
 `renderProjectModules(modules, title, mode)` accept `overview` or `detail`
 (default). Both use exactly the same grid/slot renderer. After inserting markup,
 call `initProjectVideos(root)` and retain its cleanup callback for route changes.
-The app does this for local overviews and Sanity/local detail content.
+The app does this for Sanity overviews/details and their local fallbacks.
 
 The SDK is loaded on demand only for visible Vimeo slots. Fixed-height videos
 cover their slot; auto-height follows native video ratio after metadata, initially
 16:9. CSS changes are scoped to project Vimeo wrappers. The Play/Pause button uses the supplied `material/play.svg` and
 `material/pause.svg` unchanged at their original 60×59 dimensions. Accessible
 labels follow playback state; Vimeo native controls stay hidden. For schema/migration rules and remaining browser
-checks, see `studio/CONTENT_MODEL.md`. Selected Work remains local; project details prefer published Sanity data.
+checks, see `studio/CONTENT_MODEL.md`. Selected Work and project details now use published Sanity data.
 
 
 ## Detail migration behavior

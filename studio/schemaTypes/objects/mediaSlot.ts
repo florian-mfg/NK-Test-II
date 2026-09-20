@@ -79,7 +79,7 @@ export const mediaSlot = defineType({
       validation: (rule) =>
         rule.custom((value, context) =>
           (context.parent as {type?: string})?.type === 'image' && !value?.asset
-            ? 'Upload an image, or choose Empty.'
+            ? 'Upload an image, or choose another media type.'
             : true,
         ),
     }),

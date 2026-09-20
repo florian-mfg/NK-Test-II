@@ -39,7 +39,7 @@ ignored when Content is Empty. Each module can also be entirely empty.
 ## Mapping for the future data connection
 
 Project details now use published Sanity data by slug, with local fallback.
-Selected Work overviews still use `projects.js`. Info and Frontpage remain connected
+Selected Work overviews now use the published singleton references in CMS order. Info and Frontpage remain connected
 through the same one-time public adapter request.
 Sanity documents are not yet directly renderable: native assets are references,
 and Sanity object arrays use typed objects rather than null entries.
@@ -91,14 +91,15 @@ Selected Work curation, independent Index entries, shared contacts, navigation,
 legal content, compatibility rules, and verification commands. The module mapping
 above remains unchanged. Project `description` is plain popup text;
 `detailPageEnabled` defaults to true for new documents and must also be interpreted
-as true when absent on older documents. Project details, Info and Frontpage are connected; Selected Work remains local.
+as true when absent on older documents. Project details, Selected Work, Info and Frontpage are connected.
 
 
 ## Permanent project-video requirement: Vimeo only
 
 All website videos must ultimately use Vimeo URLs, never Sanity video uploads.
 Project-media preparation and project DETAIL integration are implemented.
-Selected Work overviews remain **not connected** to Sanity and use `projects.js`.
+Selected Work overviews now use published Sanity reference arrays; valid empty
+categories stay empty. `projects.js` is retained for migration fallback.
 Details prefer published projects, with local data retained as migration fallback.
 Frontpage and Info behavior are unchanged.
 
@@ -174,7 +175,7 @@ validation feedback and a `legacy_video_requires_migration` adapter diagnostic.
 Supply an editorially chosen Vimeo equivalent manually; files cannot be converted
 into Vimeo URLs automatically. A valid Vimeo URL wins even if a legacy asset remains.
 
-### Remaining playback checks and future Selected Work integration
+### Remaining playback checks
 
 1. Verify intended Vimeo videos allow embedding from localhost and the deployed
    GitHub Pages origin, including privacy hashes and owner-side embed settings.
@@ -182,7 +183,7 @@ into Vimeo URLs automatically. A valid Vimeo URL wins even if a legacy asset rem
    desktop/mobile cover geometry. No layout changes are needed for the data hookup.
 3. Review any private drafts for legacy uploads, replace them with Vimeo URLs,
    and resolve invalid module diagnostics before adopting a project composition.
-4. Connect Selected Work only in a separately authorized step. Keep public
+4. Selected Work is now connected. Keep public
    tokenless Sanity reads, the existing hash routes and Free-plan-compatible setup.
 
 The SDK and iframe are served directly by Vimeo; no Vimeo API token, npm runtime
@@ -221,3 +222,24 @@ Selected Work local. Actual Vimeo readiness timed out, so real playback still
 requires manual browser verification. `detailModules` provides defensive row-level
 recovery without changing the strict `modulesValid/modules` contract or CMS schema.
 See `SANITY_DATA.md` for full loading, fallback, metadata and validation behavior.
+
+
+Selected Work integration uses the existing normalized ordered reference lists,
+with fixed category sequence Video → Commissioned → Graphic. No schema was changed.
+Index, Navigation and Legal remain local. The detail renderer and Vimeo player
+implementation were not changed during the Selected Work connection.
+
+
+### Explicit Selected Work Preview
+
+In Content → Projects → a project, **Selected Work Preview** appears above
+**Project Modules**. It is optional. Choose Image (upload/select a Sanity image,
+optionally set crop/hotspot and alt) or Vimeo Video (paste a validated Vimeo URL,
+optionally set poster and alt). It has no text/empty/layout controls. Its media
+fields and Vimeo validator are reused from the shared slot schema.
+
+Publishing an explicit preview affects only the overview: it occupies one existing
+full/auto media row. Detail modules and their playback do not change. Leaving the
+field unset preserves the first-Vimeo-module, then first-image-module migration
+fallback. Invalid stored previews are diagnosed and also fall back defensively.
+This field is not populated or published automatically for any existing project.

@@ -71,10 +71,12 @@ function arrangeArchive(projects) {
 const ARCHIVE_DISPLAY_PROJECTS = arrangeArchive(ARCHIVE_PROJECTS);
 
 const app = document.querySelector("#app");
-// Info, Frontpage and project details consume this snapshot. Overviews stay local.
+// Connected pages share one snapshot; Index, Navigation and Legal stay local.
 let sanityContent = null;
 let sanityLoadSettled = false;
 const renderedDetailProjects = new WeakMap();
+const renderedWorkPages = new WeakMap();
+const WORK_CATEGORIES = ["Video", "Commissioned", "Graphic"];
 const hydratedInfoPages = new WeakSet();
 const header = document.querySelector(".site-header");
 const workMenu = document.querySelector(".work-menu");
@@ -125,7 +127,7 @@ function hideOpenCursor() {
 }
 
 function updateOpenCursor(event) {
-  const projectLink = event.target.closest?.(".is-work .project-link, .is-work .project-title");
+  const projectLink = event.target.closest?.(".is-work .project-link, .is-work a.project-title");
   if (event.pointerType !== "mouse" || !projectLink) {
     hideOpenCursor();
     return;
@@ -240,23 +242,54 @@ function renderWorkModule(module, project) {
   const title = escapeModuleAttribute(project.title);
   const href = `#project/${encodeURIComponent(project.id)}`;
   const empty = previewModule.slots.every(slot => slot == null);
+  const titleTag = project.detailPageEnabled === false ? "span" : "a";
+  const titleLink = project.detailPageEnabled === false ? "" : ` href="${href}" aria-label="Open ${title}"`;
   return `<section class="project-module-preview${empty ? " is-empty" : ""}" aria-label="${title}">
-    <a class="project-title" href="${href}" aria-label="Open ${title}"><span>${title}</span>${project.additionalInfo ? `<span class="project-additional-info">${escapeModuleAttribute(project.additionalInfo)}</span>` : ""}</a>
+    <${titleTag} class="project-title"${titleLink}><span>${title}</span>${project.additionalInfo ? `<span class="project-additional-info">${escapeModuleAttribute(project.additionalInfo)}</span>` : ""}</${titleTag}>
     ${renderProjectModule(previewModule, project.title, "overview")}
   </section>`;
 }
 
-function renderWork(category = "Graphic") {
-  const selectedCategory = ["Graphic", "Commissioned", "Video"].includes(category) ? category : "Graphic";
+function renderWorkPreview(project) {
+  if (project.selectedWorkPreview) {
+    return renderWorkModule({type: "full", height: "auto", slots: [project.selectedWorkPreview]}, project);
+  }
+  // One reference owns one preview, not the project's entire detail sequence.
+  const preview = project.modules.find(module => module.slots.some(slot => slot?.type === "video"))
+    || project.modules.find(module => module.slots.some(slot => slot?.type === "image"))
+    || project.modules[0];
+  return preview ? renderWorkModule(preview, project) : "";
+}
+
+function workCategory(category) {
+  return WORK_CATEGORIES.find(value => value.toLowerCase() === category?.toLowerCase()) || "Video";
+}
+
+function renderWork(category = "Video") {
+  const selectedCategory = workCategory(category);
+  const current = app.querySelector(".work");
+  const source = sanityContent?.selectedWork || WORK_PROJECTS;
+  if (current?.dataset.category === selectedCategory && renderedWorkPages.get(current) === source) return;
   document.body.className = `is-work is-work-${selectedCategory.toLowerCase()}`;
   setCurrentPage(`work/${selectedCategory.toLowerCase()}`);
-  const projects = WORK_PROJECTS.map((p, i) => `
-    <article class="project-preview" data-category="${p.category}" data-project="${p.id}"${p.category === selectedCategory ? "" : " hidden"}>
-      ${p.category === "Commissioned" ? "" : `<a class="project-link" href="#project/${p.id}" aria-label="Open ${p.title}"></a>`}
-      <div class="project-modules">${p.modules.map(module => renderWorkModule(module, p)).join("")}</div>
-      ${i === WORK_PROJECTS.length - 1 ? `<span class="project-kind">${p.category}</span>` : ""}
+  if (!sanityLoadSettled) {
+    app.innerHTML = `<section class="work" data-category="${selectedCategory}" aria-busy="true" aria-label="Loading selected work"><div class="projects"></div></section>`;
+    return;
+  }
+  const useLocal = category => !sanityContent?.selectedWork || sanityContent.issues.some(issue =>
+    issue.path === `selectedWork.${category.toLowerCase()}` && issue.code === "invalid_array");
+  const selectedProjects = WORK_CATEGORIES.flatMap(category => useLocal(category)
+    ? WORK_PROJECTS.filter(project => project.category === category)
+    : sanityContent.selectedWork[category.toLowerCase()].map(id => sanityContent.projectsById[id])
+      .filter(project => project && (project.selectedWorkPreview || project.modulesValid !== false)));
+  const projects = selectedProjects.map((p, i) => `
+    <article class="project-preview" data-category="${p.category}" data-project="${escapeModuleAttribute(p.id)}"${p.category === selectedCategory ? "" : " hidden"}>
+      ${p.category === "Commissioned" || p.detailPageEnabled === false ? "" : `<a class="project-link" href="#project/${encodeURIComponent(p.id)}" aria-label="Open ${escapeModuleAttribute(p.title)}"></a>`}
+      <div class="project-modules">${renderWorkPreview(p)}</div>
+      ${i === selectedProjects.length - 1 ? `<span class="project-kind">${p.category}</span>` : ""}
     </article>`).join("");
-  app.innerHTML = `<section class="work"><div class="projects">${projects}</div></section>`;
+  app.innerHTML = `<section class="work" data-category="${selectedCategory}" data-source="${useLocal(selectedCategory) ? "local" : "sanity"}"><div class="projects">${projects}</div></section>`;
+  renderedWorkPages.set(app.querySelector(".work"), source);
   cleanupPage = initProjectVideos(app);
 }
 
@@ -394,6 +427,8 @@ async function loadInfoContent() {
     const [page, id] = location.hash.replace(/^#\/?/, "").split("/");
     // Complete only the active pending detail. Never reroute or reset scrolling.
     if (pending && page === "project" && pending.dataset.projectId === (id || "")) renderProject(id);
+    const pendingWork = app.querySelector(".work[aria-busy='true']");
+    if (pendingWork && page === "work" && pendingWork.dataset.category === workCategory(id)) renderWork(id);
   }
 }
 
@@ -495,6 +530,8 @@ function route() {
   const [activePage, activeId] = activeHash.split("/");
   const detail = app.querySelector(".detail");
   if (activePage === "project" && detail?.dataset.projectId === activeId && renderedDetailProjects.has(detail)) return;
+  const work = app.querySelector(".work");
+  if (activePage === "work" && work?.dataset.category === workCategory(activeId) && renderedWorkPages.has(work)) return;
   closeMobileMenu();
   cleanupPage();
   cleanupPage = () => {};
@@ -505,7 +542,7 @@ function route() {
   const [page, id] = hash.split("/");
   if (page === "project") renderProject(id);
   else if (page === "imprint" || page === "privacy-policy") renderLegal(page);
-  else if (page === "work") renderWork(id ? id[0].toUpperCase() + id.slice(1) : "Graphic");
+  else if (page === "work") renderWork(id);
   else ({ home: renderHome, archive: renderArchive, info: renderInfo }[page] || renderHome)();
   window.scrollTo(0, 0);
   lastScrollY = 0;

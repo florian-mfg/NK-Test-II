@@ -1,5 +1,6 @@
 import {project} from './documents/project'
 import {mediaSlot} from './objects/mediaSlot'
+import {selectedWorkPreview} from './objects/selectedWorkPreview'
 import {projectModules} from './objects/projectModules'
 import {pageDocuments} from './documents/pages'
 import {richText, cvEntry, editorialLinks, indexEntry} from './objects/editorial'
@@ -7,6 +8,7 @@ import {richText, cvEntry, editorialLinks, indexEntry} from './objects/editorial
 export const schemaTypes = [
   project,
   mediaSlot,
+  selectedWorkPreview,
   ...projectModules,
   ...pageDocuments,
   richText,

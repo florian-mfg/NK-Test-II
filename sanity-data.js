@@ -1,5 +1,5 @@
 /*
- * Free-plan Sanity adapter. Info, Frontpage and project details consume it in app.js.
+ * Free-plan Sanity adapter. Info, Frontpage, project details and Selected Work consume it in app.js.
  * Loading this file only exposes SanityData; it never fetches or touches the DOM.
  *
  * SanityData.load({timeoutMs?, signal?}) -> Promise<{ok, data, error}>
@@ -47,6 +47,7 @@
     "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,cv[]{period,text},work,skills,contactLinks[]{label,destination},selectedClients},
     "projects": *[_type == "project" && ${published}] | order(_id asc) {
       _id,_type,title,slug,category,year,additionalInfo,description,detailPageEnabled,
+      selectedWorkPreview{type,alt,vimeoUrl,image${imageFields},poster${imageFields}},
       modules[]{_type,type,height,order,slots[]{type,text,textSize,alt,vimeoUrl,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
@@ -173,6 +174,16 @@
       return null;
     });
     return valid ? {type, height, order: Array.isArray(order) ? [...order] : order, slots} : null;
+  }
+
+  function previewValue(value, issues, path) {
+    if (value == null) return null;
+    if (!record(value) || !['image', 'video'].includes(value.type)) {
+      issue(issues, path, 'invalid_preview', 'Expected an image or Vimeo preview.');
+      return null;
+    }
+    // Use the same image/Vimeo validation and normalization as detail media.
+    return moduleValue({type: 'full', slots: [value]}, issues, path)?.slots[0] || null;
   }
 
   function normalizeModule(value) {
@@ -334,6 +345,7 @@
       const modulesValid = (value.modules == null || Array.isArray(value.modules)) && modules.every(Boolean);
       const project = {id, documentId: value._id, title: value.title, category: value.category,
         year: year(value.year), additionalInfo: string(value.additionalInfo), description: string(value.description),
+        selectedWorkPreview: previewValue(value.selectedWorkPreview, issues, `${path}.selectedWorkPreview`),
         detailPageEnabled: value.detailPageEnabled !== false, modulesValid, modules: modulesValid ? modules : [],
         // Details can keep healthy rows without rebalancing malformed compositions.
         // A valid layout/height/order gets its original empty frame; unknown layouts

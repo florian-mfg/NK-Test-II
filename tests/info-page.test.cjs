@@ -129,7 +129,7 @@ test('late published content wins after scrolling or focus without resetting scr
 });
 
 test('other routes keep their local DOM and direct project routing during async loading', async () => {
-  for (const hash of ['#home', '#work/video', '#work/commissioned', '#work/graphic', '#archive', '#imprint', '#privacy-policy']) {
+  for (const hash of ['#home', '#archive', '#imprint', '#privacy-policy']) {
     const app = setup(hash);
     try {
       const initial = app.window.document.querySelector('#app').innerHTML;

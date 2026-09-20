@@ -74,6 +74,12 @@ export const project = defineType({
         'Enable a full project detail page. Older projects with this field unset should be treated as enabled by the future frontend adapter.',
     }),
     defineField({
+      name: 'selectedWorkPreview',
+      title: 'Selected Work Preview',
+      type: 'selectedWorkPreview',
+      description: 'Optional image or Vimeo video used when this project appears on Selected Work, independently of its detail modules. Leave unset to use the existing detail-media fallback.',
+    }),
+    defineField({
       name: 'modules',
       title: 'Project Modules',
       type: 'array',

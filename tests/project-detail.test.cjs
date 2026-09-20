@@ -139,7 +139,7 @@ test('missing published project or failed request uses local fallback; truly mis
 test('late responses do not replace another page; navigating between local and Sanity details uses one snapshot', async () => {
   const app = setup();
   try {
-    app.window.location.hash = '#work/video';
+    app.window.location.hash = '#archive';
     app.window.route();
     const initial = app.window.document.querySelector('#app').innerHTML;
     await app.settle(success(content()));

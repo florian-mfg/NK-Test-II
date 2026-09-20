@@ -2,9 +2,9 @@
 
 `index.html` loads `sanity-data.js` before `app.js`. The adapter itself has no
 side effects; `app.js` calls `load()` once at startup and caches the result. Only
-Info, Frontpage and project detail routes consume the snapshot. Info uses Site
-Settings for contact links. Selected Work overviews, Index, Navigation and Legal
-retain local content. Local projects remain available as detail fallbacks.
+Info, Frontpage, project details and Selected Work consume the snapshot. Info uses Site
+Settings for contact links. Index, Navigation and Legal retain local content.
+Local projects remain available as migration fallbacks.
 Site Settings does not change global branding, metadata, navigation or footers.
 
 ## Interface
@@ -170,7 +170,7 @@ same snapshot. No new request, token, dependency or hosting/build requirement is
 
 See `studio/CONTENT_MODEL.md` for the mandatory Vimeo-only project media plan.
 Project Vimeo schema, query/normalization and module rendering preparation is
-implemented. Detail routes now use published projects; Selected Work remains local.
+implemented. Detail routes and Selected Work now use published projects.
 
 ## Info rendering and fallback
 
@@ -268,3 +268,69 @@ The real Vimeo player timed out before readiness in this environment; SDK-backed
 SVG Play/Pause wiring is covered with mocked playback events, but actual playback
 must still be checked in the user's browser. Verify Play/Pause/resume, sound,
 portrait/landscape cover, posters and slow/offline navigation before deployment.
+
+
+## Selected Work integration
+
+Selected Work uses the same one-time snapshot. The category sequence remains
+Video → Commissioned → Graphic; each category's project order comes directly from
+the normalized `selectedWork.video/commissioned/graphic` reference arrays, resolved
+through `projectsById`. The default `#work` category is Video. Navigation labels
+and links still come from local markup, not the CMS Navigation document.
+
+Valid empty arrays (including unset optional arrays normalized to empty) show no
+projects. Never merge local projects into a successfully loaded category. Missing
+or invalid references are omitted by the adapter; projects with invalid module
+compositions are omitted from overviews without local replacement. Adapter issues
+remain available for diagnosis. Request failure or missing/invalid singleton uses
+local projects; a malformed category array uses local fallback only for that
+category, without changing authoritative valid sibling categories.
+
+Overview routes show the existing empty work container with aria-busy until the
+request settles. The response fills only the active pending overview, without
+rerouting or resetting scroll. Other active pages are untouched. Same-category
+renders preserve the current DOM/player. Changing categories or leaving the page
+uses the existing player cleanup. Hidden category players are not initialized.
+
+Existing modules render in overview mode: images retain their geometry; Vimeo
+teasers use autoplay/muted/loop, hidden native UI, and no custom Play/Pause button.
+Enabled projects keep hash detail links. Explicitly disabled details have no
+project overlay/title link; their media and title remain visible. The existing
+Commissioned category behavior (title link only for enabled details) is retained.
+No schema, CSS or player implementation changes were needed.
+
+Tests cover reference/category ordering, empty arrays without local merging,
+request/document/category fallback, disabled details, malformed compositions,
+late category navigation, stable player identity and live Ethereal Tides reference
+resolution. Frontpage, Info and detail regressions remain in the frontend suite.
+
+Selected Work verification: all 54 frontend tests passed with live checks enabled;
+syntax and diff checks passed. Chrome confirmed published Video = Ethereal Tides,
+Commissioned = empty, Graphic = empty, a working title-link transition to its
+Sanity detail page, one shared request and no page runtime errors. Its overview
+Vimeo URL uses autoplay/muted/loop with controls disabled and no custom button.
+Real Vimeo playback again timed out in the isolated browser; manually verify
+actual teaser playback and desktop/mobile hover/click behavior. No Vimeo player,
+CSS, schema, detail-renderer or remaining local-section changes were made here.
+
+
+## Explicit Selected Work Preview
+
+Projects have optional `selectedWorkPreview` media, projected in the existing query
+and normalized with the same image/Vimeo rules as module slots. The normalized
+value is one image/video slot or null. It preserves alt, crop, hotspot and optional
+video poster data. Invalid values produce preview-specific diagnostics and use
+the same migration fallback as a missing preview; detail modules are unaffected.
+
+The overview uses a valid explicit preview in the existing full/auto single-media
+renderer, once per project reference. With no usable preview it retains the first
+Vimeo-containing detail module, otherwise the first image-containing module.
+No detail composition is changed. Valid explicit previews also work independently
+of malformed detail modules. Video previews use the existing overview SDK mode;
+images use the existing crop/hotspot placement. Category order, reference order,
+empty arrays, cached loading and non-detail link behavior remain unchanged.
+
+No preview is automatically populated or published. Nicolas can add an image or
+Vimeo URL under Projects → Selected Work Preview, above Project Modules. The object
+reuses media-slot image/Vimeo/poster/alt fields and validation but offers only Image
+or Vimeo Video, without text, empty, upload-video or composition controls.

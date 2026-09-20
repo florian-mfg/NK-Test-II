@@ -251,3 +251,33 @@ test('caller cancellation is handled before and during a request', async () => {
   controller.abort();
   assert.equal((await pending).error.code, 'aborted');
 });
+
+test('independent Selected Work image and Vimeo previews normalize without changing detail modules', () => {
+  const original = project('one');
+  const baseline = data.normalize(fixture({projects: [original]})).projects[0];
+  const previewImage = {...img(), crop: {left: .1, right: .2, top: .25, bottom: 0}, hotspot: {x: .4, y: .5, width: .2, height: .3}};
+  for (const selectedWorkPreview of [
+    {type: 'image', image: previewImage, alt: 'Preview alt'},
+    {type: 'video', vimeoUrl: 'https://player.vimeo.com/video/98765?h=private&autoplay=0', poster: previewImage, alt: 'Preview film'}
+  ]) {
+    const normalized = data.normalize(fixture({projects: [{...original, selectedWorkPreview}]}));
+    const result = normalized.projects[0];
+    assert.deepEqual(normalized.issues, []);
+    assert.deepEqual(result.modules, baseline.modules);
+    assert.deepEqual(result.detailModules, baseline.detailModules);
+    assert.equal(result.selectedWorkPreview.alt, selectedWorkPreview.alt);
+    const image = result.selectedWorkPreview.image || result.selectedWorkPreview.posterImage;
+    assert.deepEqual(image.hotspot, previewImage.hotspot);
+    assert.equal(new URL(image.src).searchParams.get('rect'), '120,200,840,600');
+    if (selectedWorkPreview.type === 'video') assert.equal(result.selectedWorkPreview.vimeo.embedUrl, 'https://player.vimeo.com/video/98765?h=private');
+  }
+  assert.equal(baseline.selectedWorkPreview, null);
+  for (const selectedWorkPreview of [{type: 'text', text: 'Forbidden'}, {type: 'empty'}, {type: 'image'}, {type: 'video', vimeoUrl: 'https://example.com/file.mp4'}]) {
+    const result = data.normalize(fixture({projects: [{...original, selectedWorkPreview}]}));
+    assert.equal(result.projects[0].selectedWorkPreview, null);
+    assert.ok(result.issues.some(issue => issue.path.includes('selectedWorkPreview')));
+    assert.deepEqual(result.projects[0].modules, baseline.modules);
+    assert.equal(result.projects[0].modulesValid, true);
+  }
+  assert.ok(data.query.includes('selectedWorkPreview{type,alt,vimeoUrl,image'));
+});

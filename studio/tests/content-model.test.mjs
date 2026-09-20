@@ -174,3 +174,17 @@ test('shared video slots accept Vimeo URLs and preserve uploads only for migrati
     assert.equal(field(schemaTypes.find(type => type.name === name), 'slots').of[0].type, 'mediaSlot')
   }
 })
+
+test('Selected Work Preview is optional and reuses only image/Vimeo media fields', () => {
+  const preview = schemaTypes.find(type => type.name === 'selectedWorkPreview')
+  const slot = schemaTypes.find(type => type.name === 'mediaSlot')
+  assert.equal(field(project, 'selectedWorkPreview').type, 'selectedWorkPreview')
+  assert.equal(field(project, 'selectedWorkPreview').validation, undefined)
+  assert.deepEqual(preview.fields.map(field => field.name), ['type', 'image', 'vimeoUrl', 'poster', 'alt'])
+  const [validate] = validators(field(preview, 'type'))
+  for (const type of ['image', 'video']) assert.equal(validate(type), true)
+  for (const type of ['text', 'empty', undefined]) assert.notEqual(validate(type), true)
+  for (const name of ['image', 'vimeoUrl', 'poster', 'alt']) {
+    assert.equal(field(preview, name), field(slot, name))
+  }
+})
