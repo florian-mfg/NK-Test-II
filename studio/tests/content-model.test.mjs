@@ -203,16 +203,40 @@ test('shared video slots accept Vimeo URLs and preserve uploads only for migrati
   }
 })
 
-test('Selected Work Preview is optional and reuses only image/Vimeo media fields', () => {
+test('Selected Work Preview offers one composition and reuses module geometry and media fields', () => {
   const preview = schemaTypes.find(type => type.name === 'selectedWorkPreview')
-  const slot = schemaTypes.find(type => type.name === 'mediaSlot')
+  const slot = schemaTypes.find(type => type.name === 'previewMediaSlot')
+  const detailSlot = schemaTypes.find(type => type.name === 'mediaSlot')
   assert.equal(field(project, 'selectedWorkPreview').type, 'selectedWorkPreview')
   assert.equal(field(project, 'selectedWorkPreview').validation, undefined)
-  assert.deepEqual(preview.fields.map(field => field.name), ['type', 'image', 'vimeoUrl', 'poster', 'alt'])
-  const [validate] = validators(field(preview, 'type'))
-  for (const type of ['image', 'video']) assert.equal(validate(type), true)
-  for (const type of ['text', 'empty', undefined]) assert.notEqual(validate(type), true)
-  for (const name of ['image', 'vimeoUrl', 'poster', 'alt']) {
-    assert.equal(field(preview, name), field(slot, name))
+  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'vimeoUrl', 'poster', 'alt'])
+  const [validate] = validators(field(slot, 'type'))
+  for (const type of ['image', 'video', 'empty']) assert.equal(validate(type), true)
+  for (const type of ['text', undefined]) assert.notEqual(validate(type), true)
+  for (const name of ['image', 'vimeoUrl', 'poster', 'alt']) assert.equal(field(slot, name), field(detailSlot, name))
+  const composition = field(preview, 'composition')
+  const names = ['full', 'half-half', 'half-quarter-quarter', 'quarter-quarter-quarter-quarter', 'third-third-third', 'two-thirds-one-third']
+  assert.deepEqual(composition.of.map(item => item.type), names.map(name => `preview-${name}`))
+  let max
+  composition.validation({max(value) {max=value; return this}})
+  assert.equal(max, 1)
+  for (const name of names) {
+    const detail = schemaTypes.find(type => type.name === name)
+    const overview = schemaTypes.find(type => type.name === `preview-${name}`)
+    assert.deepEqual(overview.initialValue, {...detail.initialValue, slots: detail.initialValue.slots.map(slot=>({...slot,_type:'previewMediaSlot'}))})
+    assert.deepEqual(field(overview,'order').options,field(detail,'order').options)
+    assert.deepEqual(field(overview,'height').options,field(detail,'height').options)
+    assert.equal(field(overview,'slots').of[0].type,'previewMediaSlot')
+    assert.equal(field(detail,'slots').of[0].type,'mediaSlot')
+    let length
+    const rule={required(){return this},length(value){length=value;return this}}
+    field(overview,'slots').validation(rule)
+    assert.equal(length,detail.initialValue.slots.length)
   }
+  const [validatePreview] = validators(preview)
+  assert.equal(validatePreview(undefined),true)
+  assert.equal(validatePreview({type:'image'}),true) // old records remain readable
+  assert.equal(validatePreview({composition:[{}]}),true) // nested validators validate the layout
+  assert.notEqual(validatePreview({composition:[]}),true)
+  assert.notEqual(validatePreview({composition:[{},{}]}),true)
 })

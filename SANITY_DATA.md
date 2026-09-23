@@ -377,26 +377,104 @@ actual teaser playback and desktop/mobile hover/click behavior. No Vimeo player,
 CSS, schema, detail-renderer or remaining local-section changes were made here.
 
 
-## Explicit Selected Work Preview
+## Selected Work Preview compositions
 
-Projects have optional `selectedWorkPreview` media, projected in the existing query
-and normalized with the same image/Vimeo rules as module slots. The normalized
-value is one image/video slot or null. It preserves alt, crop, hotspot and optional
-video poster data. Invalid values produce preview-specific diagnostics and use
-the same migration fallback as a missing preview; detail modules are unaffected.
+Each Project has one optional `selectedWorkPreview` object. Its `composition` array
+holds exactly one layout object, not a sequence of project entries. The Studio uses
+the same `createProjectModules()` schema factory as detail modules, with namespaced
+`preview-*` object types and `previewMediaSlot` slots limited to Image, Vimeo Video
+and Empty. Image, Vimeo URL, poster and alt fields/validation are shared with
+`mediaSlot`. Legacy top-level media fields stay registered but hidden for compatibility.
+No paid features or additional runtime packages are used.
 
-The overview uses a valid explicit preview in the existing full/auto single-media
-renderer, once per project reference. With no usable preview it retains the first
-Vimeo-containing detail module, otherwise the first image-containing module.
-No detail composition is changed. Valid explicit previews also work independently
-of malformed detail modules. Video previews use the existing overview SDK mode;
-images use the existing crop/hotspot placement. Category order, reference order,
-empty arrays, cached loading and non-detail link behavior remain unchanged.
+All six grid mappings are unchanged: full `[12]`, half-half `[6,6]`,
+half-quarter-quarter `[6,3,3]`, four quarters `[3,3,3,3]`, thirds `[4,4,4]`,
+two-thirds/one-third `[8,4]`. The shared module normalizer maps Empty to `null`,
+`middle` to `[1,0,2]` only for half-quarter-quarter, and leaves reverse for the
+shared renderer (three-slot reverse is `[2,1,0]`). Missing trailing slots retain
+space; arrangements move each slot together with its width and media. Height presets
+remain Auto, Small, Medium, Large and Viewport.
 
-No preview is automatically populated or published. Nicolas can add an image or
-Vimeo URL under Projects → Selected Work Preview, above Project Modules. The object
-reuses media-slot image/Vimeo/poster/alt fields and validation but offers only Image
-or Vimeo Video, without text, empty, upload-video or composition controls.
+The public query includes the composition in the existing single request. The
+normalized `selectedWorkPreview` is now one module (`type`, `height`, `order`,
+`slots`) or null. `renderWorkPreview()` sends that module to `renderWorkModule()`
+and the existing `renderProjectModule(..., "overview")`. One Selected Work reference
+still creates one project entry, title and preview row. Category and reference
+ordering, routes, hover/cursor behavior, caching and spacing are unchanged.
+
+All Vimeo slots retain overview autoplay/muted/loop/background mode with native
+controls and decorative UI disabled. The existing SDK fits videos to cover like
+images; auto height uses native video ratio when available. No new video controller
+or mobile layout is introduced. At 700px and below, occupied slots stack in arranged
+order and empty slots/rows disappear, exactly like equivalent detail compositions.
+CSS, `project-modules.js`, and `project-video.js` are unchanged.
+
+Explicit compositions take precedence over retained legacy fields. Intentional
+all-empty compositions remain empty. Malformed compositions are diagnosed and use
+the existing first-Vimeo-detail-module, then first-image-module fallback; they do
+not revive retained legacy media. An absent/empty composition with a legacy Image
+or Vimeo preview normalizes to full/auto without modifying stored data. Detail
+modules and their playback mode are independent, including when either preview
+or detail data is malformed. Request/document/category failure fallbacks are unchanged.
+
+### Backwards compatibility and migration
+
+`studio/migrations/preview-composition.mjs` wraps old Image/Vimeo previews in one
+Full Width / Auto / Default composition with one `previewMediaSlot`. It copies
+image/poster objects intact (asset references, metadata, alt, crop/hotspot) and
+preserves the exact Vimeo URL, including hash/query parameters. Original top-level
+media fields remain stored for older frontend versions; the new composition wins
+on the updated frontend. No upload or manual re-entry is needed. Existing
+compositions are not overwritten and rerunning the conversion is a no-op.
+
+From `studio/`, dry-run with:
+
+```sh
+npx sanity exec scripts/migrate-preview-compositions.mjs --with-user-token
+```
+
+Append `-- --apply` to commit. The runner backs up content (default
+`/tmp/nk-preview-migration`, configurable via `PREVIEW_MIGRATION_BACKUP_DIR`),
+checks revisions and applies all preview-only patches in one transaction. Existing
+drafts remain drafts; release versions are excluded. Read-back verifies that no
+other Project fields, modules, references, assets or other documents changed.
+No Studio/frontend deployment is performed.
+
+### Migration and verification result (2026-09-23)
+
+Four published previews were converted to Full Width / Auto / Default:
+`001NK-V1`, `001NK-C1`, `002NK-C2`, and `001NK-G1` (three images, one Vimeo).
+No drafts existed. Only their `selectedWorkPreview` fields and server-managed
+revision/timestamps changed. Original media fields were retained. Read-back against
+the backup confirmed all other content, detail modules and Selected Work ordering
+were unchanged, and the public adapter produced identical old/new preview media
+with zero preview issues. No deployment was performed.
+
+92 frontend/migration/browser tests passed with live checks enabled, plus 10 Studio
+architecture tests. TypeScript, ESLint, schema validation (zero errors/warnings)
+and the local Studio build passed. Browser playback metadata was simulated for
+geometry checks; these results do not re-certify Vimeo account/embed availability.
+
+### Verification commands
+
+Run `node --test tests/*.test.cjs studio/tests/*migration.test.mjs`; set
+`INFO_LIVE_SMOKE=1` for published-data checks. The composition matrix covers all
+six layouts, five heights, all applicable arrangements, images, videos, mixtures,
+empty slots, invalid data, ordering, cleanup and unchanged detail rendering.
+Migration tests compare old/new normalization and verify raw media preservation.
+
+The optional real-browser responsive test uses a locally installed Playwright Core
+and Chrome/Chromium, isolated Sanity/image fixtures and simulated Vimeo metadata:
+
+```sh
+BROWSER_TEST=1 PLAYWRIGHT_MODULE_PATH=/path/to/playwright-core \
+  node --test tests/selected-work-responsive.test.cjs
+```
+
+Set `BROWSER_EXECUTABLE` if Chrome is not at its standard macOS path. It checks
+all layouts/arrangements at 1440, 701, 700 and 390px, exact grid widths, mobile
+stacking/hiding, image cover, video cover, single-entry counts and playback flags.
+It verifies geometry and playback configuration, not Vimeo account availability.
 
 ## Legal integration
 

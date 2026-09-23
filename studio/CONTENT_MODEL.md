@@ -237,16 +237,29 @@ The detail renderer and Vimeo player
 implementation were not changed during the Selected Work connection.
 
 
-### Explicit Selected Work Preview
+### Selected Work Preview compositions
 
 In Content → Projects → a project, **Selected Work Preview** appears above
-**Project Modules**. It is optional. Choose Image (upload/select a Sanity image,
-optionally set crop/hotspot and alt) or Vimeo Video (paste a validated Vimeo URL,
-optionally set poster and alt). It has no text/empty/layout controls. Its media
-fields and Vimeo validator are reused from the shared slot schema.
+**Project Modules**. It is optional and independent of the detail page.
 
-Publishing an explicit preview affects only the overview: it occupies one existing
-full/auto media row. Detail modules and their playback do not change. Leaving the
-field unset preserves the first-Vimeo-module, then first-image-module migration
-fallback. Invalid stored previews are diagnosed and also fall back defensively.
-This field is not populated or published automatically for any existing project.
+1. Add one **Composition** and choose one of the same six Project Module layouts.
+2. Fill the fixed slots with **Image**, **Vimeo Video**, or **Empty**. Images retain
+   crop/hotspot and alt controls; Vimeo accepts the existing URL forms and poster.
+3. Choose the existing **Height** preset and **Arrangement** (including the middle
+   half in Half + Quarter + Quarter). Each slot moves with its width and media.
+
+The shared `createProjectModules()` factory creates both detail and preview schema
+objects. Preview slots reuse image/Vimeo fields from `mediaSlot`, but do not offer
+Text or uploaded-video controls. Only one composition is allowed per preview. The
+project still appears once in Selected Work, in that page's curated category order.
+
+Existing single Image/Vimeo previews normalize to Full Width / Auto without manual
+re-entry. The lossless migration moves that media into the composition editor while
+retaining old fields for compatibility. See [SANITY_DATA.md](../SANITY_DATA.md#backwards-compatibility-and-migration)
+for dry-run/apply commands and backup/revision protection.
+
+The overview uses the existing module renderer, CSS and video controller. All media
+slots keep the same desktop grid and mobile stacking/empty hiding. Vimeo previews
+autoplay muted and loop without native controls; detail videos and modules are
+unchanged. A missing/invalid preview retains the existing detail-media fallback;
+a valid all-empty composition stays empty. No paid Sanity features are used.

@@ -362,7 +362,7 @@ function renderWorkModule(module, project) {
 
 function renderWorkPreview(project) {
   if (project.selectedWorkPreview) {
-    return renderWorkModule({type: "full", height: "auto", slots: [project.selectedWorkPreview]}, project);
+    return renderWorkModule(project.selectedWorkPreview, project);
   }
   // One reference owns one preview, not the project's entire detail sequence.
   const preview = project.modules.find(module => module.slots.some(slot => slot?.type === "video"))

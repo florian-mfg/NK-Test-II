@@ -77,7 +77,7 @@ export const project = defineType({
       name: 'selectedWorkPreview',
       title: 'Selected Work Preview',
       type: 'selectedWorkPreview',
-      description: 'Optional image or Vimeo video used when this project appears on Selected Work, independently of its detail modules. Leave unset to use the existing detail-media fallback.',
+      description: 'Optional independent preview for Selected Work. Choose one composition and fill its Image, Vimeo Video or Empty slots. Leave unset to use the existing detail-media fallback.',
     }),
     defineField({
       name: 'modules',

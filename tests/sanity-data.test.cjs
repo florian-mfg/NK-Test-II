@@ -265,13 +265,15 @@ test('independent Selected Work image and Vimeo previews normalize without chang
     const normalized = data.normalize(fixture({projects: [{...original, selectedWorkPreview}]}));
     const result = normalized.projects[0];
     assert.deepEqual(normalized.issues, []);
+    assert.equal(result.selectedWorkPreview.type, 'full');
+    assert.equal(result.selectedWorkPreview.height, 'auto');
     assert.deepEqual(result.modules, baseline.modules);
     assert.deepEqual(result.detailModules, baseline.detailModules);
-    assert.equal(result.selectedWorkPreview.alt, selectedWorkPreview.alt);
-    const image = result.selectedWorkPreview.image || result.selectedWorkPreview.posterImage;
+    assert.equal(result.selectedWorkPreview.slots[0].alt, selectedWorkPreview.alt);
+    const image = result.selectedWorkPreview.slots[0].image || result.selectedWorkPreview.slots[0].posterImage;
     assert.deepEqual(image.hotspot, previewImage.hotspot);
     assert.equal(new URL(image.src).searchParams.get('rect'), '120,200,840,600');
-    if (selectedWorkPreview.type === 'video') assert.equal(result.selectedWorkPreview.vimeo.embedUrl, 'https://player.vimeo.com/video/98765?h=private');
+    if (selectedWorkPreview.type === 'video') assert.equal(result.selectedWorkPreview.slots[0].vimeo.embedUrl, 'https://player.vimeo.com/video/98765?h=private');
   }
   assert.equal(baseline.selectedWorkPreview, null);
   for (const selectedWorkPreview of [{type: 'text', text: 'Forbidden'}, {type: 'empty'}, {type: 'image'}, {type: 'video', vimeoUrl: 'https://example.com/file.mp4'}]) {
@@ -282,4 +284,17 @@ test('independent Selected Work image and Vimeo previews normalize without chang
     assert.equal(result.projects[0].modulesValid, true);
   }
   assert.ok(data.query.includes('selectedWorkPreview{type,alt,vimeoUrl,image'));
+});
+
+test('preview normalization preserves missing slots and explicit permutations without mutating source data', () => {
+  const preview={composition:[{_type:'preview-half-quarter-quarter',type:'half-quarter-quarter',height:'large',order:[2,0,1],slots:[{type:'image',image:img()}]}]};
+  const before=JSON.parse(JSON.stringify(preview));
+  const normalized=data.normalize(fixture({projects:[{...project('one'),selectedWorkPreview:preview}]}));
+  assert.deepEqual(preview,before);
+  assert.deepEqual(normalized.issues,[]);
+  const row=normalized.projects[0].selectedWorkPreview;
+  assert.deepEqual(row.order,[2,0,1]);
+  assert.equal(row.slots.length,3);
+  assert.deepEqual(row.slots.slice(1),[null,null]);
+  assert.equal(row.type,'half-quarter-quarter');
 });

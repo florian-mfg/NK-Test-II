@@ -47,7 +47,8 @@
     "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,cv[]{period,text},work,skills,contactLinks[]{label,destination},selectedClients},
     "projects": *[_type == "project" && ${published}] | order(_id asc) {
       _id,_type,title,slug,category,year,additionalInfo,description,detailPageEnabled,
-      selectedWorkPreview{type,alt,vimeoUrl,image${imageFields},poster${imageFields}},
+      selectedWorkPreview{type,alt,vimeoUrl,image${imageFields},poster${imageFields},
+        composition[]{_type,type,height,order,slots[]{type,alt,vimeoUrl,image${imageFields},poster${imageFields}}}},
       modules[]{_type,type,height,order,slots[]{type,text,textSize,alt,vimeoUrl,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
@@ -178,12 +179,24 @@
 
   function previewValue(value, issues, path) {
     if (value == null) return null;
-    if (!record(value) || !['image', 'video'].includes(value.type)) {
-      issue(issues, path, 'invalid_preview', 'Expected an image or Vimeo preview.');
-      return null;
+    const invalid = message => { issue(issues, path, 'invalid_preview', message); return null; };
+    if (!record(value)) return invalid('Expected a Selected Work preview.');
+    // Older single-media previews retain their exact media in a full/auto row.
+    // Explicit compositions win; malformed compositions never revive stale media.
+    if (value.composition == null || (Array.isArray(value.composition) && !value.composition.length)) {
+      if (['image', 'video'].includes(value.type)) return moduleValue({type: 'full', slots: [value]}, issues, path);
+      return invalid('Choose one preview composition.');
     }
-    // Use the same image/Vimeo validation and normalization as detail media.
-    return moduleValue({type: 'full', slots: [value]}, issues, path)?.slots[0] || null;
+    if (!Array.isArray(value.composition) || value.composition.length !== 1) return invalid('Expected exactly one preview composition.');
+    const row = value.composition[0];
+    if (!record(row) || !own(layouts, row.type) || (row._type && row._type !== `preview-${row.type}`)) {
+      return invalid('Unknown or mismatched preview composition.');
+    }
+    if (!Array.isArray(row.slots) || row.slots.some(slot => slot != null && (!record(slot) || !['empty', 'image', 'video'].includes(slot.type)))) {
+      return invalid('Preview slots support Image, Vimeo Video or Empty.');
+    }
+    // Namespaced Studio types share the exact module normalizer and renderer.
+    return moduleValue({...row, _type: row.type}, issues, `${path}.composition[0]`);
   }
 
   function normalizeModule(value) {

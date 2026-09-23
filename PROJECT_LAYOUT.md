@@ -41,8 +41,9 @@ cover`. At 700px and below, occupied slots stack in configured order and empty
 slots disappear. Each stacked slot uses the selected height; auto stays natural.
 
 Each Selected Work reference renders one `.project-module-preview` and one
-`.project-title`. A valid Project **Selected Work Preview** takes precedence, using the existing
-full-width, auto-height single-media layout. Otherwise the preview uses the first
+`.project-title`. A valid Project **Selected Work Preview** takes precedence. It supports
+all six module compositions, the same heights and arrangements, and Image/Vimeo/Empty
+slots. Older single-media previews normalize to full/auto. Otherwise the preview uses the first
 Vimeo-containing detail module, then the first image-containing module (or the
 first module if neither exists).
 Its composition, height and arrangement remain unchanged. The title sticks within
