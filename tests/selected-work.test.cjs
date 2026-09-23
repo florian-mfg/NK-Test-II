@@ -148,9 +148,10 @@ test('late Selected Work response respects the active category and does not repl
 test('live Selected Work uses the published explicit image preview and opens its Sanity detail', {skip:!process.env.INFO_LIVE_SMOKE}, async () => {
   const result=await adapter.load();
   assert.equal(result.ok,true,JSON.stringify(result.error));
-  assert.deepEqual(result.data.selectedWork?.video,['ethereal-tides']);
-  assert.deepEqual(result.data.selectedWork.commissioned,[]);
-  assert.deepEqual(result.data.selectedWork.graphic,[]);
+  assert.ok(result.data.selectedWork);
+  const project = result.data.selectedWork.video.map(id=>result.data.projectsById[id]).find(p=>
+    p?.selectedWorkPreview?.type==='image' && p.detailPageEnabled && p.modules.some(m=>m.slots.some(s=>s?.type==='video')));
+  assert.ok(project, 'A published Video project with an image preview and Vimeo detail is required');
   const app=setup();
   try {
     await app.settle(result);
@@ -159,17 +160,17 @@ test('live Selected Work uses the published explicit image preview and opens its
       return project && (project.selectedWorkPreview || project.modulesValid);
     });
     assert.deepEqual(ids(app),expected);
-    const article=app.window.document.querySelector('[data-project="ethereal-tides"]');
+    const article=app.window.document.querySelector(`[data-project="${project.id}"]`);
     assert.ok(article);
-    assert.equal(app.window.document.querySelectorAll('[data-project="ethereal-tides"]').length,1);
+    assert.equal(app.window.document.querySelectorAll(`[data-project="${project.id}"]`).length,1);
     assert.equal(article.querySelectorAll('.project-module-preview').length,1);
     assert.equal(article.querySelectorAll('.project-title').length,1);
-    const preview=result.data.projectsById['ethereal-tides'].selectedWorkPreview;
+    const preview=project.selectedWorkPreview;
     assert.equal(preview?.type,'image');
     const image=article.querySelector('.project-module-preview img');
     assert.ok(image);
     assert.equal(image.getAttribute('src'),preview.src);
-    assert.equal(image.getAttribute('alt'),preview.alt ?? 'Ethereal Tides');
+    assert.equal(image.getAttribute('alt'),preview.alt ?? project.title);
     assert.equal(article.querySelector('iframe'),null);
     assert.equal(article.querySelector('button'),null);
     app.window.location.hash=article.querySelector('.project-link').hash;
@@ -179,7 +180,9 @@ test('live Selected Work uses the published explicit image preview and opens its
     assert.ok(app.window.document.querySelector('.project-video-toggle img'));
     for (const category of ['commissioned','graphic']) {
       app.window.location.hash=`#work/${category}`; app.window.route(); await flush();
-      assert.deepEqual(ids(app),[]);
+      assert.deepEqual(ids(app),result.data.selectedWork[category].filter(id=>{
+        const p=result.data.projectsById[id];return p && (p.selectedWorkPreview || p.modulesValid);
+      }));
       assert.equal(app.window.document.querySelector('.work').dataset.source,'sanity');
     }
     assert.equal(app.requests(),1);

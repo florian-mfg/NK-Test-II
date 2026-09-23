@@ -420,9 +420,7 @@ function renderArchive() {
     const title = escapeModuleAttribute(entry.title);
     const info = `<span class="archive-additional-info">${escapeModuleAttribute(entry.additionalInfo || "")}</span>`;
     const attributes = `class="archive-row" data-index="${index}" data-year="${escapeModuleAttribute(entry.year || "")}"`;
-    return entry.detailHref
-      ? `<div ${attributes} role="group"><span><a href="${escapeModuleAttribute(entry.detailHref)}">${title}</a></span><button class="archive-preview-cycle" type="button" aria-label="Next preview for ${title}">${info}</button></div>`
-      : `<button ${attributes} type="button"><span>${title}</span>${info}</button>`;
+    return `<button ${attributes} type="button"><span>${title}</span>${info}</button>`;
   };
   app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true">${entries[0]?.images?.[0] ? image(entries[0].images[0]) : ""}</div><div class="archive-list">${entries.map(entryMarkup).join("")}</div></section>`;
   renderedIndexPages.set(app.querySelector(".archive"), entries);
@@ -437,23 +435,23 @@ function renderArchive() {
   let activeRow = -1;
   let frame = 0;
   let scrollFrame;
-  const showProjectImage = (project, imageIndex) => {
-    if (!bgImage || !project?.images?.length) {
+  const showEntryImage = (entry, imageIndex) => {
+    if (!bgImage || !entry?.images?.length) {
       bg.classList.remove("visible");
       return;
     }
-    const media = project.previewImages?.[imageIndex % project.images.length];
+    const media = entry.previewImages?.[imageIndex % entry.images.length];
     bgImage.alt = media?.alt ?? "";
     // Reuse the module image crop/hotspot mapping without changing Index sizing.
     const position = moduleImagePosition(media);
     bgImage.style.cssText = position ? position.slice(' style="'.length, -1) : "";
-    const half = !mobile.matches && (project.layout === "half") !== (imageIndex % 2 === 1);
+    const half = !mobile.matches && (entry.layout === "half") !== (imageIndex % 2 === 1);
     bg.classList.toggle("half", half);
     bg.classList.toggle("full", !half);
-    bgImage.src = project.images[imageIndex % project.images.length];
+    bgImage.src = entry.images[imageIndex % entry.images.length];
     bg.classList.add("visible");
   };
-  const updateMobileProject = () => {
+  const updateMobileEntry = () => {
     if (!mobile.matches) return;
     const top = list.getBoundingClientRect().top;
     const index = rows.findIndex(row => row.getBoundingClientRect().bottom > top + 1);
@@ -465,13 +463,13 @@ function renderArchive() {
       else row.removeAttribute("aria-current");
     });
     activeRow = next;
-    showProjectImage(entries[next], 0);
+    showEntryImage(entries[next], 0);
   };
   list.addEventListener("scroll", () => {
     if (!mobile.matches || scrollFrame) return;
     scrollFrame = requestAnimationFrame(() => {
       scrollFrame = null;
-      updateMobileProject();
+      updateMobileEntry();
     });
   }, { passive: true, signal: events.signal });
   rows.forEach(row => {
@@ -479,20 +477,19 @@ function renderArchive() {
       if (mobile.matches) return;
       activeRow = Number(row.dataset.index);
       frame = 0;
-      showProjectImage(entries[activeRow], frame);
+      showEntryImage(entries[activeRow], frame);
     });
-    row.addEventListener("click", event => {
-      if (event.target.closest("a")) return;
+    row.addEventListener("click", () => {
       if (mobile.matches) {
         list.scrollTo({ top: row.offsetTop, behavior: "auto" });
-        updateMobileProject();
+        updateMobileEntry();
         return;
       }
       const rowIndex = Number(row.dataset.index);
-      const project = entries[rowIndex];
+      const entry = entries[rowIndex];
       frame = activeRow === rowIndex ? frame + 1 : 0;
       activeRow = rowIndex;
-      showProjectImage(project, frame);
+      showEntryImage(entry, frame);
     });
     row.addEventListener("mouseleave", () => {
       if (mobile.matches) return;
@@ -509,11 +506,11 @@ function renderArchive() {
       row.removeAttribute("aria-current");
     });
     bg.classList.remove("visible");
-    if (mobile.matches) updateMobileProject();
+    if (mobile.matches) updateMobileEntry();
     else list.scrollTop = 0;
   };
   mobile.addEventListener("change", syncLayout, { signal: events.signal });
-  window.addEventListener("resize", updateMobileProject, { signal: events.signal });
+  window.addEventListener("resize", updateMobileEntry, { signal: events.signal });
   cleanupPage = () => {
     events.abort();
     cancelAnimationFrame(scrollFrame);

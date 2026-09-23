@@ -49,7 +49,7 @@ feature, dependency installation, or build pipeline is introduced.
 | projects | Complete usable project metadata collection, independent from Selected Work |
 | projectsById | Null-prototype lookup keyed by project slug |
 | selectedWork | Ordered slug arrays under video, commissioned, graphic; null when absent |
-| indexPage.entries | Independently ordered entries with title/year/additionalInfo, optional projectId, layout, images and previewImages |
+| indexPage.entries | Independently ordered entries with own title/year/additionalInfo, layout, and 1–3 images/previewImages (no Project reference or URL) |
 | legalPages | imprint and privacy-policy, each containing title and restricted Portable Text body or null |
 | availability | missing / invalid / present for source documents and collections |
 | issues | Structured diagnostics: path, code, message |
@@ -142,35 +142,69 @@ and Navigation was missing. Publish Navigation manually to test real editorial l
 and ordering. No content or schema changes were made. The Studio's existing initial
 category order is preserved; once published, explicit CMS ordering wins.
 
-## Index decisions
+## Independent Index
 
-Index entries never derive preview images from project modules and never pass
-through the old archive sorting algorithm. They can stand alone. Missing related
-projects do not invalidate an entry if it has its own title and preview images.
-Unusable images are omitted in order; an entry without any images or a title is
-omitted with an issue. Missing title/year/info inherit from a valid related project.
-An explicitly empty additionalInfo string suppresses inheritance, while an absent
-field inherits. Existing schema/editor behavior may unset an empty string; adding
-an explicit suppress-inheritance control would be a separate schema decision.
+`#archive` reads `indexPage.entries` in exact CMS order. Every entry has its own
+required `displayTitle`, optional integer `year`, optional `additionalInfo`,
+1–3 ordered `previewImages`, and `initialLayout` (`full` or `half`). The query and
+normalizer do not read Project references or legacy `yearOverride` values. Project
+edits, slugs and detail availability cannot affect an Index entry.
 
-## Index integration
+Every row is a preview button; no Index title or row links to a Project. The existing
+left/right arrow cursor and click-to-advance interaction are unchanged: desktop
+hover starts with the first image, clicking cycles images modulo their count and
+alternates full/right-half layout, and leaving the row resets it. Mobile retains
+full-width previews driven by row selection and scrolling; clicking selects a row
+rather than introducing a new mobile image-cycling gesture. CSS, image positioning,
+transitions, crop/hotspot and responsive behavior are unchanged.
 
-`#archive` uses the normalized `indexPage.entries` in exact CMS order. It waits
-for the shared load before displaying entries. A valid empty list stays empty;
-request failures, missing documents and malformed entry arrays use the existing
-arranged local archive. Entries without usable titles or preview images are omitted.
+The page waits for the shared load. A valid empty list stays empty; request failure,
+a missing document or a malformed entries array uses the independent local archive
+list. Entries without titles or usable images, or with image counts outside 1–3,
+are omitted with diagnostics. Invalid individual images are omitted in order.
+No Project metadata or Project image fallback is used. Repeated routing preserves
+the current Index DOM; late responses cannot replace another active route.
 
-Linked titles open enabled project details through the existing hash route; the
-rest of each row retains desktop preview cycling and mobile selection/scrolling.
-Independent and detail-disabled entries have no detail link. Own preview images
-retain alt text, crop and hotspot. Repeated routing preserves the current Index DOM;
-a late response cannot replace another active page. Legal uses the same shared snapshot.
+Validation: `node --test tests/index-page.test.cjs tests/sanity-data.test.cjs`.
+Set `INFO_LIVE_SMOKE=1` for the read-only published-data check. Project and Selected
+Work regression tests exercise their unchanged behavior.
 
-Validation uses `node --test tests/index-page.test.cjs tests/sanity-data.test.cjs`.
-Set `INFO_LIVE_SMOKE=1` to additionally check the current published response. During
-this integration the live response contained no published Index document, so the
-live check exercised the genuine missing-document fallback. Publish Index manually
-to verify its actual entries in the browser. No CMS content was changed.
+### Legacy content migration
+
+Before removing a relationship, copy the old renderer's effective title, year and
+additional information into independent fields, retaining entry/image keys, array
+order, image crop/hotspot and layout. The migration in
+`studio/scripts/migrate-index-independent.mjs` performs this once, separately for
+published Index and any existing draft. It never publishes a draft or modifies a
+Project. Its only Project metadata lookup is migration-time code, not runtime logic.
+
+From `studio/`, run `npx sanity exec scripts/migrate-index-independent.mjs --with-user-token`
+to back up content and inspect a dry-run plan. Append `-- --apply` to apply it.
+Backups default to `/tmp/nk-index-migration` (override with
+`INDEX_MIGRATION_BACKUP_DIR` for durable storage). The script refuses unresolved
+titles or image loss, checks revisions, commits atomically, and verifies that all
+non-Index content stayed unchanged. It can be rerun without changing migrated data.
+
+The inspected `001NK-Test` entry (`7cbe36eea913`) inherits title `001NK-Test`, year
+`2026`, and additional information `Client ` (including the trailing space).
+These values are preserved alongside its existing single landscape preview and
+Full initial layout; neither the entry nor any asset is deleted.
+
+### Verification (2026-09-23)
+
+The published `indexPage` migration completed and read-back matched the plan.
+All non-Index documents, including Projects and Selected Work, matched the
+pre-migration snapshot exactly. No Index draft existed. The entry key, image key,
+asset reference, layout and visible metadata were retained.
+
+84 frontend/migration tests passed with all live checks enabled, plus 10 Studio
+architecture tests. TypeScript, ESLint and schema validation passed (zero schema
+warnings/errors). Chrome compared 21 browsing states for 1/2/3-image entries at
+1440px, 700px and 390px against the previous renderer: image geometry, layout,
+transitions, cursor and responsive interactions matched. The actual published
+Index also rendered from Sanity after migration. CSS and cursor assets are unchanged.
+Live Project/Selected Work checks now resolve the current published project instead
+of assuming its former `ethereal-tides` slug; their application behavior is unchanged.
 
 ## Frontpage integration
 

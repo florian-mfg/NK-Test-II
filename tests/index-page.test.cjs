@@ -41,7 +41,7 @@ const titles = app => rows(app).map(row=>row.firstElementChild.textContent);
 const fire = (app, row, name) => row.dispatchEvent(new app.window.MouseEvent(name,{bubbles:true}));
 const flush = () => new Promise(resolve=>setImmediate(resolve));
 
-test('Index preserves CMS order, metadata, independent entries and safe enabled-only detail links',async()=>{
+test('Index preserves CMS order and independent metadata; legacy references never create links',async()=>{
  const app=setup();
  try {
   assert.ok(app.window.document.querySelector('.archive[aria-busy]'));
@@ -50,19 +50,18 @@ test('Index preserves CMS order, metadata, independent entries and safe enabled-
   const scrolls=app.scrollCalls.length;
   app.window.scrollY=90;
   await app.settle(success(content([
-   entry('Z independent',{yearOverride:1999,additionalInfo:'Own'}),
-   entry('  ',{project:{_ref:'enabled'}}),
-   entry('A override',{project:{_ref:'enabled'},yearOverride:2001,additionalInfo:''}),
+   entry('Z independent',{year:1999,additionalInfo:'Own'}),
+   entry('Own title',{project:{_ref:'enabled'}}),
+   entry('A override',{project:{_ref:'enabled'},year:2001,additionalInfo:''}),
    entry('Disabled',{project:{_ref:'disabled'}}),
    entry('Missing reference',{project:{_ref:'missing'}})
   ],[project('enabled'),project('disabled',{detailPageEnabled:false})])));
-  assert.deepEqual(titles(app),['Z independent','Project enabled','A override','Disabled','Missing reference']);
-  assert.deepEqual(rows(app).map(row=>row.dataset.year),['1999','2026','2001','2026','']);
-  assert.deepEqual(rows(app).map(row=>row.querySelector('.archive-additional-info').textContent),['Own','Inherited info','','Inherited info','']);
-  assert.equal(rows(app)[0].querySelector('a'),null);
-  assert.equal(rows(app)[1].querySelector('a').getAttribute('href'),'#project/enabled');
-  assert.equal(rows(app)[3].querySelector('a'),null);
-  assert.equal(rows(app)[4].querySelector('a'),null);
+  assert.deepEqual(titles(app),['Z independent','Own title','A override','Disabled','Missing reference']);
+  assert.deepEqual(rows(app).map(row=>row.dataset.year),['1999','','2001','','']);
+  assert.deepEqual(rows(app).map(row=>row.querySelector('.archive-additional-info').textContent),['Own','','','','']);
+  assert.ok(rows(app).every(row=>row.tagName==='BUTTON' && !row.querySelector('a')));
+  for(const row of rows(app)) {row.firstElementChild.click();row.querySelector('.archive-additional-info').click();}
+  assert.equal(app.window.location.hash,'#archive');
   assert.equal(app.scrollCalls.length,scrolls);
   assert.equal(app.window.scrollY,90);
   const list=app.window.document.querySelector('.archive-list');
@@ -86,7 +85,7 @@ test('desktop hover/click cycles only Index images and retains half/full alterna
   assert.equal(image.style.objectPosition,'25% 60%');
   assert.equal(image.alt,'First alt');
   assert.ok(bg.classList.contains('half'));
-  row.querySelector('.archive-preview-cycle').click();
+  row.querySelector('.archive-additional-info').click();
   assert.ok(image.src.includes('/second-1200x800.jpg'));
   assert.equal(image.style.objectPosition,'');
   assert.equal(image.alt,'Second alt');
@@ -98,12 +97,10 @@ test('desktop hover/click cycles only Index images and retains half/full alterna
   fire(app,row,'mouseleave');
   assert.equal(bg.classList.contains('visible'),false);
   fire(app,row,'mouseenter');
-  const source=image.src;
-  row.querySelector('a').click();await new Promise(resolve=>setTimeout(resolve,5));
-  assert.equal(image.src,source);
-  assert.equal(app.window.location.hash,'#project/enabled');
-  app.window.route();
-  assert.equal(app.window.document.querySelector('.detail').dataset.projectSource,'sanity');
+  row.firstElementChild.click();await flush();
+  assert.ok(image.src.includes('/second-1200x800.jpg'));
+  assert.equal(app.window.location.hash,'#archive');
+  assert.equal(row.querySelector('a'),null);
  }finally{app.dom.window.close();}
 });
 
@@ -128,6 +125,23 @@ test('mobile scroll/selection still drives previews and full-width layout',async
   await new Promise(resolve=>app.window.requestAnimationFrame(resolve));
   assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
  }finally{app.dom.window.close();}
+});
+
+test('1, 2 and 3 images wrap in order with the existing arrow-cursor click interaction',async()=>{
+ for(const count of [1,2,3]) {
+  const app=setup();
+  try {
+   await app.settle(success(content([entry('Cycle',{previewImages:Array.from({length:count},(_,i)=>img(`image${i}`))})])));
+   const row=rows(app)[0], bg=app.window.document.querySelector('.archive-background');
+   fire(app,row,'mouseenter');
+   for(let i=0;i<count*2+1;i++) {
+    assert.ok(bg.querySelector('img').src.includes(`/image${i%count}-1200x800.jpg`));
+    assert.equal(bg.classList.contains('half'),i%2===1);
+    assert.equal(app.window.location.hash,'#archive');
+    row.firstElementChild.click();
+   }
+  }finally{app.dom.window.close();}
+ }
 });
 
 test('published empty Index and entries without images do not crash or pull in local content',async()=>{
@@ -181,6 +195,9 @@ test('live Index document or its actual absence reaches the Index renderer', {sk
   if(result.data.indexPage) {
    assert.deepEqual(titles(app),result.data.indexPage.entries.map(entry=>entry.title));
    assert.equal(app.window.document.querySelector('.archive').dataset.source,'sanity');
+   assert.equal(app.window.document.querySelector('.archive-row a'),null);
+   for (const row of rows(app)) row.firstElementChild.click();
+   assert.equal(app.window.location.hash,'#archive');
   }else{
    assert.equal(app.window.document.querySelector('.archive').dataset.source,'local');
    assert.deepEqual(titles(app),Array.from(vm.runInContext('ARCHIVE_DISPLAY_PROJECTS.map(p=>p.title)',app.dom.getInternalVMContext())));

@@ -83,8 +83,9 @@ Ethereal Tides demonstrates all three sizes.
 ## Index additional info
 
 Published Sanity Index entries control the list and its order. Their own preview
-images drive the existing hover/click and mobile interactions. Linked project
-titles open details; the rest of each row keeps its preview/selection action.
+images (1–3 per entry) drive the existing arrow-cursor hover/click and mobile
+interactions. Every title/row is a preview button with no Project navigation.
+Title, year and additional information are independent Index values.
 The following local data remains only as a request/document failure fallback.
 
 The sixth value of an `ARCHIVE_PROJECTS` entry in `app.js` is optional free text

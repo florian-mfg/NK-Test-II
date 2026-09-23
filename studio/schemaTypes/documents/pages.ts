@@ -84,8 +84,7 @@ export const indexPage = defineType({
       title: 'Index entries',
       type: 'array',
       options: {sortable: true},
-      description:
-        'An independent browsing list. Drag entries to reorder; a related project is optional.',
+      description: 'An independent image browsing list. Drag entries to reorder.',
       of: [defineArrayMember({type: 'indexEntry'})],
     }),
   ],

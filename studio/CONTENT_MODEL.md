@@ -230,7 +230,8 @@ Navigation and Site Settings now drive global labels/order, branding, metadata a
 shared contact/footer links through the existing public read. Legal bodies now use their published Display title and restricted formatted text,
 with per-document local fallback only when unavailable.
 Index now consumes its independently ordered
-entries and own preview images; enabled project titles link to details. Missing
+entries, required own titles, independent year/additional information and 1–3 own
+preview images. Entries only browse previews and never link to Project details. Missing
 Index documents retain local fallback, while valid empty lists stay empty.
 The detail renderer and Vimeo player
 implementation were not changed during the Selected Work connection.

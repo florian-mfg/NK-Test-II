@@ -52,11 +52,39 @@ test('slugs retain legacy route IDs but reject unsafe routes', () => {
   }
 })
 
-test('Index-only entries require a title; linked entries inherit it', () => {
+test('Index requires its own title and 1–3 previews and has no Project relationship', () => {
+  assert.deepEqual(
+    indexEntry.fields.map((item) => item.name),
+    ['displayTitle', 'year', 'additionalInfo', 'previewImages', 'initialLayout'],
+  )
   const [validate] = validators(field(indexEntry, 'displayTitle'))
-  assert.equal(validate('Independent entry', {parent: {}}), true)
-  assert.equal(validate(undefined, {parent: {project: {_ref: 'example'}}}), true)
-  assert.notEqual(validate('  ', {parent: {}}), true)
+  assert.equal(validate('Independent entry'), true)
+  assert.notEqual(validate(undefined, {parent: {project: {_ref: 'example'}}}), true)
+  assert.notEqual(validate('  '), true)
+  for (const [name, expected] of [
+    ['displayTitle', [['required'], ['custom']]],
+    ['previewImages', [['required'], ['min', 1], ['max', 3]]],
+  ]) {
+    const calls = []
+    const rule = new Proxy(
+      {},
+      {
+        get:
+          (_, method) =>
+          (...args) => {
+            calls.push(method === 'custom' ? [method] : [method, ...args])
+            return rule
+          },
+      },
+    )
+    field(indexEntry, name).validation(rule)
+    assert.deepEqual(calls, expected)
+  }
+  assert.deepEqual(indexEntry.preview.prepare({title: 'Own title', year: 2026}), {
+    title: 'Own title',
+    subtitle: '2026',
+    media: undefined,
+  })
 })
 
 test('overview references detect a category changed after selection', async () => {

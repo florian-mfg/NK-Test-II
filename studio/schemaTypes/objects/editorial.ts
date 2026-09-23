@@ -123,48 +123,32 @@ export const indexEntry = defineType({
   type: 'object',
   fields: [
     defineField({
-      name: 'project',
-      title: 'Related project (optional)',
-      type: 'reference',
-      to: [{type: 'project'}],
-      options: {disableNew: true},
-      description: 'Optional. An Index entry can exist without a project or detail page.',
-    }),
-    defineField({
       name: 'displayTitle',
       title: 'Display title',
       type: 'string',
-      description:
-        'Leave blank to use the related project title. Required when no project is selected.',
+      description: 'The title shown in the Index.',
       validation: (rule) =>
-        rule.custom((value, context) =>
-          value?.trim() || (context.parent as {project?: {_ref?: string}})?.project?._ref
-            ? true
-            : 'Enter a display title or select a project.',
-        ),
+        rule.required().custom((value) => (value?.trim() ? true : 'Enter a display title.')),
     }),
     defineField({
-      name: 'yearOverride',
-      title: 'Year override',
+      name: 'year',
+      title: 'Year',
       type: 'number',
-      description: 'Optional. Otherwise use the related project year, if available.',
       validation: (rule) => rule.integer(),
     }),
     defineField({
       name: 'additionalInfo',
-      title: 'Additional information override',
+      title: 'Additional information',
       type: 'string',
-      description:
-        'Optional client or brand shown beside the title. If omitted, use the related project’s additional information.',
+      description: 'Optional client, brand, or other information shown beside the title.',
     }),
     defineField({
       name: 'previewImages',
       title: 'Preview images',
       type: 'array',
-      description:
-        'Drag images to set their browsing order. These are independent of project modules.',
+      description: 'Choose 1–3 images and drag them to set their browsing order.',
       options: {sortable: true},
-      validation: (rule) => rule.required().min(1),
+      validation: (rule) => rule.required().min(1).max(3),
       of: [
         defineArrayMember({
           type: 'image',
@@ -207,15 +191,13 @@ export const indexEntry = defineType({
   preview: {
     select: {
       title: 'displayTitle',
-      projectTitle: 'project.title',
-      year: 'yearOverride',
-      projectYear: 'project.year',
+      year: 'year',
       media: 'previewImages.0',
     },
-    prepare({title, projectTitle, year, projectYear, media}) {
+    prepare({title, year, media}) {
       return {
-        title: title || projectTitle || 'Untitled Index entry',
-        subtitle: String(year ?? projectYear ?? 'Independent Index entry'),
+        title: title || 'Untitled Index entry',
+        subtitle: String(year ?? 'Independent Index entry'),
         media,
       }
     },

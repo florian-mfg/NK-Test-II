@@ -51,7 +51,7 @@
       modules[]{_type,type,height,order,slots[]{type,text,textSize,alt,vimeoUrl,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
-    "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,project{_ref},displayTitle,yearOverride,additionalInfo,initialLayout,previewImages[]${imageFields}}},
+    "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,displayTitle,year,additionalInfo,initialLayout,previewImages[]${imageFields}}},
     "legalPages": *[_type == "legalPage" && _id in ["legal-imprint","legal-privacy-policy"]]{_id,_type,pageType,title,body}
   }`;
 
@@ -373,17 +373,17 @@
     const indexPage = indexDoc ? {entries: array(indexDoc.entries, issues, 'indexPage.entries').flatMap((entry, index) => {
       const path = `indexPage.entries[${index}]`;
       if (!record(entry)) { issue(issues, path, 'invalid_entry', 'Invalid Index entry omitted.'); return []; }
-      const project = byDocumentId.get(entry.project?._ref);
-      if (entry.project && !project) issue(issues, `${path}.project`, 'missing_reference', 'Related project unavailable; entry overrides remain usable.');
-      const title = text(entry.displayTitle) || project?.title || '';
-      const previews = array(entry.previewImages, issues, `${path}.previewImages`).map((item, i) => image(item, issues, `${path}.previewImages[${i}]`)).filter(Boolean);
+      const title = text(entry.displayTitle);
+      const images = array(entry.previewImages, issues, `${path}.previewImages`);
+      if (images.length < 1 || images.length > 3) {
+        issue(issues, path, 'invalid_entry', 'Index entry requires 1–3 preview images.'); return [];
+      }
+      const previews = images.map((item, i) => image(item, issues, `${path}.previewImages[${i}]`)).filter(Boolean);
       if (!title || !previews.length) { issue(issues, path, 'invalid_entry', 'Index entry without a title or usable preview images omitted.'); return []; }
       const layout = ['full', 'half'].includes(entry.initialLayout) ? entry.initialLayout : 'full';
       if (entry.initialLayout != null && entry.initialLayout !== layout) issue(issues, `${path}.initialLayout`, 'invalid_layout', 'Invalid initial layout replaced with full.');
-      return [{key: text(entry._key) || `entry-${index}`, projectId: project?.id ?? null, title,
-        detailHref: project && project.detailPageEnabled !== false ? `#project/${project.id}` : null,
-        year: year(entry.yearOverride) || project?.year || '',
-        additionalInfo: typeof entry.additionalInfo === 'string' ? entry.additionalInfo : project?.additionalInfo || '',
+      return [{key: text(entry._key) || `entry-${index}`, title,
+        year: year(entry.year), additionalInfo: string(entry.additionalInfo),
         layout, images: previews.map(preview => preview.src), previewImages: previews}];
     })} : null;
 

@@ -10,7 +10,7 @@ by these source changes.
 - Content → Frontpage: background video URL, accessible title, optional poster.
 - Content → Selected Work: three independently ordered project-reference arrays.
 - Content → Projects: normal repeatable project documents and the existing modules.
-- Content → Index: independent ordered entries, optionally linked to projects.
+- Content → Index: independent ordered entries with their own metadata and 1–3 preview images; no Project links.
 - Content → Info: biography, CV, Work, Skills, contact selectors, Selected Clients.
 - Settings → Navigation: labels and controlled destinations for both menus.
 - Settings → Site Settings: shared contact addresses, brand, metadata, footer links.
@@ -69,14 +69,18 @@ check remains in place.
 
 ## Index semantics
 
-Index entries are embedded objects in a separately ordered singleton array. They
-can exist without any project. Unlinked entries require a displayTitle. Linked
-entries fall back to the project title/year/additionalInfo when their overrides are
-absent. Preview images are explicitly curated per entry and required, even when a
-project is linked. Their order does not depend on project modules. Initial layout
-is full or right-half; subsequent cycling and mobile behavior remain frontend logic.
-There is no automatic generation from Selected Work and no forced detail route.
-The optional additionalInfo override preserves the frontend’s client/brand column.
+Index entries are embedded objects in a separately ordered singleton array. Each
+entry requires its own Display title and 1–3 independently curated Preview images.
+Year is an optional integer; Additional information is optional text. Neither
+inherits from Projects. Initial preview layout is Full width or Right half.
+There is no Related project field or Project URL, and clicking an Index entry never
+opens a Project. Existing desktop image cycling, arrow cursor and mobile
+selection/scrolling remain frontend behavior; no styling has changed.
+
+Before adopting this schema for legacy data, run the backed-up, revision-guarded
+migration described in [SANITY_DATA.md](../SANITY_DATA.md#legacy-content-migration).
+It materializes currently displayed metadata and removes only obsolete Index
+relationship/override fields. Projects and other pages are never patched.
 
 ## Text and homepage decisions
 
@@ -113,8 +117,9 @@ Manually test after login:
 3. Fill a project description, toggle detail availability, and validate a slug.
 4. Select/reorder projects per category; change a selected project category and
    check the overview validation message.
-5. Make an Index-only entry with a title and images, then a linked entry without a
-   custom title. Reorder entries/images and switch the initial layout.
+5. Create an Index entry with its own title, year, optional information and 1–3
+   images. Confirm blank titles and 0/4 images fail validation. Reorder entries/images
+   and switch the initial layout; confirm no Project selector or navigation exists.
 6. Edit/reorder Info content. Set shared contacts once; select them in Info/menu/footer.
 7. Rename navigation labels while retaining destinations; verify all three categories.
 8. Open both legal pages; confirm the correct locked page type and rich text editing.

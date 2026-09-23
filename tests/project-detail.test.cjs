@@ -196,13 +196,12 @@ test('published empty description/modules stay empty; image crop/hotspot and alt
   } finally {empty.dom.window.close();}
 });
 
-test('live Ethereal Tides modules and Vimeo source reach detail DOM and custom controls', {skip: !process.env.INFO_LIVE_SMOKE}, async () => {
+test('live published project modules and Vimeo source reach detail DOM and custom controls', {skip: !process.env.INFO_LIVE_SMOKE}, async () => {
   const result = await adapter.load();
   assert.equal(result.ok, true, JSON.stringify(result.error));
-  const project = result.data.projectsById['ethereal-tides'];
+  const project = result.data.projects.find(p=>p.detailPageEnabled && p.modulesValid && p.modules.some(m=>m.slots.some(s=>s?.type==='video')));
   assert.ok(project?.modulesValid);
-  assert.equal(project.title, 'Ethereal Tides');
-  const app = setup();
+  const app = setup(`#project/${project.id}`);
   try {
     await app.settle(result);
     const {document} = app.window;

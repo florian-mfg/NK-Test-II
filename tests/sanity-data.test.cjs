@@ -152,31 +152,28 @@ test('shared category defaults have the approved order and stable destinations',
   assert.equal(cms.navigation.categories[0].href, '#work/graphic');
 });
 
-test('Index-only entries, overrides and images remain independent of projects', () => {
+test('Index metadata and 1–3 preview images are independent of Projects and legacy overrides', () => {
   const preview = {asset: {_ref: 'image-index123-400x600-png'}};
-  const result = data.normalize(fixture({projects: [project('one', 'Video', {additionalInfo: 'Client'})], indexPage: doc('indexPage', {entries: [
-    {_key: 'independent', displayTitle: 'Independent', yearOverride: 2020, previewImages: [preview], initialLayout: 'half'},
-    {_key: 'linked', project: {_ref: 'one'}, previewImages: [preview]},
-    {_key: 'override', project: {_ref: 'one'}, displayTitle: 'Custom', yearOverride: 2022, additionalInfo: '', previewImages: [preview, img()]},
-    {project: {_ref: 'missing'}, displayTitle: 'Still usable', previewImages: [preview]},
-    {displayTitle: 'No images', previewImages: []}
-  ]})}));
-  const entries = result.indexPage.entries;
-  assert.equal(entries.length, 4);
-  assert.deepEqual(entries.map(e => e.title), ['Independent', 'one', 'Custom', 'Still usable']);
-  assert.equal(entries[0].projectId, null);
-  assert.equal(entries[0].detailHref, null);
-  assert.equal(entries[1].detailHref, '#project/one');
-  assert.equal(entries[3].detailHref, null);
-  const disabled = data.normalize(fixture({projects: [project('one', 'Video', {detailPageEnabled: false})], indexPage: doc('indexPage', {entries: [{project: {_ref: 'one'}, previewImages: [preview]}]})}));
-  assert.equal(disabled.indexPage.entries[0].detailHref, null);
-  assert.equal(entries[0].layout, 'half');
-  assert.equal(entries[1].additionalInfo, 'Client');
-  assert.equal(entries[1].year, '2026');
-  assert.equal(entries[2].additionalInfo, '');
-  assert.equal(entries[2].year, '2022');
-  assert.equal(entries[2].images.length, 2);
-  assert.notEqual(entries[1].images[0], result.projects[0].modules[0].slots[0].src);
+  const entries = [1, 2, 3].map(count => ({_key: `entry${count}`, displayTitle: `Own ${count}`,
+    year: 2000 + count, additionalInfo: count === 1 ? 'Own info' : '', initialLayout: 'half',
+    project: {_ref: 'one'}, yearOverride: 1999, previewImages: Array(count).fill(preview)}));
+  entries.push({project: {_ref: 'one'}, previewImages: [preview]},
+    {displayTitle: 'No images', previewImages: []},
+    {displayTitle: 'Too many', previewImages: Array(4).fill(preview)},
+    {displayTitle: 'No inheritance', project: {_ref: 'one'}, yearOverride: 1999, previewImages: [preview]});
+  const normalize = projects => data.normalize(fixture({projects, indexPage: doc('indexPage', {entries})}));
+  const result = normalize([project('one', 'Video', {additionalInfo: 'Client'})]);
+  assert.deepEqual(result.indexPage, normalize([]).indexPage);
+  assert.deepEqual(result.indexPage, normalize([project('one', 'Video', {title: 'Changed', year: 1900, detailPageEnabled: false})]).indexPage);
+  assert.deepEqual(result.indexPage.entries.map(e => e.title), ['Own 1', 'Own 2', 'Own 3', 'No inheritance']);
+  assert.deepEqual(result.indexPage.entries.map(e => e.year), ['2001', '2002', '2003', '']);
+  assert.deepEqual(result.indexPage.entries.map(e => e.additionalInfo), ['Own info', '', '', '']);
+  assert.deepEqual(result.indexPage.entries.map(e => e.images.length), [1, 2, 3, 1]);
+  assert.equal(result.indexPage.entries[0].layout, 'half');
+  assert.ok(result.indexPage.entries.every(e => !('projectId' in e) && !('detailHref' in e)));
+  assert.equal(result.issues.filter(e => e.code === 'invalid_entry').length, 3);
+  const projection = data.query.split('"indexPage":')[1].split('"legalPages":')[0];
+  assert.doesNotMatch(projection, /project|yearOverride/);
 });
 
 test('settings, Info and navigation resolve shared contacts without HTML injection', () => {
