@@ -78,27 +78,27 @@
       return url.protocol === 'https:' && !url.username && !url.password ? url.href : null;
     } catch { return null; }
   }
-  function asset(value, kind) {
+  function asset(value) {
     if (!record(value)) return null;
     const id = value._ref || value._id;
-    const pattern = kind === 'images' ? /^image-([a-zA-Z0-9]+)-(\d+)x(\d+)-([a-zA-Z0-9]+)$/ : /^file-([a-zA-Z0-9]+)-([a-zA-Z0-9]+)$/;
+    const pattern = /^image-([a-zA-Z0-9]+)-(\d+)x(\d+)-([a-zA-Z0-9]+)$/;
     const match = typeof id === 'string' ? id.match(pattern) : null;
     // Native references are supported for local fixtures/exports as well as the
     // dereferenced asset objects returned by the public query.
-    const filename = match && (kind === 'images' ? `${match[1]}-${match[2]}x${match[3]}.${match[4]}` : `${match[1]}.${match[2]}`);
-    const derived = filename ? `https://cdn.sanity.io/${kind}/${config.projectId}/${config.dataset}/${filename}` : null;
+    const filename = match && `${match[1]}-${match[2]}x${match[3]}.${match[4]}`;
+    const derived = filename ? `https://cdn.sanity.io/images/${config.projectId}/${config.dataset}/${filename}` : null;
     const src = https(value.url) || derived;
     if (!src) return null;
     const url = new URL(src);
-    if (url.hostname !== 'cdn.sanity.io' || !url.pathname.startsWith(`/${kind}/${config.projectId}/${config.dataset}/`)) return null;
+    if (url.hostname !== 'cdn.sanity.io' || !url.pathname.startsWith(`/images/${config.projectId}/${config.dataset}/`)) return null;
     const dimensions = value.metadata?.dimensions;
-    const width = Number(dimensions?.width ?? (kind === 'images' && match ? match[2] : NaN));
-    const height = Number(dimensions?.height ?? (kind === 'images' && match ? match[3] : NaN));
+    const width = Number(dimensions?.width ?? (match ? match[2] : NaN));
+    const height = Number(dimensions?.height ?? (match ? match[3] : NaN));
     return {src, width: width > 0 && Number.isFinite(width) ? width : null, height: height > 0 && Number.isFinite(height) ? height : null};
   }
   function image(value, issues, path) {
     if (!record(value)) return null;
-    const resolved = asset(value.asset, 'images');
+    const resolved = asset(value.asset);
     if (!resolved) {
       issue(issues, path, 'missing_image', 'Image asset is missing or invalid.');
       return null;

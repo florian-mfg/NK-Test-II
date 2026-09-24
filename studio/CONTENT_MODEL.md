@@ -145,8 +145,8 @@ Manual video slots show a semantic `(Play)` / `(Pause)` text button. Player even
 update the text and accessible action label. Typography matches the standard
 interface, and the shared contrast controller supplies solid black or white.
 The keyboard focus outline and bottom-right placement remain; touch devices get
-an invisible target of at least 44×44px. Autoplay slots have no button. The old
-SVG assets are retained but are no longer used for playback controls.
+an invisible target of at least 44×44px. Autoplay slots have no button. The unused
+SVG playback assets were removed during the conservative cleanup audit.
 
 `project-video.js` loads the official Vimeo Player SDK only when visible project
 Vimeo slots exist. Hidden overview categories never load their embeds. Route cleanup
