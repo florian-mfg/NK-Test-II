@@ -1,5 +1,7 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {categories, orderedStrings} from '../shared/content'
+import {projectCategories} from '../../components/ProjectCategoriesInput'
+import {InfoSectionContentField} from '../../components/InfoSectionContentField'
+import {categories, orderedStrings, textColorField} from '../shared/content'
 
 const singletonPreview = (title: string) => ({prepare: () => ({title})})
 
@@ -8,6 +10,7 @@ export const homePage = defineType({
   title: 'Frontpage',
   type: 'document',
   fields: [
+    textColorField(),
     defineField({
       name: 'backgroundVideoUrl',
       title: 'Background video source',
@@ -48,22 +51,22 @@ export const selectedWork = defineType({
         defineArrayMember({
           type: 'reference',
           to: [{type: 'project'}],
-          options: {disableNew: true, filter: 'category == $category', filterParams: {category}},
+          options: {disableNew: true, filter: '($category in categories || $lower in categories) || (!defined(categories) && (category == $category || category == $lower))', filterParams: {category, lower: category.toLowerCase()}},
           validation: (rule) =>
             rule.custom(async (value, context) => {
               if (!value?._ref) return true
               const id = value._ref.replace(/^drafts\./, '')
               const client = context.getClient({apiVersion: '2025-02-19'})
-              const documents = await client.fetch<Array<{_id: string; category?: string}>>(
-                '*[_id in $ids]{_id, category}',
+              const documents = await client.fetch<Array<{_id: string; category?: string; categories?: string[]}>>(
+                '*[_id in $ids]{_id, category, categories}',
                 {ids: [id, `drafts.${id}`]},
                 {perspective: 'raw'},
               )
               const project = documents.find((item) => item._id === `drafts.${id}`) || documents[0]
               return (
                 !project ||
-                project.category === category ||
-                `This project belongs to ${project.category || 'no category'}. Choose a ${category} project.`
+                projectCategories(project).includes(category) ||
+                `This project belongs to ${projectCategories(project).join(', ') || 'no category'}. Choose a ${category} project.`
               )
             }),
         }),
@@ -95,8 +98,23 @@ export const infoPage = defineType({
   name: 'infoPage',
   title: 'Info',
   type: 'document',
+  // Fieldsets group existing sibling fields without changing stored paths.
+  fieldsets: ['cv', 'work', 'skills', 'contactLinks', 'selectedClients'].map((name) => ({
+    name,
+    // Sanity substitutes the fieldset name for an empty title; a space keeps it unlabelled.
+    title: ' ',
+    options: {collapsible: false},
+  })),
   fields: [
     defineField({name: 'introduction', title: 'Introduction / biography', type: 'text', rows: 4}),
+    defineField({
+      name: 'cvLabel',
+      title: 'Section name',
+      fieldset: 'cv',
+      type: 'string',
+      initialValue: 'CV',
+      description: 'Heading shown on the Info page. Leave blank to use “CV”.',
+    }),
     defineField({
       name: 'cv',
       title: 'CV',
@@ -104,8 +122,32 @@ export const infoPage = defineType({
       options: {sortable: true},
       of: [defineArrayMember({type: 'cvEntry'})],
     }),
+    defineField({
+      name: 'workLabel',
+      title: 'Section name',
+      fieldset: 'work',
+      type: 'string',
+      initialValue: 'Work',
+      description: 'Heading shown on the Info page. Leave blank to use “Work”.',
+    }),
     orderedStrings('work', 'Work', 'One entry per item. Drag to reorder.'),
+    defineField({
+      name: 'skillsLabel',
+      title: 'Section name',
+      fieldset: 'skills',
+      type: 'string',
+      initialValue: 'Skills',
+      description: 'Heading shown on the Info page. Leave blank to use “Skills”.',
+    }),
     orderedStrings('skills', 'Skills', 'One skill per item. Drag to reorder.'),
+    defineField({
+      name: 'contactLabel',
+      title: 'Section name',
+      fieldset: 'contactLinks',
+      type: 'string',
+      initialValue: 'Contact',
+      description: 'Heading shown on the Info page. Leave blank to use “Contact”.',
+    }),
     defineField({
       name: 'contactLinks',
       title: 'Contact',
@@ -114,12 +156,24 @@ export const infoPage = defineType({
       description: 'Choose shared contact destinations. Edit their addresses in Site Settings.',
       of: [defineArrayMember({type: 'contactLink'})],
     }),
+    defineField({
+      name: 'selectedClientsLabel',
+      title: 'Section name',
+      fieldset: 'selectedClients',
+      type: 'string',
+      initialValue: 'Selected Clients',
+      description: 'Heading shown on the Info page. Leave blank to use “Selected Clients”.',
+    }),
     orderedStrings(
       'selectedClients',
       'Selected Clients',
       'One client name per item. Drag to reorder.',
     ),
-  ],
+  ].map((field) =>
+    ['cv', 'work', 'skills', 'contactLinks', 'selectedClients'].includes(field.name)
+      ? {...field, fieldset: field.name, components: {field: InfoSectionContentField}}
+      : field,
+  ),
   preview: singletonPreview('Info'),
 })
 

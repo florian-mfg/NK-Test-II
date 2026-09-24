@@ -95,6 +95,19 @@ export const mediaSlot = defineType({
       ),
     }),
     defineField({
+      name: 'playback',
+      title: 'Playback',
+      type: 'string',
+      description: 'Leave unset to use Autoplay in Selected Work and Manual on detail pages. Autoplay is muted and loops; Manual shows the Play/Pause button.',
+      options: {list: [
+        {title: 'Autoplay', value: 'autoplay'},
+        {title: 'Manual', value: 'manual'},
+      ]},
+      hidden: ({parent}) => parent?.type !== 'video',
+      validation: (rule) => rule.custom((value) =>
+        !value || ['autoplay', 'manual'].includes(value) || 'Choose Autoplay or Manual.'),
+    }),
+    defineField({
       name: 'video',
       title: 'Legacy uploaded video (migration only)',
       type: 'file',

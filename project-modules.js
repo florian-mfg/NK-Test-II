@@ -64,16 +64,18 @@ function renderProjectModule(module, title = "", mode = "detail") {
       const video = VimeoMedia.parseVimeoUrl(slot.vimeoUrl ?? slot.src);
       if (!video) throw new Error("Project videos require a Vimeo URL");
       const url = new URL(video.embedUrl);
-      const teaser = mode === "overview";
+      const playback = ["autoplay", "manual"].includes(slot.playback)
+        ? slot.playback : mode === "overview" ? "autoplay" : "manual";
+      const teaser = playback === "autoplay";
       const options = {background: teaser ? "1" : "0", autoplay: teaser ? "1" : "0",
         muted: teaser ? "1" : "0", loop: teaser ? "1" : "0", controls: "0",
         autopause: "0", title: "0", byline: "0", portrait: "0", badge: "0",
         keyboard: "0", playsinline: "1", dnt: "1"};
       for (const [key, value] of Object.entries(options)) url.searchParams.set(key, value);
-      media = `<div class="project-vimeo" data-playback="${mode}">
+      media = `<div class="project-vimeo" data-playback="${playback}">
         ${slot.poster ? `<img class="project-video-poster" src="${moduleMediaUrl(slot.poster)}" alt="" aria-hidden="true"${moduleImagePosition(slot.posterImage)}>` : ""}
         <iframe data-project-video-src="${escapeModuleAttribute(url.href)}" title="${label || "Project video"}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe>
-        ${teaser ? "" : `<button class="project-video-toggle" type="button" aria-label="Play ${label || "video"}" disabled><img src="material/play.svg" width="60" height="59" alt="" aria-hidden="true"></button>`}
+        ${teaser ? "" : `<button class="project-video-toggle" type="button" aria-label="Play video" disabled>(Play)</button>`}
       </div>`;
     } else throw new Error("Unsupported project media type");
     return `<figure class="project-slot" ${style}>${media}</figure>`;

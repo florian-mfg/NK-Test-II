@@ -1,5 +1,6 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {
+  textColorField,
   categoryDestinations,
   contactDestinations,
   footerDestinations,
@@ -122,6 +123,7 @@ export const indexEntry = defineType({
   title: 'Index entry',
   type: 'object',
   fields: [
+    textColorField(),
     defineField({
       name: 'displayTitle',
       title: 'Display title',
@@ -160,33 +162,30 @@ export const indexEntry = defineType({
               type: 'string',
               description: 'Describe the image for screen readers.',
             }),
+            defineField({
+              name: 'portraitPosition',
+              title: 'Portrait position',
+              type: 'string',
+              initialValue: 'center',
+              description: 'Desktop portrait images use half the viewport width. Landscape images are always full bleed; mobile display is unchanged. Leave unset to preserve the legacy position.',
+              options: {
+                list: [
+                  {title: 'Left Half', value: 'left'},
+                  {title: 'Centered', value: 'center'},
+                  {title: 'Right Half', value: 'right'},
+                ],
+              },
+              validation: (rule) => rule.custom((value) =>
+                !value || ['left', 'center', 'right'].includes(value) || 'Choose a portrait position.'),
+            }),
           ],
           validation: (rule) =>
             rule.required().custom((value) => (value?.asset ? true : 'Upload a preview image.')),
         }),
       ],
     }),
-    defineField({
-      name: 'initialLayout',
-      title: 'Initial preview layout',
-      type: 'string',
-      initialValue: 'full',
-      description:
-        'Desktop starting layout. The frontend controls subsequent image cycling and mobile display.',
-      options: {
-        list: [
-          {title: 'Full width', value: 'full'},
-          {title: 'Right half', value: 'half'},
-        ],
-      },
-      validation: (rule) =>
-        rule
-          .required()
-          .custom(
-            (value) =>
-              !value || ['full', 'half'].includes(value) || 'Choose Full width or Right half.',
-          ),
-    }),
+    // Retain the stored legacy value for compatibility, but remove it from editing.
+    defineField({name: 'initialLayout', type: 'string', hidden: true}),
   ],
   preview: {
     select: {

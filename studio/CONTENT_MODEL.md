@@ -141,11 +141,12 @@ actual play/pause/ended events rather than assuming a successful API command.
 Play rejection permits retry; unavailable embeds/SDK failures disable the button
 and expose the failure through its accessible label and tooltip.
 
-The detail button uses the supplied `material/play.svg` and `material/pause.svg`
-assets unchanged at their native 60×59 size and original color. Player events swap
-the icon and accessible label. There is no visible text-button design, filter or
-hover recoloring; the keyboard focus outline remains. Existing control placement
-and Vimeo playback logic are unchanged.
+Manual video slots show a semantic `(Play)` / `(Pause)` text button. Player events
+update the text and accessible action label. Typography matches the standard
+interface, and the shared contrast controller supplies solid black or white.
+The keyboard focus outline and bottom-right placement remain; touch devices get
+an invisible target of at least 44×44px. Autoplay slots have no button. The old
+SVG assets are retained but are no longer used for playback controls.
 
 `project-video.js` loads the official Vimeo Player SDK only when visible project
 Vimeo slots exist. Hidden overview categories never load their embeds. Route cleanup

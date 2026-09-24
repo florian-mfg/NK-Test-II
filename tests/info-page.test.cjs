@@ -185,3 +185,43 @@ test('live published Info values are retrieved and rendered', {skip: !process.en
     assert.ok(app.window.document.querySelector('.info-skills p').textContent.includes('Tattooboss'));
   } finally {app.dom.window.close();}
 });
+
+const labelFields = ['cvLabel', 'workLabel', 'skillsLabel', 'contactLabel', 'selectedClientsLabel'];
+const defaultLabels = ['CV', 'Work', 'Skills', 'Contact', 'Selected Clients'];
+
+test('custom Info labels render as plain text in existing headings and survive revisiting', async () => {
+  const app = setup();
+  try {
+    const labels = ['Experience', 'Work Experience', 'Expertise', 'Get in touch', '<b>Clients</b>'];
+    const fields = Object.fromEntries(labelFields.map((field, index) => [field, labels[index]]));
+    const root = app.window.document.querySelector('.info');
+    const nodes = [...root.querySelectorAll('*')];
+    const otherContent = app.window.document.querySelector('.main-nav').outerHTML;
+    const info = content().infoPage;
+    await app.settle(success(content({infoPage: doc('infoPage', {...info, ...fields})})));
+    assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), labels);
+    assert.equal(root.querySelector('h2 b'), null);
+    // Existing headings, columns and paragraphs retain their identity.
+    for (const node of nodes.filter(node => node.matches('section, div, h2, p'))) assert.ok(root.contains(node));
+    assert.equal(root.querySelector('.info-work p').textContent, 'Eps51');
+    assert.equal(root.querySelector('.info-skills p').textContent, 'Tattooboss');
+    assert.equal(root.querySelector('.info-contact a').href, 'mailto:published@example.com');
+    assert.equal(app.window.document.querySelector('.main-nav').outerHTML, otherContent);
+    app.window.renderInfo();
+    assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(node => node.textContent), labels);
+  } finally {app.dom.window.close();}
+});
+
+test('absent, undefined, null, empty and whitespace labels use defaults without filling empty content', async () => {
+  for (const value of ['absent', undefined, null, '', '   ']) {
+    const app = setup();
+    try {
+      const fields = value === 'absent' ? {} : Object.fromEntries(labelFields.map(field => [field, value]));
+      await app.settle(success(content({infoPage: doc('infoPage', {...fields,
+        introduction: '', cv: [], work: [], skills: [], contactLinks: [], selectedClients: []})})));
+      const root = app.window.document.querySelector('.info');
+      assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), defaultLabels);
+      assert.ok([...root.querySelectorAll('p')].every(node => node.innerHTML === ''));
+    } finally {app.dom.window.close();}
+  }
+});

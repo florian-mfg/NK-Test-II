@@ -133,28 +133,26 @@ test('detail custom button follows Vimeo events, handles rejection, covers slot 
     const player = players[0], button = box.querySelector('button'), frame = box.querySelector('iframe');
     assert.deepEqual(player.calls, []); // no detail autoplay, including API calls
     assert.equal(button.disabled, false);
-    assert.equal(button.textContent, '');
-    assert.equal(button.querySelector('img').getAttribute('width'), '60');
-    assert.equal(button.querySelector('img').getAttribute('height'), '59');
-    assert.equal(button.querySelector('img').alt, '');
+    assert.equal(button.textContent, '(Play)');
+    assert.equal(button.querySelector('img, svg'), null);
     assert.equal(frame.style.height, '500px');
     assert.ok(Math.abs(parseFloat(frame.style.width) - 500 * 1920 / 1080) < .001);
     assert.equal(box.style.getPropertyValue('--video-ratio'), String(1920 / 1080));
     button.click(); await flush();
-    assert.equal(button.querySelector('img').getAttribute('src'), 'material/pause.svg');
-    assert.equal(button.getAttribute('aria-label'), 'Pause Film');
+    assert.equal(button.textContent, '(Pause)');
+    assert.equal(button.getAttribute('aria-label'), 'Pause video');
     button.click(); await flush();
-    assert.equal(button.querySelector('img').getAttribute('src'), 'material/play.svg');
-    assert.equal(button.getAttribute('aria-label'), 'Play Film');
+    assert.equal(button.textContent, '(Play)');
+    assert.equal(button.getAttribute('aria-label'), 'Play video');
     assert.deepEqual(player.calls, ['play', 'pause']);
     player.events.play();
     player.events.ended();
-    assert.equal(button.querySelector('img').getAttribute('src'), 'material/play.svg');
-    assert.equal(button.getAttribute('aria-label'), 'Play Film');
+    assert.equal(button.textContent, '(Play)');
+    assert.equal(button.getAttribute('aria-label'), 'Play video');
     player.play = () => Promise.reject(Error('Denied'));
     button.click(); await flush();
-    assert.equal(button.querySelector('img').getAttribute('src'), 'material/play.svg');
-    assert.equal(button.getAttribute('aria-label'), 'Play Film');
+    assert.equal(button.textContent, '(Play)');
+    assert.equal(button.getAttribute('aria-label'), 'Play video');
     assert.ok(button.title.includes('retry'));
     dispose();
     assert.equal(observers[0].disconnected, true);
@@ -189,7 +187,7 @@ test('route cleanup before SDK readiness prevents late players; SDK failures are
       const dispose = env.window.initProjectVideos(env.root);
       if (failure) {
         reject(Error('offline')); await flush();
-        assert.equal(env.root.querySelector('button img').getAttribute('src'), 'material/play.svg');
+        assert.equal(env.root.querySelector('button').textContent, '(Play)');
         assert.equal(env.root.querySelector('button').getAttribute('aria-label'), 'Video unavailable. Reload to retry.');
         assert.equal(env.root.querySelector('button').disabled, true);
         dispose();
@@ -201,4 +199,49 @@ test('route cleanup before SDK readiness prevents late players; SDK failures are
       }
     } finally {env.dom.window.close();}
   }
+});
+
+test('per-slot playback overrides context across all compositions, retaining defaults and geometry',()=>{
+ const env=environment();
+ try {
+  for(const [type,spans] of Object.entries(layouts)) for(const mode of ['overview','detail']) {
+   for(const values of [['autoplay','manual'],[undefined,null],['','invalid']]) {
+    const source=row(type,spans.map((_,i)=>({...video,playback:values[i%2]})),{height:'medium',order:'reverse'});
+    const normalized=adapter.normalizeModule(source);
+    assert.deepEqual(normalized.issues,[]);
+    env.root.innerHTML=env.window.renderProjectModule(normalized.module,'Film',mode);
+    const slots=[...env.root.querySelectorAll('.project-slot')];
+    assert.deepEqual(slots.map(slot=>Number(slot.style.getPropertyValue('--slot-span'))),[...spans].reverse());
+    slots.forEach((slot,i)=>{
+     const requested=source.slots[spans.length-1-i].playback;
+     const expected=['autoplay','manual'].includes(requested)?requested:mode==='overview'?'autoplay':'manual';
+     const url=new URL(slot.querySelector('iframe').dataset.projectVideoSrc);
+     assert.equal(slot.querySelector('.project-vimeo').dataset.playback,expected);
+     for(const key of ['autoplay','muted','loop','background']) assert.equal(url.searchParams.get(key),expected==='autoplay'?'1':'0');
+     assert.equal(url.searchParams.get('controls'),'0');
+     assert.equal(url.searchParams.get('playsinline'),'1');
+     assert.equal(Boolean(slot.querySelector('button')),expected==='manual');
+    });
+   }
+  }
+  assert.equal((adapter.query.match(/vimeoUrl,playback/g)||[]).length,3);
+ }finally{env.dom.window.close();}
+});
+
+test('manual overview controls only toggle their own player and never bubble navigation clicks',async()=>{
+ const env=environment();const {players}=mockPlayers(env.window);
+ try {
+  env.root.innerHTML=env.window.renderProjectModule(adapter.normalizeModule(row('half-half',[
+   {...video,playback:'autoplay'},{...video,playback:'manual'}
+  ])).module,'Film','overview');
+  let clicks=0;env.root.addEventListener('click',()=>{clicks++;});
+  const dispose=env.window.initProjectVideos(env.root);await flush();
+  const button=env.root.querySelector('button');
+  button.click();await flush();button.click();await flush();
+  assert.deepEqual(players[0].calls,[]);
+  assert.deepEqual(players[1].calls,['play','pause']);
+  assert.equal(clicks,0);
+  assert.equal(button.textContent,'(Play)');
+  dispose();
+ }finally{env.dom.window.close();}
 });

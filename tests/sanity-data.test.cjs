@@ -17,7 +17,7 @@ const fixture = (extra = {}) => ({projects: [], ...extra});
 const plain = value => JSON.parse(JSON.stringify(value));
 
 function isolated(fetch) {
-  const sandbox = {URL, AbortController, setTimeout, clearTimeout, fetch, VimeoMedia: require('../vimeo-media.js')};
+  const sandbox = {URL, AbortController, setTimeout, clearTimeout, fetch, VimeoMedia: require('../vimeo-media.js'), ProjectCategories: require('../project-categories.js')};
   vm.runInNewContext(adapterSource, sandbox);
   return sandbox.SanityData;
 }
@@ -283,7 +283,7 @@ test('independent Selected Work image and Vimeo previews normalize without chang
     assert.deepEqual(result.projects[0].modules, baseline.modules);
     assert.equal(result.projects[0].modulesValid, true);
   }
-  assert.ok(data.query.includes('selectedWorkPreview{type,alt,vimeoUrl,image'));
+  assert.ok(data.query.includes('selectedWorkPreview{type,alt,vimeoUrl,playback,image'));
 });
 
 test('preview normalization preserves missing slots and explicit permutations without mutating source data', () => {
@@ -297,4 +297,51 @@ test('preview normalization preserves missing slots and explicit permutations wi
   assert.equal(row.slots.length,3);
   assert.deepEqual(row.slots.slice(1),[null,null]);
   assert.equal(row.type,'half-quarter-quarter');
+});
+
+test('Info label fields are queried and normalized independently from content', () => {
+  const labels = {cvLabel: 'Experience', workLabel: 'Work Experience', skillsLabel: 'Expertise', contactLabel: 'Get in touch', selectedClientsLabel: 'Clients'};
+  const result = data.normalize(fixture({infoPage: doc('infoPage', labels)}));
+  const projection = data.query.match(/"infoPage":.*\n/)[0];
+  for (const [field, label] of Object.entries(labels)) {
+    assert.ok(projection.includes(field), field);
+    assert.equal(result.infoPage[field], label);
+  }
+  for (const field of ['cv', 'work', 'skills', 'contactLinks', 'selectedClients']) assert.deepEqual(result.infoPage[field], []);
+});
+
+test('Index per-image position projection and compatibility preserve image data and order', () => {
+  assert.match(data.query.split('"indexPage":')[1].split('"legalPages":')[0], /portraitPosition/);
+  for (const initialLayout of ['full', 'half', undefined]) {
+    const previewImages = [
+      {asset: {_ref:'image-a-800x1200-jpg'}, portraitPosition:'left', alt:'A'},
+      {asset: {_ref:'image-b-800x1200-jpg'}, portraitPosition:'', alt:'B'},
+      {asset: {_ref:'image-c-1200x800-jpg'}, portraitPosition:null, alt:'C'}
+    ];
+    const raw = fixture({indexPage:doc('indexPage',{entries:[{displayTitle:'Test',initialLayout,previewImages}]})});
+    const before = JSON.stringify(raw);
+    const entry = data.normalize(raw).indexPage.entries[0];
+    assert.deepEqual(entry.previewImages.map(image=>image.alt), ['A','B','C']);
+    assert.deepEqual(entry.previewImages.map(image=>image.portraitPosition),
+      initialLayout === 'half' ? ['left','center','right'] : ['left','right','center']);
+    assert.equal(JSON.stringify(raw), before);
+  }
+});
+
+test('multi-category projects retain one identity and independently curated placements', () => {
+  const original = project('shared', 'Graphic', {categories: ['video', 'commissioned']});
+  const raw = fixture({projects: [original, project('legacy', 'video')],
+    selectedWork: doc('selectedWork', {video:[{_ref:'legacy'},{_ref:'shared'}],commissioned:[{_ref:'shared'}],graphic:[]})});
+  const before = structuredClone(raw);
+  const result = data.normalize(raw);
+  assert.deepEqual(result.projectsById.shared.categories, ['Video','Commissioned']);
+  assert.equal(result.projectsById.shared.category, 'Video');
+  assert.deepEqual(result.projectsById.legacy.categories, ['Video']);
+  assert.deepEqual(result.selectedWork, {video:['legacy','shared'],commissioned:['shared'],graphic:[]});
+  assert.equal(result.projects.filter(p=>p.id==='shared').length,1);
+  assert.deepEqual(raw,before);
+  const empty = data.normalize(fixture({projects:[{...original,categories:[]}]}));
+  assert.equal(empty.projects.length,0,'explicit empty membership must not restore legacy Graphic');
+  const unplaced = data.normalize(fixture({projects:[original],selectedWork:doc('selectedWork',{video:[],commissioned:[],graphic:[]})}));
+  assert.deepEqual(unplaced.selectedWork,{video:[],commissioned:[],graphic:[]});
 });

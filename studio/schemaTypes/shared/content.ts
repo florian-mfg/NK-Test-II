@@ -40,3 +40,18 @@ export const orderedStrings = (name: string, title: string, description: string)
       }),
     ],
   })
+
+
+export const textColorField = () => defineField({
+  name: 'textColor',
+  title: 'Text color',
+  type: 'string',
+  initialValue: 'auto',
+  description: 'Auto chooses black or white over images. Video uses white in Auto. Choose Black or White to override overlay text.',
+  options: {list: [
+    {title: 'Auto', value: 'auto'},
+    {title: 'Black', value: 'black'},
+    {title: 'White', value: 'white'},
+  ]},
+  validation: (rule) => rule.custom(value => !value || ['auto', 'black', 'white'].includes(value) || 'Choose Auto, Black or White.'),
+})

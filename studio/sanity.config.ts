@@ -1,3 +1,4 @@
+import {createDuplicateProjectAction} from './actions/DuplicateProjectAction'
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
@@ -39,6 +40,8 @@ export default defineConfig({
     actions: (actions, context) =>
       singletonTypes.has(context.schemaType)
         ? actions.filter(({action}) => action && singletonActions.has(action))
-        : actions,
+        : context.schemaType === 'project'
+          ? actions.map(action => action.action === 'duplicate' ? createDuplicateProjectAction(action) : action)
+          : actions,
   },
 })

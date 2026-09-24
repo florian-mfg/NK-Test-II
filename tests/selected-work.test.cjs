@@ -177,7 +177,7 @@ test('live Selected Work uses the published explicit image preview and opens its
     app.window.route(); await flush();
     assert.equal(app.window.document.querySelector('.detail').dataset.projectSource,'sanity');
     assert.equal(new URL(app.window.document.querySelector('.detail iframe').src).searchParams.get('autoplay'),'0');
-    assert.ok(app.window.document.querySelector('.project-video-toggle img'));
+    assert.equal(app.window.document.querySelector('.project-video-toggle').textContent, '(Play)');
     for (const category of ['commissioned','graphic']) {
       app.window.location.hash=`#work/${category}`; app.window.route(); await flush();
       assert.deepEqual(ids(app),result.data.selectedWork[category].filter(id=>{
@@ -367,4 +367,49 @@ test('empty previews are intentional; malformed compositions use existing fallba
       }
     } finally {app.dom.window.close();}
   }
+});
+
+test('all categories use the existing full-project link and cursor; disabled details and touch do not',async()=>{
+ for(const category of ['Video','Commissioned','Graphic']) {
+  const app=setup(`#work/${category.toLowerCase()}`);
+  try {
+   const enabled=project('enabled',category), disabled=project('disabled',category,{detailPageEnabled:false});
+   await app.settle(success(content({video:[],commissioned:[],graphic:[],[category.toLowerCase()]:[{_ref:'doc-enabled'},{_ref:'doc-disabled'}]},[enabled,disabled])));
+   const articles=[...app.window.document.querySelectorAll('.project-preview')];
+   const link=articles[0].querySelector(':scope > .project-link');
+   assert.equal(link.getAttribute('href'),'#project/enabled');
+   const cursor=app.window.document.querySelector('.open-cursor');
+   const over=(target,pointerType='mouse')=>{
+    const event=new app.window.Event('pointerover',{bubbles:true});
+    Object.assign(event,{pointerType,clientX:100,clientY:100});target.dispatchEvent(event);
+   };
+   for(const target of [articles[0].querySelector('.project-title'),link,articles[0].querySelector('.project-title'),link]) {
+    over(target);assert.equal(cursor.hidden,false);assert.equal(cursor.textContent,'(Open)');
+   }
+   over(link,'touch');assert.equal(cursor.hidden,true);
+   assert.equal(articles[1].querySelector('a'),null);
+   over(articles[1].querySelector('.project-slot'));assert.equal(cursor.hidden,true);
+   over(link);over(app.window.document.body);assert.equal(cursor.hidden,true);
+   const navigated=new Promise(resolve=>app.window.addEventListener('hashchange',resolve,{once:true}));
+   link.click();await navigated;assert.equal(app.window.location.hash,'#project/enabled');
+  }finally{app.dom.window.close();}
+ }
+});
+
+test('one multi-category project renders in independently ordered views with the same detail route', async () => {
+  const app = setup();
+  try {
+    await app.settle(success(content({video:[{_ref:'doc-two'},{_ref:'doc-shared'}],
+      commissioned:[{_ref:'doc-shared'},{_ref:'doc-commissioned'}],graphic:[]},
+      [project('shared','Graphic',{categories:['video','commissioned']}),project('two'),project('commissioned','Commissioned')])));
+    assert.deepEqual(ids(app),['two','shared']);
+    const links = [...app.window.document.querySelectorAll('[data-project="shared"] > .project-link')];
+    assert.equal(links.length,2);
+    assert.ok(links.every(link=>link.getAttribute('href')==='#project/shared'));
+    app.window.location.hash='#work/commissioned'; app.window.route(); await flush();
+    assert.deepEqual(ids(app),['shared','commissioned']);
+    app.window.location.hash='#project/shared'; app.window.route(); await flush();
+    assert.equal(app.window.document.querySelector('.detail').dataset.projectId,'shared');
+    assert.equal(app.window.document.querySelector('.detail').dataset.projectSource,'sanity');
+  } finally { app.dom.window.close(); }
 });

@@ -22,6 +22,8 @@
   'use strict';
   const vimeo = typeof module !== 'undefined' && module.exports ? require('./vimeo-media.js') : root.VimeoMedia;
 
+  const {projectCategories} = typeof module !== 'undefined' && module.exports ? require('./project-categories.js') : root.ProjectCategories;
+
   const config = Object.freeze({
     projectId: 'ck6xe2er', dataset: 'production', apiVersion: '2025-02-19',
     perspective: 'published', timeoutMs: 10000
@@ -41,24 +43,25 @@
   const published = '!(_id in path("drafts.**")) && !(_id in path("versions.**"))';
   // Fixed singleton IDs, explicit projections, no per-slot network calls.
   const query = `{
-    "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,backgroundVideoUrl,videoTitle,poster${imageFields}},
+    "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,textColor,backgroundVideoUrl,videoTitle,poster${imageFields}},
     "siteSettings": *[_type == "siteSettings" && _id == "siteSettings"][0]{_id,_type,brandName,email,instagram,phone,defaultPageTitle,defaultDescription,socialImage${imageFields},footerLinks[]{label,destination}},
     "navigation": *[_type == "navigation" && _id == "navigation"][0]{_id,_type,homeLabel,items[]{label,destination},categories[]{label,destination},mobileContact{label,destination}},
-    "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,cv[]{period,text},work,skills,contactLinks[]{label,destination},selectedClients},
+    "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,cvLabel,workLabel,skillsLabel,contactLabel,selectedClientsLabel,cv[]{period,text},work,skills,contactLinks[]{label,destination},selectedClients},
     "projects": *[_type == "project" && ${published}] | order(_id asc) {
-      _id,_type,title,slug,category,year,additionalInfo,description,detailPageEnabled,
-      selectedWorkPreview{type,alt,vimeoUrl,image${imageFields},poster${imageFields},
-        composition[]{_type,type,height,order,slots[]{type,alt,vimeoUrl,image${imageFields},poster${imageFields}}}},
-      modules[]{_type,type,height,order,slots[]{type,text,textSize,alt,vimeoUrl,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
+      _id,_type,title,slug,category,categories,year,additionalInfo,description,detailPageEnabled,textColor,
+      selectedWorkPreview{type,alt,vimeoUrl,playback,image${imageFields},poster${imageFields},
+        composition[]{_type,type,height,order,slots[]{type,alt,vimeoUrl,playback,image${imageFields},poster${imageFields}}}},
+      modules[]{_type,type,height,order,slots[]{type,text,textSize,alt,vimeoUrl,playback,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
-    "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,displayTitle,year,additionalInfo,initialLayout,previewImages[]${imageFields}}},
+    "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,displayTitle,year,additionalInfo,textColor,initialLayout,previewImages[]${imageFields.slice(0, -1)},portraitPosition}}},
     "legalPages": *[_type == "legalPage" && _id in ["legal-imprint","legal-privacy-policy"]]{_id,_type,pageType,title,body}
   }`;
 
   const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   const string = value => typeof value === 'string' ? value : '';
   const text = value => string(value).trim();
+  const textColor = value => ['black', 'white'].includes(value) ? value : 'auto';
   const own = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
   const year = value => Number.isInteger(value) ? String(value) : '';
   const publicId = value => typeof value === 'string' && !/^(drafts|versions)\./.test(value);
@@ -164,7 +167,7 @@
         const media = vimeo.parseVimeoUrl(slot.vimeoUrl);
         if (media) {
           const posterImage = slot.poster ? image(slot.poster, issues, `${slotPath}.poster`) : null;
-          return {type: 'video', src: media.src, vimeo: media, alt: typeof slot.alt === 'string' ? slot.alt : undefined,
+          return {type: 'video', ...(['autoplay', 'manual'].includes(slot.playback) ? {playback: slot.playback} : {}), src: media.src, vimeo: media, alt: typeof slot.alt === 'string' ? slot.alt : undefined,
             ...(posterImage ? {poster: posterImage.src, posterImage} : {})};
         }
         issue(issues, slotPath, slot.video?.asset ? 'legacy_video_requires_migration' : 'invalid_vimeo',
@@ -304,7 +307,7 @@
         } else if (/\.(mp4|webm)$/i.test(url.pathname)) video = {type: 'file', src};
       }
       if (!video) issue(issues, 'homePage.backgroundVideoUrl', 'invalid_video', 'Expected a Vimeo video or direct HTTPS MP4/WebM URL.');
-      homePage = {video, videoTitle: string(homeDoc.videoTitle), poster: homeDoc.poster ? image(homeDoc.poster, issues, 'homePage.poster') : null};
+      homePage = {textColor: textColor(homeDoc.textColor), video, videoTitle: string(homeDoc.videoTitle), poster: homeDoc.poster ? image(homeDoc.poster, issues, 'homePage.poster') : null};
     }
 
     const navigationDoc = singleton(raw, 'navigation', issues, availability);
@@ -331,6 +334,11 @@
     const infoDoc = singleton(raw, 'infoPage', issues, availability);
     const infoPage = infoDoc ? {
       introduction: string(infoDoc.introduction),
+      cvLabel: text(infoDoc.cvLabel) || 'CV',
+      workLabel: text(infoDoc.workLabel) || 'Work',
+      skillsLabel: text(infoDoc.skillsLabel) || 'Skills',
+      contactLabel: text(infoDoc.contactLabel) || 'Contact',
+      selectedClientsLabel: text(infoDoc.selectedClientsLabel) || 'Selected Clients',
       cv: array(infoDoc.cv, issues, 'infoPage.cv').flatMap((entry, index) => {
         if (record(entry) && text(entry.text)) return [{period: string(entry.period), text: entry.text}];
         issue(issues, `infoPage.cv[${index}]`, 'invalid_cv', 'CV entry without text omitted.'); return [];
@@ -347,7 +355,8 @@
     for (const [index, value] of array(raw.projects, issues, 'projects').entries()) {
       const path = `projects[${index}]`;
       const id = value?.slug?.current;
-      if (!record(value) || !publicId(value._id) || !value._id || value._type !== 'project' || typeof id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || !text(value.title) || !categories.includes(value.category)) {
+      const memberships = projectCategories(value);
+      if (!record(value) || !publicId(value._id) || !value._id || value._type !== 'project' || typeof id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id) || !text(value.title) || !memberships.length) {
         issue(issues, path, 'invalid_project', 'Project requires a published ID, route-safe slug, title, and supported category.'); continue;
       }
       if (own(projectsById, id) || byDocumentId.has(value._id)) {
@@ -356,7 +365,7 @@
       const rows = array(value.modules, issues, `${path}.modules`);
       const modules = rows.map((row, rowIndex) => moduleValue(row, issues, `${path}.modules[${rowIndex}]`));
       const modulesValid = (value.modules == null || Array.isArray(value.modules)) && modules.every(Boolean);
-      const project = {id, documentId: value._id, title: value.title, category: value.category,
+      const project = {id, textColor: textColor(value.textColor), documentId: value._id, title: value.title, category: memberships[0], categories: memberships,
         year: year(value.year), additionalInfo: string(value.additionalInfo), description: string(value.description),
         selectedWorkPreview: previewValue(value.selectedWorkPreview, issues, `${path}.selectedWorkPreview`),
         detailPageEnabled: value.detailPageEnabled !== false, modulesValid, modules: modulesValid ? modules : [],
@@ -374,7 +383,7 @@
       const ids = [];
       for (const [index, ref] of array(workDoc[key], issues, `selectedWork.${key}`).entries()) {
         const project = byDocumentId.get(ref?._ref);
-        if (!project || project.category !== category || seen.has(project.id)) {
+        if (!project || !project.categories.includes(category) || seen.has(project.id)) {
           issue(issues, `selectedWork.${key}[${index}]`, 'invalid_reference', 'Missing, duplicate, or wrong-category project reference omitted.'); continue;
         }
         seen.add(project.id); ids.push(project.id);
@@ -391,11 +400,19 @@
       if (images.length < 1 || images.length > 3) {
         issue(issues, path, 'invalid_entry', 'Index entry requires 1–3 preview images.'); return [];
       }
-      const previews = images.map((item, i) => image(item, issues, `${path}.previewImages[${i}]`)).filter(Boolean);
+      const previews = images.map((item, i) => {
+        const preview = image(item, issues, `${path}.previewImages[${i}]`);
+        if (!preview) return null;
+        // Preserve the first legacy cycle: right-half frames stay right; full
+        // frames become centered when the image is portrait. No stored writes.
+        const legacyRight = (entry.initialLayout === 'half') !== (i % 2 === 1);
+        return {...preview, portraitPosition: ['left', 'center', 'right'].includes(item.portraitPosition)
+          ? item.portraitPosition : legacyRight ? 'right' : 'center'};
+      }).filter(Boolean);
       if (!title || !previews.length) { issue(issues, path, 'invalid_entry', 'Index entry without a title or usable preview images omitted.'); return []; }
       const layout = ['full', 'half'].includes(entry.initialLayout) ? entry.initialLayout : 'full';
       if (entry.initialLayout != null && entry.initialLayout !== layout) issue(issues, `${path}.initialLayout`, 'invalid_layout', 'Invalid initial layout replaced with full.');
-      return [{key: text(entry._key) || `entry-${index}`, title,
+      return [{textColor: textColor(entry.textColor), key: text(entry._key) || `entry-${index}`, title,
         year: year(entry.year), additionalInfo: string(entry.additionalInfo),
         layout, images: previews.map(preview => preview.src), previewImages: previews}];
     })} : null;

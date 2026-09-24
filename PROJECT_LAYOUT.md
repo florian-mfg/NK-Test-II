@@ -118,9 +118,10 @@ The app does this for Sanity overviews/details and their local fallbacks.
 
 The SDK is loaded on demand only for visible Vimeo slots. Fixed-height videos
 cover their slot; auto-height follows native video ratio after metadata, initially
-16:9. CSS changes are scoped to project Vimeo wrappers. The Play/Pause button uses the supplied `material/play.svg` and
-`material/pause.svg` unchanged at their original 60×59 dimensions. Accessible
-labels follow playback state; Vimeo native controls stay hidden. For schema/migration rules and remaining browser
+16:9. CSS changes are scoped to project Vimeo wrappers. Manual playback uses a
+text-only `(Play)` / `(Pause)` button with standard interface typography and shared
+black/white contrast. A larger invisible touch target preserves the visible text
+size and bottom-right placement. Accessible labels follow playback state; Vimeo native controls stay hidden. For schema/migration rules and remaining browser
 checks, see `studio/CONTENT_MODEL.md`. Selected Work and project details now use published Sanity data.
 
 

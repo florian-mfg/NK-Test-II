@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import {InfoSectionContentField} from '../components/InfoSectionContentField.tsx'
 import {project} from '../schemaTypes/documents/project.ts'
-import {selectedWork, navigation, legalPage} from '../schemaTypes/documents/pages.ts'
+import {selectedWork, navigation, legalPage, infoPage} from '../schemaTypes/documents/pages.ts'
 import {indexEntry} from '../schemaTypes/objects/editorial.ts'
 import {schemaTypes} from '../schemaTypes/index.ts'
 import {structure, singletonTypes} from '../structure.ts'
@@ -55,7 +56,7 @@ test('slugs retain legacy route IDs but reject unsafe routes', () => {
 test('Index requires its own title and 1–3 previews and has no Project relationship', () => {
   assert.deepEqual(
     indexEntry.fields.map((item) => item.name),
-    ['displayTitle', 'year', 'additionalInfo', 'previewImages', 'initialLayout'],
+    ['textColor', 'displayTitle', 'year', 'additionalInfo', 'previewImages', 'initialLayout'],
   )
   const [validate] = validators(field(indexEntry, 'displayTitle'))
   assert.equal(validate('Independent entry'), true)
@@ -209,7 +210,7 @@ test('Selected Work Preview offers one composition and reuses module geometry an
   const detailSlot = schemaTypes.find(type => type.name === 'mediaSlot')
   assert.equal(field(project, 'selectedWorkPreview').type, 'selectedWorkPreview')
   assert.equal(field(project, 'selectedWorkPreview').validation, undefined)
-  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'vimeoUrl', 'poster', 'alt'])
+  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'vimeoUrl', 'playback', 'poster', 'alt'])
   const [validate] = validators(field(slot, 'type'))
   for (const type of ['image', 'video', 'empty']) assert.equal(validate(type), true)
   for (const type of ['text', undefined]) assert.notEqual(validate(type), true)
@@ -239,4 +240,94 @@ test('Selected Work Preview offers one composition and reuses module geometry an
   assert.equal(validatePreview({composition:[{}]}),true) // nested validators validate the layout
   assert.notEqual(validatePreview({composition:[]}),true)
   assert.notEqual(validatePreview({composition:[{},{}]}),true)
+})
+
+
+test('Info sections group editable labels and unchanged arrays without duplicate headings', () => {
+  const labels = [
+    ['cvLabel', 'CV', 'cv'],
+    ['workLabel', 'Work', 'work'],
+    ['skillsLabel', 'Skills', 'skills'],
+    ['contactLabel', 'Contact', 'contactLinks'],
+    ['selectedClientsLabel', 'Selected Clients', 'selectedClients'],
+  ]
+  assert.deepEqual(infoPage.fields.filter((item) => !labels.some(([name]) => name === item.name)).map((item) => item.name),
+    ['introduction', 'cv', 'work', 'skills', 'contactLinks', 'selectedClients'])
+  for (const [name, defaultLabel, contentName] of labels) {
+    const label = field(infoPage, name)
+    assert.equal(label.type, 'string')
+    assert.equal(label.title, 'Section name')
+    assert.equal(label.fieldset, contentName)
+    assert.equal(field(infoPage, contentName).fieldset, contentName)
+    assert.equal(field(infoPage, contentName).components.field, InfoSectionContentField)
+    const fieldset = infoPage.fieldsets.find((item) => item.name === contentName)
+    assert.equal(fieldset.title.trim(), '')
+    // A truthy blank title prevents Studio from falling back to the fixed fieldset name.
+    assert.ok(fieldset.title)
+    assert.equal(fieldset.options.collapsible, false)
+    assert.equal(label.initialValue, defaultLabel)
+    assert.equal(label.validation, undefined)
+    assert.equal(infoPage.fields[infoPage.fields.indexOf(label) + 1].name, contentName)
+    assert.equal(field(infoPage, contentName).type, 'array')
+  }
+})
+
+
+test('Info content field only removes the redundant title from the native renderer', () => {
+  for (const name of ['cv', 'work', 'skills', 'contactLinks', 'selectedClients']) {
+    const schemaType = field(infoPage, name)
+    const value = name === 'cv' ? [{_key: 'entry', period: '2025', text: 'Existing CV'}]
+      : name === 'contactLinks' ? [{_key: 'contact', label: 'Email', destination: 'email'}]
+      : ['Existing content']
+    for (const currentValue of [value, []]) {
+      const props = {title: schemaType.title, description: schemaType.description,
+        schemaType, value: currentValue, children: 'native input', renderDefault: (next) => next}
+      const rendered = InfoSectionContentField(props)
+      assert.deepEqual(rendered, {...props, title: undefined})
+      assert.equal(rendered.value, currentValue)
+      assert.equal(rendered.schemaType, schemaType)
+    }
+  }
+})
+
+test('Index positions belong to each image and legacy entry layout is hidden without validation', () => {
+  const image = field(indexEntry, 'previewImages').of[0]
+  assert.deepEqual(image.fields.map(item => item.name), ['alt', 'portraitPosition'])
+  const position = field(image, 'portraitPosition')
+  assert.equal(position.title, 'Portrait position')
+  assert.equal(position.initialValue, 'center')
+  assert.deepEqual(position.options.list, [
+    {title: 'Left Half', value: 'left'}, {title: 'Centered', value: 'center'}, {title: 'Right Half', value: 'right'},
+  ])
+  assert.equal(field(indexEntry, 'initialLayout').hidden, true)
+  assert.equal(field(indexEntry, 'initialLayout').validation, undefined)
+})
+
+test('media-driven documents expose one optional Auto/Black/White text color control', () => {
+  for (const type of [schemaTypes.find(type => type.name === 'homePage'), project, indexEntry]) {
+    const control = field(type, 'textColor')
+    assert.equal(control.title, 'Text color')
+    assert.equal(control.initialValue, 'auto')
+    assert.deepEqual(control.options.list.map(option => option.value), ['auto', 'black', 'white'])
+    const [validate] = validators(control)
+    for (const value of [undefined, 'auto', 'black', 'white']) assert.equal(validate(value), true)
+    assert.notEqual(validate('difference'), true)
+  }
+})
+
+
+test('Vimeo playback is an optional per-slot choice immediately after its URL', () => {
+  for (const name of ['mediaSlot', 'previewMediaSlot']) {
+    const slot = schemaTypes.find(type => type.name === name)
+    const playback = field(slot, 'playback')
+    assert.equal(slot.fields[slot.fields.indexOf(field(slot, 'vimeoUrl')) + 1], playback)
+    assert.equal(playback.title, 'Playback')
+    assert.deepEqual(playback.options.list.map(option => option.value), ['autoplay', 'manual'])
+    assert.equal(playback.initialValue, undefined) // Contextual defaults must not become stored overrides.
+    assert.equal(playback.hidden({parent: {type: 'video'}}), false)
+    for (const type of ['image', 'empty', 'text']) assert.equal(playback.hidden({parent: {type}}), true)
+    const [validate] = validators(playback)
+    for (const value of [undefined, '', 'autoplay', 'manual']) assert.equal(validate(value), true)
+    assert.notEqual(validate('invalid'), true)
+  }
 })

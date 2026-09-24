@@ -32,7 +32,7 @@ function initProjectVideos(root) {
     frame.style.visibility = 'hidden';
     if (button) {
       button.disabled = true;
-      button.querySelector('img').setAttribute('src', 'material/play.svg');
+      button.textContent = '(Play)';
       button.title = 'Video unavailable. Reload to retry.';
       button.setAttribute('aria-label', 'Video unavailable. Reload to retry.');
     }
@@ -60,9 +60,9 @@ function initProjectVideos(root) {
         if (disposed) return;
         playing = value;
         if (button) {
-          button.querySelector('img').setAttribute('src', value ? 'material/pause.svg' : 'material/play.svg');
+          button.textContent = value ? '(Pause)' : '(Play)';
           button.removeAttribute('title');
-          button.setAttribute('aria-label', `${value ? 'Pause' : 'Play'} ${frame.title}`);
+          button.setAttribute('aria-label', `${value ? 'Pause' : 'Play'} video`);
         }
       };
       const onPlay = () => update(true);
@@ -72,7 +72,9 @@ function initProjectVideos(root) {
       player.on('pause', onPause);
       player.on('ended', onPause);
       player.on('error', onError);
-      const toggle = async () => {
+      const toggle = async event => {
+        event.preventDefault();
+        event.stopPropagation();
         if (busy || disposed) return;
         busy = true;
         try {

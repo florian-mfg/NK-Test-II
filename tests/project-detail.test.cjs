@@ -83,9 +83,9 @@ test('direct detail waits for Sanity, renders published metadata/modules safely 
     assert.deepEqual(app.players[0].calls, []);
     const button = document.querySelector('.project-video-toggle');
     button.click(); await flush();
-    assert.equal(button.querySelector('img').getAttribute('src'), 'material/pause.svg');
+    assert.equal(button.textContent, '(Pause)');
     button.click(); await flush();
-    assert.equal(button.querySelector('img').getAttribute('src'), 'material/play.svg');
+    assert.equal(button.textContent, '(Play)');
     app.window.renderProject('ethereal-tides');
     app.window.route();
     assert.equal(document.querySelector('iframe'), frame);
@@ -231,8 +231,8 @@ test('live published project modules and Vimeo source reach detail DOM and custo
     assert.ok(app.players.length > 0, 'Published Vimeo slot must exist');
     const button = document.querySelector('.project-video-toggle');
     button.click(); await flush();
-    assert.equal(button.querySelector('img').getAttribute('src'), 'material/pause.svg');
+    assert.equal(button.textContent, '(Pause)');
     button.click(); await flush();
-    assert.equal(button.querySelector('img').getAttribute('src'), 'material/play.svg');
+    assert.equal(button.textContent, '(Play)');
   } finally {app.dom.window.close();}
 });

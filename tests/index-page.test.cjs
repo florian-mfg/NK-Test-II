@@ -38,7 +38,12 @@ const entry = (title, extra = {}) => ({displayTitle:title,previewImages:[img('in
 const content = (entries, projects=[]) => adapter.normalize({projects,indexPage:doc('indexPage',{entries})});
 const rows = app => [...app.window.document.querySelectorAll('.archive-row')];
 const titles = app => rows(app).map(row=>row.firstElementChild.textContent);
-const fire = (app, row, name) => row.dispatchEvent(new app.window.MouseEvent(name,{bubbles:true}));
+const fire = (app, row, name) => {
+ if (name === 'mousemove') {
+  rows(app).forEach((item,index)=>{item.getBoundingClientRect=()=>({top:100+index*40,bottom:140+index*40});});
+  app.window.dispatchEvent(new app.window.MouseEvent('mousemove',{clientY:120+Number(row.dataset.index)*40}));
+ } else row.dispatchEvent(new app.window.MouseEvent(name,{bubbles:true}));
+};
 const flush = () => new Promise(resolve=>setImmediate(resolve));
 
 test('Index preserves CMS order and independent metadata; legacy references never create links',async()=>{
@@ -73,13 +78,13 @@ test('Index preserves CMS order and independent metadata; legacy references neve
  }finally{app.dom.window.close();}
 });
 
-test('desktop hover/click cycles only Index images and retains half/full alternation, crop and hotspot',async()=>{
+test('desktop hover/click cycles only Index images and uses cropped orientation while retaining crop and hotspot',async()=>{
  const app=setup();
  try {
   const crop={left:.25,right:.25,top:0,bottom:0};
   await app.settle(success(content([entry('Images',{project:{_ref:'enabled'},initialLayout:'half',previewImages:[img('first',{crop,hotspot:{x:.375,y:.6,width:.1,height:.1},alt:'First alt'}),img('second',{alt:'Second alt'})]})],[project('enabled')])));
   const row=rows(app)[0], bg=app.window.document.querySelector('.archive-background'), image=bg.querySelector('img');
-  fire(app,row,'mouseenter');
+  fire(app,row,'mousemove');
   assert.ok(image.src.includes('/first-1200x800.jpg'));
   assert.equal(new URL(image.src).searchParams.get('rect'),'300,0,600,800');
   assert.equal(image.style.objectPosition,'25% 60%');
@@ -95,8 +100,8 @@ test('desktop hover/click cycles only Index images and retains half/full alterna
   assert.ok(image.src.includes('/first-1200x800.jpg'));
   assert.ok(bg.classList.contains('half'));
   fire(app,row,'mouseleave');
-  assert.equal(bg.classList.contains('visible'),false);
-  fire(app,row,'mouseenter');
+  assert.equal(bg.classList.contains('visible'),true);
+  fire(app,row,'mousemove');
   row.firstElementChild.click();await flush();
   assert.ok(image.src.includes('/second-1200x800.jpg'));
   assert.equal(app.window.location.hash,'#archive');
@@ -133,10 +138,11 @@ test('1, 2 and 3 images wrap in order with the existing arrow-cursor click inter
   try {
    await app.settle(success(content([entry('Cycle',{previewImages:Array.from({length:count},(_,i)=>img(`image${i}`))})])));
    const row=rows(app)[0], bg=app.window.document.querySelector('.archive-background');
-   fire(app,row,'mouseenter');
+   fire(app,row,'mousemove');
    for(let i=0;i<count*2+1;i++) {
     assert.ok(bg.querySelector('img').src.includes(`/image${i%count}-1200x800.jpg`));
-    assert.equal(bg.classList.contains('half'),i%2===1);
+    assert.equal(bg.classList.contains('half'),false);
+    assert.ok(bg.classList.contains('full'));
     assert.equal(app.window.location.hash,'#archive');
     row.firstElementChild.click();
    }
@@ -165,7 +171,7 @@ test('request, document and malformed entries-array failures preserve arranged l
    const expected=vm.runInContext('ARCHIVE_DISPLAY_PROJECTS.map(p=>p.title)',app.dom.getInternalVMContext());
    assert.deepEqual(titles(app),Array.from(expected));
    assert.equal(app.window.document.querySelector('.archive').dataset.source,'local');
-   fire(app,rows(app)[0],'mouseenter');fire(app,rows(app)[0],'click');
+   fire(app,rows(app)[0],'mousemove');fire(app,rows(app)[0],'click');
    assert.ok(app.window.document.querySelector('.archive-background').classList.contains('visible'));
   }finally{app.dom.window.close();}
  }
@@ -202,5 +208,169 @@ test('live Index document or its actual absence reaches the Index renderer', {sk
    assert.equal(app.window.document.querySelector('.archive').dataset.source,'local');
    assert.deepEqual(titles(app),Array.from(vm.runInContext('ARCHIVE_DISPLAY_PROJECTS.map(p=>p.title)',app.dom.getInternalVMContext())));
   }
+ }finally{app.dom.window.close();}
+});
+
+const portrait = (id, portraitPosition) => ({asset: {_ref: `image-${id}-800x1200-jpg`}, portraitPosition});
+test('per-image desktop positions follow the active image, including portrait/landscape transitions', async () => {
+ const app = setup();
+ try {
+  const images = [portrait('left','left'), portrait('center','center'), portrait('right','right')];
+  await app.settle(success(content([entry('Portraits',{previewImages:images}),
+   entry('Mixed',{initialLayout:'half',previewImages:[portrait('p','right'),img('wide',{portraitPosition:'left'}),portrait('p2','center')]})])));
+  const bg=app.window.document.querySelector('.archive-background');
+  const check=(half,left=false,center=false)=>{
+   assert.equal(bg.classList.contains('half'),half);
+   assert.equal(bg.classList.contains('full'),!half);
+   assert.equal(bg.classList.contains('portrait-left'),left);
+   assert.equal(bg.classList.contains('portrait-center'),center);
+  };
+  fire(app,rows(app)[0],'mousemove'); check(true,true);
+  rows(app)[0].click(); check(true,false,true);
+  rows(app)[0].click(); check(true);
+  rows(app)[0].click(); check(true,true);
+  fire(app,rows(app)[1],'mousemove'); check(true);
+  rows(app)[1].click(); check(false);
+  rows(app)[1].click(); check(true,false,true);
+ } finally {app.dom.window.close();}
+});
+
+test('landscape ignores every portrait position on desktop and mobile; mobile portraits stay full width', async () => {
+ for(const mobile of [false,true]) for(const position of ['left','center','right']) for(const isPortrait of [false,true]) {
+  const app=setup('#archive',mobile);
+  try {
+   await app.settle(success(content([entry('Image',{previewImages:[isPortrait?portrait('p',position):img('wide',{portraitPosition:position})]})])));
+   if(!mobile) fire(app,rows(app)[0],'mousemove');
+   const bg=app.window.document.querySelector('.archive-background');
+   assert.equal(bg.classList.contains('half'),!mobile&&isPortrait);
+   assert.equal(bg.classList.contains('full'),mobile||!isPortrait);
+  }finally{app.dom.window.close();}
+ }
+});
+
+test('legacy portrait positions preserve first-cycle alignment and remain stable on subsequent cycles',async()=>{
+ for(const initialLayout of ['half','full',undefined]) {
+  const app=setup();
+  try {
+   await app.settle(success(content([entry('Legacy',{initialLayout,previewImages:[portrait('a'),portrait('b'),portrait('c')]})])));
+   fire(app,rows(app)[0],'mousemove');
+   const bg=app.window.document.querySelector('.archive-background');
+   for(let i=0;i<7;i++) {
+    assert.ok(bg.classList.contains('half'));
+    const right=(initialLayout==='half')!==((i%3)%2===1);
+    assert.equal(bg.classList.contains('portrait-center'),!right);
+    rows(app)[0].click();
+   }
+  }finally{app.dom.window.close();}
+ }
+});
+
+test('desktop starts on the first preview and changes only inside actual vertical row bounds', async()=>{
+ const app=setup();
+ try {
+  await app.settle(success(content([
+   entry('First',{previewImages:[portrait('first','left'),portrait('cycle','center')]}),
+   entry('Second',{previewImages:[img('landscape')]}),
+   entry('Third',{previewImages:[portrait('third','right')]})
+  ])));
+  const bg=app.window.document.querySelector('.archive-background');
+  const image=bg.querySelector('img');
+  const selected=()=>rows(app).findIndex(row=>row.getAttribute('aria-current')==='true');
+  const move=(y,x=0)=>app.window.dispatchEvent(new app.window.MouseEvent('mousemove',{clientY:y,clientX:x}));
+  rows(app).forEach((row,index)=>{row.getBoundingClientRect=()=>({top:100+index*50,bottom:150+index*50});});
+  assert.equal(selected(),0);
+  assert.ok(bg.classList.contains('visible'));
+  assert.ok(bg.classList.contains('portrait-left'));
+  assert.ok(image.src.includes('/first-'));
+  for(const y of [0,100,125,149.99]) {move(y);assert.equal(selected(),0);}
+  rows(app)[0].click();
+  assert.ok(image.src.includes('/cycle-'));
+  move(149,1200);
+  assert.ok(image.src.includes('/cycle-')); // Moving within a row never resets cycling.
+  move(150);
+  assert.equal(selected(),1);
+  assert.ok(image.src.includes('/landscape-'));
+  assert.ok(bg.classList.contains('full'));
+  move(199.99);assert.equal(selected(),1);
+  move(200);assert.equal(selected(),2);
+  assert.ok(image.src.includes('/third-'));
+  assert.ok(bg.classList.contains('half'));
+  move(300);assert.equal(selected(),2);
+  assert.ok(bg.classList.contains('visible'));
+  move(149.99);
+  assert.equal(selected(),0);
+  assert.ok(image.src.includes('/first-'));
+  assert.ok(bg.classList.contains('portrait-left'));
+ }finally{app.dom.window.close();}
+});
+
+function mobileGestureFixture(app) {
+ const list=app.window.document.querySelector('.archive-list');
+ list.getBoundingClientRect=()=>({top:50});
+ rows(app).forEach((row,index)=>{
+  Object.defineProperty(row,'offsetTop',{value:index*37});
+  row.getBoundingClientRect=()=>({top:50+index*37-list.scrollTop,bottom:50+(index+1)*37-list.scrollTop});
+ });
+ app.window.dispatchEvent(new app.window.Event('resize'));
+ const scrolls=[];
+ list.scrollTo=options=>{scrolls.push({...options});list.scrollTop=options.top;list.dispatchEvent(new app.window.Event('scroll'));};
+ const pointer=(type,{target=list,x=150,y=300,id=1,primary=true}={})=>{
+  const event=new app.window.Event(type,{bubbles:true});
+  Object.assign(event,{pointerId:id,isPrimary:primary,button:0,clientX:x,clientY:y});
+  target.dispatchEvent(event);
+ };
+ const tick=()=>new Promise(resolve=>app.window.requestAnimationFrame(resolve));
+ const active=()=>rows(app).findIndex(row=>row.getAttribute('aria-current')==='true');
+ return {list,scrolls,pointer,tick,active};
+}
+
+test('mobile background taps advance, scroll to actual row offsets and wrap; previews remain full width',async()=>{
+ const app=setup('#archive',true);
+ try {
+  await app.settle(success(content([entry('One',{previewImages:[portrait('one','left')]}),entry('Two'),entry('Three')])));
+  const {pointer,tick,active,scrolls}=mobileGestureFixture(app);
+  assert.equal(active(),0);
+  assert.ok(app.window.document.querySelector('.archive-background.visible.full'));
+  for(const next of [1,2,0]) {
+   pointer('pointerdown');pointer('pointerup');await tick();
+   assert.equal(active(),next);
+   assert.deepEqual(scrolls.at(-1),{top:next*37,behavior:'smooth'});
+   assert.ok(app.window.document.querySelector('.archive-background.visible.full'));
+  }
+ }finally{app.dom.window.close();}
+});
+
+test('mobile drags, cancelled gestures, multitouch, controls and manual scrolling do not advance',async()=>{
+ const app=setup('#archive',true);
+ try {
+  await app.settle(success(content([entry('One'),entry('Two'),entry('Three')])));
+  const {list,pointer,tick,active,scrolls}=mobileGestureFixture(app);
+  pointer('pointerdown');pointer('pointermove',{y:320});pointer('pointermove',{y:300});pointer('pointerup');
+  pointer('pointerdown');pointer('pointercancel');pointer('pointerup');
+  pointer('pointerdown');pointer('pointerdown',{id:2,primary:false});pointer('pointerup');
+  for(const target of [rows(app)[0],rows(app)[0].firstElementChild]) {
+   pointer('pointerdown',{target});pointer('pointerup',{target});
+  }
+  const link=app.window.document.createElement('a');link.href='#info';list.append(link);
+  pointer('pointerdown',{target:link});pointer('pointerup',{target:link});
+  assert.equal(scrolls.length,0);
+  assert.equal(active(),0);
+  pointer('pointerdown');
+  list.scrollTop=37;list.dispatchEvent(new app.window.Event('scroll'));await tick();
+  pointer('pointerup');await tick();
+  assert.equal(scrolls.length,0);
+  assert.equal(active(),1);
+  pointer('pointerdown');pointer('pointerup');await tick();
+  assert.equal(active(),2); // A tap continues from the manually scrolled entry.
+ }finally{app.dom.window.close();}
+});
+
+test('desktop ignores background tap gestures',async()=>{
+ const app=setup();
+ try {
+  await app.settle(success(content([entry('One'),entry('Two')])));
+  const {pointer,tick,active,scrolls}=mobileGestureFixture(app);
+  pointer('pointerdown');pointer('pointerup');await tick();
+  assert.equal(active(),0);assert.equal(scrolls.length,0);
  }finally{app.dom.window.close();}
 });

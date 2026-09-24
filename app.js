@@ -134,6 +134,7 @@ function updateOpenCursor(event) {
     return;
   }
   openCursor.hidden = false;
+  globalThis.Contrast?.cursor(event.clientX, event.clientY);
   const halfWidth = openCursor.offsetWidth / 2;
   const halfHeight = openCursor.offsetHeight / 2;
   openCursor.style.left = `${Math.max(halfWidth, Math.min(event.clientX, document.documentElement.clientWidth - halfWidth))}px`;
@@ -315,6 +316,7 @@ function applySanityHome() {
   const section = app.querySelector(".home");
   const home = sanityContent?.homePage;
   if (!section || home?.video?.type !== "vimeo") return;
+  section.dataset.textColor = home.textColor || "auto";
   const frame = section.querySelector("iframe.home-media");
   // The adapter validates the Vimeo host/id and retains an unlisted privacy hash.
   // Playback policy belongs here; editorial URL parameters cannot enable UI/audio.
@@ -388,15 +390,16 @@ function renderWork(category = "Video") {
   }
   const useLocal = category => !sanityContent?.selectedWork || sanityContent.issues.some(issue =>
     issue.path === `selectedWork.${category.toLowerCase()}` && issue.code === "invalid_array");
-  const selectedProjects = WORK_CATEGORIES.flatMap(category => useLocal(category)
+  const selectedProjects = WORK_CATEGORIES.flatMap(category => (useLocal(category)
     ? WORK_PROJECTS.filter(project => project.category === category)
     : sanityContent.selectedWork[category.toLowerCase()].map(id => sanityContent.projectsById[id])
-      .filter(project => project && (project.selectedWorkPreview || project.modulesValid !== false)));
-  const projects = selectedProjects.map((p, i) => `
-    <article class="project-preview" data-category="${p.category}" data-project="${escapeModuleAttribute(p.id)}"${p.category === selectedCategory ? "" : " hidden"}>
-      ${p.category === "Commissioned" || p.detailPageEnabled === false ? "" : `<a class="project-link" href="#project/${encodeURIComponent(p.id)}" aria-label="Open ${escapeModuleAttribute(p.title)}"></a>`}
+      .filter(project => project && (project.selectedWorkPreview || project.modulesValid !== false)))
+      .map(project => ({project, category})));
+  const projects = selectedProjects.map(({project: p, category}, i) => `
+    <article class="project-preview" data-text-color="${p.textColor || "auto"}" data-category="${category}" data-project="${escapeModuleAttribute(p.id)}"${category === selectedCategory ? "" : " hidden"}>
+      ${p.detailPageEnabled === false ? "" : `<a class="project-link" href="#project/${encodeURIComponent(p.id)}" aria-label="Open ${escapeModuleAttribute(p.title)}"></a>`}
       <div class="project-modules">${renderWorkPreview(p)}</div>
-      ${i === selectedProjects.length - 1 ? `<span class="project-kind">${p.category}</span>` : ""}
+      ${i === selectedProjects.length - 1 ? `<span class="project-kind">${category}</span>` : ""}
     </article>`).join("");
   app.innerHTML = `<section class="work" data-category="${selectedCategory}" data-source="${useLocal(selectedCategory) ? "local" : "sanity"}"><div class="projects">${projects}</div></section>`;
   renderedWorkPages.set(app.querySelector(".work"), source);
@@ -440,15 +443,26 @@ function renderArchive() {
       bg.classList.remove("visible");
       return;
     }
+    bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
     const media = entry.previewImages?.[imageIndex % entry.images.length];
     bgImage.alt = media?.alt ?? "";
-    // Reuse the module image crop/hotspot mapping without changing Index sizing.
+    // Reuse the module image crop/hotspot mapping for the active Index image.
     const position = moduleImagePosition(media);
     bgImage.style.cssText = position ? position.slice(' style="'.length, -1) : "";
-    const half = !mobile.matches && (entry.layout === "half") !== (imageIndex % 2 === 1);
+    const src = entry.images[imageIndex % entry.images.length];
+    if (bgImage.getAttribute("src") !== src) bgImage.src = src;
+    const width = media?.cropRect?.width ?? media?.width ?? (bgImage.complete ? bgImage.naturalWidth : 0);
+    const height = media?.cropRect?.height ?? media?.height ?? (bgImage.complete ? bgImage.naturalHeight : 0);
+    const half = !mobile.matches && width > 0 && height > width;
+    const portraitPosition = media?.portraitPosition ||
+      ((entry.layout === "half") !== ((imageIndex % entry.images.length) % 2 === 1) ? "right" : "center");
+    bg.classList.toggle("portrait-left", half && portraitPosition === "left");
+    bg.classList.toggle("portrait-center", half && portraitPosition === "center");
     bg.classList.toggle("half", half);
     bg.classList.toggle("full", !half);
-    bgImage.src = entry.images[imageIndex % entry.images.length];
+    bgImage.onload = () => {
+      if (bg.classList.contains("visible")) showEntryImage(entry, imageIndex);
+    };
     bg.classList.add("visible");
   };
   const updateMobileEntry = () => {
@@ -472,13 +486,55 @@ function renderArchive() {
       updateMobileEntry();
     });
   }, { passive: true, signal: events.signal });
-  rows.forEach(row => {
-    row.addEventListener("mouseenter", () => {
-      if (mobile.matches) return;
-      activeRow = Number(row.dataset.index);
-      frame = 0;
-      showEntryImage(entries[activeRow], frame);
+  // Passive pointer tracking leaves native touch scrolling and controls intact.
+  const archive = list.closest(".archive");
+  const controls = 'a, button, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
+  let tap = null;
+  archive.addEventListener("pointerdown", event => {
+    tap = null;
+    if (!mobile.matches || !event.isPrimary || event.button !== 0 || event.target.closest(controls)) return;
+    tap = {id: event.pointerId, x: event.clientX, y: event.clientY,
+      scrollTop: list.scrollTop, pageY: window.scrollY, time: event.timeStamp, moved: false};
+  }, { passive: true, signal: events.signal });
+  archive.addEventListener("pointermove", event => {
+    if (!tap || event.pointerId !== tap.id) return;
+    if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 10) tap.moved = true;
+  }, { passive: true, signal: events.signal });
+  archive.addEventListener("pointercancel", () => { tap = null; }, { passive: true, signal: events.signal });
+  list.addEventListener("scroll", () => { if (tap) tap.moved = true; }, { passive: true, signal: events.signal });
+  archive.addEventListener("pointerup", event => {
+    const gesture = tap;
+    tap = null;
+    if (!mobile.matches || !gesture || event.pointerId !== gesture.id || gesture.moved ||
+        event.target.closest(controls) || event.timeStamp - gesture.time > 500 ||
+        Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 10 ||
+        list.scrollTop !== gesture.scrollTop || window.scrollY !== gesture.pageY) return;
+    updateMobileEntry();
+    const next = (activeRow + 1) % rows.length;
+    // The existing scroll listener activates previews as the list reaches each row.
+    list.scrollTo({top: rows[next].offsetTop, behavior: "smooth"});
+  }, { passive: true, signal: events.signal });
+  const activateDesktopEntry = next => {
+    if (next < 0 || next === activeRow) return;
+    activeRow = next;
+    frame = 0;
+    rows.forEach((row, index) => {
+      if (index === next) row.setAttribute("aria-current", "true");
+      else row.removeAttribute("aria-current");
     });
+    showEntryImage(entries[next], frame);
+  };
+  window.addEventListener("mousemove", event => {
+    if (mobile.matches) return;
+    // Use each row's actual vertical area, independent of horizontal position.
+    // Outside the list, keep the current preview and its cycling frame visible.
+    const next = rows.findIndex(row => {
+      const bounds = row.getBoundingClientRect();
+      return event.clientY >= bounds.top && event.clientY < bounds.bottom;
+    });
+    activateDesktopEntry(next);
+  }, { passive: true, signal: events.signal });
+  rows.forEach(row => {
     row.addEventListener("click", () => {
       if (mobile.matches) {
         list.scrollTo({ top: row.offsetTop, behavior: "auto" });
@@ -487,16 +543,11 @@ function renderArchive() {
       }
       const rowIndex = Number(row.dataset.index);
       const entry = entries[rowIndex];
-      frame = activeRow === rowIndex ? frame + 1 : 0;
-      activeRow = rowIndex;
-      showEntryImage(entry, frame);
-    });
-    row.addEventListener("mouseleave", () => {
-      if (mobile.matches) return;
-      bg.classList.remove("visible");
-      activeRow = -1;
-      frame = 0;
-    });
+      if (activeRow === rowIndex) {
+        frame += 1;
+        showEntryImage(entry, frame);
+      } else activateDesktopEntry(rowIndex);
+    }, { signal: events.signal });
   });
   const syncLayout = () => {
     activeRow = -1;
@@ -507,7 +558,10 @@ function renderArchive() {
     });
     bg.classList.remove("visible");
     if (mobile.matches) updateMobileEntry();
-    else list.scrollTop = 0;
+    else {
+      list.scrollTop = 0;
+      activateDesktopEntry(0);
+    }
   };
   mobile.addEventListener("change", syncLayout, { signal: events.signal });
   window.addEventListener("resize", updateMobileEntry, { signal: events.signal });
@@ -527,6 +581,16 @@ function applySanityInfo() {
     issue.path.startsWith("infoPage.contactLinks") && issue.code === "missing_contact");
   // Malformed content is different from intentionally empty published arrays.
   if (issues.some(issue => issue.path.startsWith("infoPage") && issue.code !== "missing_contact")) return;
+  const labels = {
+    ".info-cv h2": info.cvLabel,
+    ".info-work h2": info.workLabel,
+    ".info-skills h2": info.skillsLabel,
+    ".info-contact h2": info.contactLabel,
+    ".info-clients h2": info.selectedClientsLabel
+  };
+  for (const [selector, label] of Object.entries(labels)) {
+    section.querySelector(selector).textContent = label;
+  }
   const lines = values => values.map(value => escapeModuleAttribute(value).replace(/\r?\n/g, "<br>")).join("<br>");
   const content = {
     ".info-intro": lines([info.introduction]),
@@ -553,7 +617,7 @@ async function loadInfoContent() {
     if (!result.ok) return;
     sanityContent = result.data;
     applySanityGlobals();
-    // Update the existing paragraphs even after interaction. Rerunning route()
+    // Update the existing Info text even after interaction. Rerunning route()
     // would reset scrolling and menus; applySanityInfo only touches active Info.
     applySanityInfo();
     applySanityHome();
@@ -709,7 +773,7 @@ function renderProject(id) {
     : `<p>${escapeModuleAttribute(description)}</p>
       <p>Set within a shifting visual environment, the project treats its setting as an active condition—one that obscures, reveals, and unsettles. Individual images form a layered reality in which clarity is deferred and meaning remains fluid, partial, and situational.</p>
       <p>The process becomes a method of introspection and fragmentation, recomposing its subject through a sequence of alternate perspectives. The work questions the coherence of representation and considers how identity, material, and place are mediated and reimagined.</p>`;
-  app.innerHTML = `<article class="detail" data-project-id="${escapeModuleAttribute(project.id)}" data-project-source="${publishedProject ? "sanity" : "local"}" data-project-category="${escapeModuleAttribute(project.category)}" data-project-year="${escapeModuleAttribute(project.year || "")}" data-project-additional-info="${escapeModuleAttribute(project.additionalInfo || "")}">
+  app.innerHTML = `<article class="detail" data-text-color="${project.textColor || "auto"}" data-project-id="${escapeModuleAttribute(project.id)}" data-project-source="${publishedProject ? "sanity" : "local"}" data-project-category="${escapeModuleAttribute(project.category)}" data-project-year="${escapeModuleAttribute(project.year || "")}" data-project-additional-info="${escapeModuleAttribute(project.additionalInfo || "")}">
     <a class="detail-back" href="#work/${project.category.toLowerCase()}">${escapeModuleAttribute(project.title)}</a>
     <button class="detail-info-label" type="button" data-project-info-open>Info</button>
     <div class="project-modules">${moduleMarkup}</div>

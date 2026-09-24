@@ -1,6 +1,7 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {layouts} from '../objects/projectModules'
-import {categories} from '../shared/content'
+import {ProjectCategoriesInput, projectCategories} from '../../components/ProjectCategoriesInput'
+import {categories, textColorField} from '../shared/content'
 
 export const project = defineType({
   name: 'project',
@@ -8,6 +9,7 @@ export const project = defineType({
   type: 'document',
   initialValue: {detailPageEnabled: true},
   fields: [
+    textColorField(),
     defineField({
       name: 'title',
       title: 'Title',
@@ -37,21 +39,20 @@ export const project = defineType({
               : 'Use lowercase letters, numbers, and single hyphens only.',
           ),
     }),
+    defineField({name: 'category', type: 'string', hidden: true}),
     defineField({
-      name: 'category',
-      title: 'Category',
-      type: 'string',
-      options: {list: [...categories]},
-      description: 'Choose the website section for this project.',
-      validation: (rule) =>
-        rule
-          .required()
-          .custom(
-            (value) =>
-              !value ||
-              categories.some((category) => category === value) ||
-              'Choose Video, Commissioned, or Graphic.',
-          ),
+      name: 'categories',
+      title: 'Categories',
+      description: 'Select one or more categories for this project.',
+      type: 'array',
+      of: [defineArrayMember({type: 'string'})],
+      options: {list: categories.map(value => ({title: value, value}))},
+      components: {input: ProjectCategoriesInput},
+      validation: (rule) => rule.unique().custom((value, context) => {
+        if (value == null) return projectCategories(context.document).length > 0 || 'Select at least one category.'
+        return (value.length > 0 && value.every(item => typeof item === 'string' &&
+          categories.some(name => name.toLowerCase() === item.toLowerCase()))) || 'Select one or more listed categories.'
+      }),
     }),
     defineField({
       name: 'year',
@@ -89,11 +90,11 @@ export const project = defineType({
     }),
   ],
   preview: {
-    select: {title: 'title', category: 'category', year: 'year'},
-    prepare({title, category, year}) {
+    select: {title: 'title', category: 'category', categories: 'categories', year: 'year'},
+    prepare({title, category, categories, year}) {
       return {
         title: title || 'Untitled project',
-        subtitle: [category, year].filter(Boolean).join(' — '),
+        subtitle: [projectCategories({category, categories}).join(', '), year].filter(Boolean).join(' — '),
       }
     },
   },
