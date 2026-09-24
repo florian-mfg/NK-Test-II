@@ -794,7 +794,16 @@ function renderProject(id) {
   </footer>`;
   applySanityFooter();
   renderedDetailProjects.set(app.querySelector(".detail"), project);
-  cleanupPage = initProjectVideos(app);
+  // The fixed, vertically centered title has no flow height. Reserve its actual
+  // lower half above the mobile footer links, including font/width-driven wraps.
+  const title = app.querySelector(".detail-back");
+  const footer = app.querySelector(".project-footer");
+  const titleSize = new ResizeObserver(() => {
+    footer.style.setProperty("--detail-title-height", `${title.getBoundingClientRect().height}px`);
+  });
+  titleSize.observe(title);
+  const cleanupVideos = initProjectVideos(app);
+  cleanupPage = () => { titleSize.disconnect(); cleanupVideos(); };
 }
 
 function route() {

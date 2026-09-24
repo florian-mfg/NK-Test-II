@@ -53,6 +53,7 @@
     return data;
   }
   function background(x, y, target) {
+    const light = root.matchMedia('(max-width: 700px)').matches || document.body.matches('.is-work, .is-detail, .is-info');
     const stack = document.elementsFromPoint(x, y);
     const media = stack.find(node => node.matches('img, iframe, video, .project-vimeo, .home, .project-slot.is-empty, .project-slot-text'));
     const scope = target.closest('[data-text-color]') || media?.closest('[data-text-color]') ||
@@ -76,9 +77,8 @@
       const ny = Math.max(0, Math.min(1, (y - top) / height));
       // Match the existing mobile Index scrim without touching its appearance.
       const shade = media.closest('.archive') && root.matchMedia('(max-width: 700px)').matches ? .72 : 1;
-      return {setting, luminance: sample(data.grid, nx, ny, shade, document.body.matches('.is-work, .is-detail, .is-info') ? 1 : 0)};
+      return {setting, luminance: sample(data.grid, nx, ny, shade, light ? 1 : 0)};
     }
-    const light = document.body.matches('.is-work, .is-detail, .is-info');
     return {setting, luminance: light ? 1 : 0};
   }
   function apply(target, x, y) {
