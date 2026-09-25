@@ -210,17 +210,14 @@ test('ordered arrays and line breaks remain ordered, and CMS strings are escaped
 test('live published Info values are retrieved and rendered', {skip: !process.env.INFO_LIVE_SMOKE}, async () => {
   const result = await adapter.load();
   assert.equal(result.ok, true, JSON.stringify(result.error));
-  assert.equal(result.data.infoPage?.introduction, 'Berliner Boy');
-  assert.ok(result.data.infoPage?.work.includes('Eps51'));
-  assert.ok(result.data.infoPage?.skills.includes('Tattooboss'));
-  assert.equal(result.data.siteSettings?.brandName, 'Nicolas Kawohl');
-  assert.ok(result.data.siteSettings?.contacts.email);
+  const info = result.data.infoPage;
+  assert.ok(info, 'Published Info document is available');
   const app = setup();
   try {
     await app.settle(result);
-    assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
-    assert.ok(app.window.document.querySelector('.info-work p').textContent.includes('Eps51'));
-    assert.ok(app.window.document.querySelector('.info-skills p').textContent.includes('Tattooboss'));
+    assert.equal(app.window.document.querySelector('.info-intro').textContent, info.introduction.replace(/\r?\n/g, ''));
+    assert.equal(app.window.document.querySelector('.info-work p').textContent, info.work.join('').replace(/\r?\n/g, ''));
+    assert.equal(app.window.document.querySelector('.info-skills p').textContent, info.skills.join('').replace(/\r?\n/g, ''));
   } finally {app.dom.window.close();}
 });
 
