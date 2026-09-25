@@ -53,10 +53,9 @@ export const selectedWorkPreview = defineType({
       title: 'Composition',
       type: 'array',
       description:
-        'Choose one layout, fill its slots, then choose height and arrangement. This is one preview for the project.',
-      options: {sortable: false},
+        'Add layouts or Spacers and drag to reorder. Media layouts keep their own slots, height and arrangement. Together these rows form one project preview.',
+      options: {sortable: true},
       of: previewCompositions.map(({name}) => defineArrayMember({type: name})),
-      validation: (rule) => rule.max(1),
     }),
     // Keep old stored media recognized and lossless. The frontend wraps it in
     // Full Width; the migration moves it into the editor without re-uploading.
@@ -68,14 +67,14 @@ export const selectedWorkPreview = defineType({
   validation: (rule) =>
     rule.custom((value) => {
       if (!value) return true // optional Project field
-      if (Array.isArray(value.composition) && value.composition.length === 1) return true
+      if (Array.isArray(value.composition) && value.composition.length > 0) return true
       if (
         (value.composition == null ||
           (Array.isArray(value.composition) && !value.composition.length)) &&
         (value.type === 'image' || value.type === 'video')
       )
         return true
-      return 'Choose one preview composition.'
+      return 'Choose at least one preview composition or Spacer.'
     }),
   preview: {
     select: {composition: 'composition', image: 'image', poster: 'poster'},
@@ -85,7 +84,7 @@ export const selectedWorkPreview = defineType({
         (slot: {type?: string}) => slot.type === 'image' || slot.type === 'video',
       )
       return {
-        title: layouts.find((layout) => layout.name === row?.type)?.title || 'Full Width',
+        title: row?.type === 'spacer' ? 'Spacer' : layouts.find((layout) => layout.name === row?.type)?.title || 'Full Width',
         subtitle: 'Selected Work Preview',
         media: media?.image || media?.poster || image || poster,
       }

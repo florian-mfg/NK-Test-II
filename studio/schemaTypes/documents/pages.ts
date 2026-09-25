@@ -1,6 +1,7 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {projectCategories} from '../../components/ProjectCategoriesInput'
 import {InfoSectionContentField} from '../../components/InfoSectionContentField'
+import {InfoSectionOrderInput, InfoSectionOrderPreview, infoSections, defaultInfoSectionOrder} from '../../components/InfoSectionOrderInput'
 import {categories, orderedStrings, textColorField} from '../shared/content'
 
 const singletonPreview = (title: string) => ({prepare: () => ({title})})
@@ -94,12 +95,37 @@ export const indexPage = defineType({
   preview: singletonPreview('Index'),
 })
 
+const infoLinkedSections = [
+  {name: 'news', title: 'News', detailTitle: 'Additional information / date'},
+  {name: 'publications', title: 'Publications', detailTitle: 'Additional information / year'},
+].flatMap(({name, title, detailTitle}) => [
+  defineField({
+    name: `${name}Label`, title: 'Section name', fieldset: name, type: 'string', initialValue: title,
+    description: `Heading shown on the Info page. Leave blank to use “${title}”.`,
+  }),
+  defineField({
+    name, title, type: 'array', options: {sortable: true},
+    description: 'Optional entries. Add, remove or drag to reorder. An empty list is hidden on the website.',
+    of: [defineArrayMember({
+      name: `${name}Entry`, title: `${title} entry`, type: 'object',
+      fields: [
+        defineField({name: 'title', title: 'Title', type: 'string', validation: rule => rule.required()}),
+        defineField({name: 'additionalInfo', title: detailTitle, type: 'string'}),
+        defineField({name: 'url', title: 'URL', type: 'url',
+          description: 'Optional. Leave blank to display plain text.',
+          validation: rule => rule.uri({scheme: ['http', 'https']})}),
+      ],
+      preview: {select: {title: 'title', subtitle: 'additionalInfo'}},
+    })],
+  }),
+])
+
 export const infoPage = defineType({
   name: 'infoPage',
   title: 'Info',
   type: 'document',
   // Fieldsets group existing sibling fields without changing stored paths.
-  fieldsets: ['cv', 'work', 'skills', 'contactLinks', 'selectedClients'].map((name) => ({
+  fieldsets: infoSections.map(({value: name}) => ({
     name,
     // Sanity substitutes the fieldset name for an empty title; a space keeps it unlabelled.
     title: ' ',
@@ -107,6 +133,36 @@ export const infoPage = defineType({
   })),
   fields: [
     defineField({name: 'introduction', title: 'Introduction / biography', type: 'text', rows: 4}),
+    defineField({
+      name: 'additionalIntroduction', title: 'Additional introduction', type: 'text', rows: 4,
+      description: 'Optional text below the introduction in the left half of the Info page.',
+    }),
+    defineField({
+      name: 'sectionOrder', title: 'Section order', type: 'array',
+      description: 'Drag to reorder. On desktop, Selected Clients stays on the right; all other sections stay on the left. Mobile follows this sequence. Content and section names remain below.',
+      components: {input: InfoSectionOrderInput},
+      options: {sortable: true, disableActions: ['add', 'remove', 'duplicate', 'copy']},
+      initialValue: defaultInfoSectionOrder,
+      of: [defineArrayMember({
+        name: 'infoSectionOrderItem', type: 'object', title: 'Info section',
+        components: {preview: InfoSectionOrderPreview},
+        fields: [defineField({name: 'section', title: 'Section', type: 'string', readOnly: true,
+          options: {list: infoSections}})],
+        preview: {
+          select: {section: 'section'},
+          prepare: ({section}) => ({section, title: infoSections.find(item => item.value === section)?.title || 'Unknown section'}),
+        },
+      })],
+      validation: rule => rule.custom(value => {
+        if (value === undefined) return true
+        const sections = value?.map(item => (item as {section?: string}).section) || []
+        // Saved five-section orders remain valid without a content migration.
+        const required = ['cv', 'work', 'skills', 'contactLinks', 'selectedClients']
+        return (new Set(sections).size === sections.length &&
+          sections.every(section => infoSections.some(item => item.value === section)) &&
+          required.every(section => sections.includes(section))) || 'Include each existing section once, with no duplicate or unknown sections.'
+      }),
+    }),
     defineField({
       name: 'cvLabel',
       title: 'Section name',
@@ -140,6 +196,7 @@ export const infoPage = defineType({
       description: 'Heading shown on the Info page. Leave blank to use “Skills”.',
     }),
     orderedStrings('skills', 'Skills', 'One skill per item. Drag to reorder.'),
+    ...infoLinkedSections,
     defineField({
       name: 'contactLabel',
       title: 'Section name',
@@ -170,7 +227,7 @@ export const infoPage = defineType({
       'One client name per item. Drag to reorder.',
     ),
   ].map((field) =>
-    ['cv', 'work', 'skills', 'contactLinks', 'selectedClients'].includes(field.name)
+    infoSections.some(section => section.value === field.name)
       ? {...field, fieldset: field.name, components: {field: InfoSectionContentField}}
       : field,
   ),

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {InfoSectionContentField} from '../components/InfoSectionContentField.tsx'
+import {InfoSectionOrderInput, defaultInfoSectionOrder} from '../components/InfoSectionOrderInput.tsx'
 import {project} from '../schemaTypes/documents/project.ts'
 import {selectedWork, navigation, legalPage, infoPage} from '../schemaTypes/documents/pages.ts'
 import {indexEntry} from '../schemaTypes/objects/editorial.ts'
@@ -147,7 +148,12 @@ test('singletons cannot be created or duplicated from Studio menus', () => {
     assert.ok(!allowed.includes('delete') && !allowed.includes('duplicate'))
     assert.ok(allowed.includes('publish'))
   }
-  assert.deepEqual(config.document.actions(actions, {schemaType: 'project'}), actions)
+  const projectActions = config.document.actions(actions, {schemaType: 'project'})
+  assert.deepEqual(projectActions.map(item => item.action), actions.map(item => item.action))
+  for (const [index, action] of actions.entries()) {
+    if (action.action === 'duplicate') assert.equal(typeof projectActions[index], 'function')
+    else assert.equal(projectActions[index], action)
+  }
 })
 
 test('structure opens fixed documents with explicit legal initial values', () => {
@@ -204,7 +210,7 @@ test('shared video slots accept Vimeo URLs and preserve uploads only for migrati
   }
 })
 
-test('Selected Work Preview offers one composition and reuses module geometry and media fields', () => {
+test('Selected Work Preview supports ordered compositions and reuses module geometry and media fields', () => {
   const preview = schemaTypes.find(type => type.name === 'selectedWorkPreview')
   const slot = schemaTypes.find(type => type.name === 'previewMediaSlot')
   const detailSlot = schemaTypes.find(type => type.name === 'mediaSlot')
@@ -217,10 +223,9 @@ test('Selected Work Preview offers one composition and reuses module geometry an
   for (const name of ['image', 'vimeoUrl', 'poster', 'alt']) assert.equal(field(slot, name), field(detailSlot, name))
   const composition = field(preview, 'composition')
   const names = ['full', 'half-half', 'half-quarter-quarter', 'quarter-quarter-quarter-quarter', 'third-third-third', 'two-thirds-one-third']
-  assert.deepEqual(composition.of.map(item => item.type), names.map(name => `preview-${name}`))
-  let max
-  composition.validation({max(value) {max=value; return this}})
-  assert.equal(max, 1)
+  assert.deepEqual(composition.of.map(item => item.type), [...names.map(name => `preview-${name}`), 'preview-spacer'])
+  assert.equal(composition.options.sortable, true)
+  assert.equal(composition.validation, undefined)
   for (const name of names) {
     const detail = schemaTypes.find(type => type.name === name)
     const overview = schemaTypes.find(type => type.name === `preview-${name}`)
@@ -239,7 +244,7 @@ test('Selected Work Preview offers one composition and reuses module geometry an
   assert.equal(validatePreview({type:'image'}),true) // old records remain readable
   assert.equal(validatePreview({composition:[{}]}),true) // nested validators validate the layout
   assert.notEqual(validatePreview({composition:[]}),true)
-  assert.notEqual(validatePreview({composition:[{},{}]}),true)
+  assert.equal(validatePreview({composition:[{},{}]}),true)
 })
 
 
@@ -248,11 +253,13 @@ test('Info sections group editable labels and unchanged arrays without duplicate
     ['cvLabel', 'CV', 'cv'],
     ['workLabel', 'Work', 'work'],
     ['skillsLabel', 'Skills', 'skills'],
+    ['newsLabel', 'News', 'news'],
+    ['publicationsLabel', 'Publications', 'publications'],
     ['contactLabel', 'Contact', 'contactLinks'],
     ['selectedClientsLabel', 'Selected Clients', 'selectedClients'],
   ]
   assert.deepEqual(infoPage.fields.filter((item) => !labels.some(([name]) => name === item.name)).map((item) => item.name),
-    ['introduction', 'cv', 'work', 'skills', 'contactLinks', 'selectedClients'])
+    ['introduction', 'additionalIntroduction', 'sectionOrder', 'cv', 'work', 'skills', 'news', 'publications', 'contactLinks', 'selectedClients'])
   for (const [name, defaultLabel, contentName] of labels) {
     const label = field(infoPage, name)
     assert.equal(label.type, 'string')
@@ -272,9 +279,24 @@ test('Info sections group editable labels and unchanged arrays without duplicate
   }
 })
 
+test('Spacer is last in both module menus and exposes only Spacing size', () => {
+  assert.equal(field(project, 'modules').of.at(-1).type, 'spacer')
+  assert.equal(field(schemaTypes.find(type => type.name === 'selectedWorkPreview'), 'composition').of.at(-1).type, 'preview-spacer')
+  for (const name of ['spacer', 'preview-spacer']) {
+    const spacer = schemaTypes.find(type => type.name === name)
+    assert.deepEqual(spacer.initialValue, {type: 'spacer', size: 'medium'})
+    assert.deepEqual(spacer.fields.filter(field => !field.hidden).map(field => field.name), ['size'])
+    assert.deepEqual(field(spacer, 'size').options.list.map(item => item.value), ['small', 'medium', 'large'])
+    const [validate] = validators(field(spacer, 'size'))
+    for (const size of [undefined, 'small', 'medium', 'large']) assert.equal(validate(size), true)
+    assert.notEqual(validate('viewport'), true)
+    assert.match(spacer.preview.prepare({size: 'small'}).subtitle, /Empty vertical space/)
+  }
+})
+
 
 test('Info content field only removes the redundant title from the native renderer', () => {
-  for (const name of ['cv', 'work', 'skills', 'contactLinks', 'selectedClients']) {
+  for (const name of ['cv', 'work', 'skills', 'news', 'publications', 'contactLinks', 'selectedClients']) {
     const schemaType = field(infoPage, name)
     const value = name === 'cv' ? [{_key: 'entry', period: '2025', text: 'Existing CV'}]
       : name === 'contactLinks' ? [{_key: 'contact', label: 'Email', destination: 'email'}]
@@ -287,6 +309,79 @@ test('Info content field only removes the redundant title from the native render
       assert.equal(rendered.value, currentValue)
       assert.equal(rendered.schemaType, schemaType)
     }
+  }
+})
+
+test('Info adds optional plain text and identifier-only native section ordering without migrating fields', () => {
+  const additional = field(infoPage, 'additionalIntroduction')
+  assert.equal(additional.type, field(infoPage, 'introduction').type)
+  assert.equal(additional.rows, field(infoPage, 'introduction').rows)
+  assert.equal(additional.validation, undefined)
+  const order = field(infoPage, 'sectionOrder')
+  assert.equal(order.components.input, InfoSectionOrderInput)
+  assert.equal(order.options.sortable, true)
+  assert.deepEqual(order.options.disableActions, ['add', 'remove', 'duplicate', 'copy'])
+  assert.deepEqual(order.of[0].fields.map(item => item.name), ['section'])
+  assert.equal(order.of[0].fields[0].readOnly, true)
+  assert.deepEqual(order.initialValue.map(item => item.section), ['cv', 'work', 'skills', 'news', 'publications', 'contactLinks', 'selectedClients'])
+  const [validate] = validators(order)
+  assert.equal(validate(undefined), true)
+  assert.equal(validate(defaultInfoSectionOrder), true)
+  assert.equal(validate([...defaultInfoSectionOrder].reverse()), true)
+  for (const invalid of [[], defaultInfoSectionOrder.slice(1), [...defaultInfoSectionOrder.slice(1), defaultInfoSectionOrder[1]],
+    [...defaultInfoSectionOrder.slice(1), {section: 'unknown'}]]) assert.notEqual(validate(invalid), true)
+  for (const item of defaultInfoSectionOrder) assert.ok(order.of[0].preview.prepare(item).title)
+})
+
+test('Info ordering input never writes on mount and delegates saved values to the native editor', () => {
+  const patches = []
+  const props = {value: undefined, onChange: patch => patches.push(patch), renderDefault: next => next}
+  const output = InfoSectionOrderInput(props)
+  assert.equal(patches.length, 0)
+  const button = output.props.children[1]
+  button.props.onClick()
+  assert.equal(patches.length, 1)
+  assert.equal(patches[0].type, 'set')
+  assert.deepEqual(patches[0].value, defaultInfoSectionOrder)
+  assert.equal(InfoSectionOrderInput({...props, readOnly: true}).props.children[1].props.disabled, true)
+  const saved = {...props, value: defaultInfoSectionOrder}
+  assert.equal(InfoSectionOrderInput(saved), saved)
+})
+
+test('legacy Info order remains valid and only an explicit click adds missing identifiers', () => {
+  const legacy = defaultInfoSectionOrder.filter(item => !['news', 'publications'].includes(item.section)).reverse()
+  const before = JSON.stringify(legacy)
+  const [validate] = validators(field(infoPage, 'sectionOrder'))
+  assert.equal(validate(legacy), true)
+  const patches = []
+  const props = {value: legacy, onChange: patch => patches.push(patch), renderDefault: () => 'native array'}
+  const output = InfoSectionOrderInput(props)
+  assert.equal(patches.length, 0)
+  assert.equal(output.props.children[0], 'native array')
+  output.props.children[1].props.onClick()
+  assert.deepEqual(patches[0].value.slice(0, 5), legacy)
+  assert.deepEqual(patches[0].value.slice(5).map(item => item.section), ['news', 'publications'])
+  assert.equal(validate(patches[0].value), true)
+  assert.equal(JSON.stringify(legacy), before)
+})
+
+test('News and Publications use optional native arrays with titles, detail text and optional web URLs', () => {
+  for (const name of ['news', 'publications']) {
+    const list = field(infoPage, name)
+    assert.equal(list.type, 'array')
+    assert.equal(list.options.sortable, true)
+    assert.equal(list.options.disableActions, undefined)
+    assert.equal(list.validation, undefined)
+    const entry = list.of[0]
+    assert.deepEqual(entry.fields.map(item => item.name), ['title', 'additionalInfo', 'url'])
+    assert.equal(field(entry, 'additionalInfo').type, 'string')
+    assert.deepEqual(entry.preview.select, {title: 'title', subtitle: 'additionalInfo'})
+    let required = false
+    field(entry, 'title').validation({required() {required = true; return this}})
+    assert.equal(required, true)
+    let schemes
+    field(entry, 'url').validation({uri(options) {schemes = options.scheme; return this}})
+    assert.deepEqual(schemes, ['http', 'https'])
   }
 })
 

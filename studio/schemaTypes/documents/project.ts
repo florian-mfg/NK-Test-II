@@ -1,5 +1,5 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {layouts} from '../objects/projectModules'
+import {projectModules} from '../objects/projectModules'
 import {ProjectCategoriesInput, projectCategories} from '../../components/ProjectCategoriesInput'
 import {categories, textColorField} from '../shared/content'
 
@@ -78,7 +78,7 @@ export const project = defineType({
       name: 'selectedWorkPreview',
       title: 'Selected Work Preview',
       type: 'selectedWorkPreview',
-      description: 'Optional independent preview for Selected Work. Choose one composition and fill its Image, Vimeo Video or Empty slots. Leave unset to use the existing detail-media fallback.',
+      description: 'Optional independent preview for Selected Work. Add compositions and optional Spacers in display order. Leave unset to use the existing detail-media fallback.',
     }),
     defineField({
       name: 'modules',
@@ -86,7 +86,7 @@ export const project = defineType({
       type: 'array',
       description: 'Add layouts and drag them into the order you want them to appear.',
       options: {sortable: true},
-      of: layouts.map(({name}) => defineArrayMember({type: name})),
+      of: projectModules.map(({name}) => defineArrayMember({type: name})),
     }),
   ],
   preview: {

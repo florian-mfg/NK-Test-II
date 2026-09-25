@@ -345,6 +345,7 @@ function renderHome() {
 }
 
 function renderWorkModule(module, project) {
+  if (module.type === "spacer") return renderProjectModule(module, "", "overview");
   const hasText = module.slots.some(slot => slot?.type === "text");
   const previewModule = {
     ...module,
@@ -364,11 +365,12 @@ function renderWorkModule(module, project) {
 
 function renderWorkPreview(project) {
   if (project.selectedWorkPreview) {
-    return renderWorkModule(project.selectedWorkPreview, project);
+    const modules = project.selectedWorkPreview.composition || [project.selectedWorkPreview];
+    return modules.map(module => renderWorkModule(module, project)).join("");
   }
   // One reference owns one preview, not the project's entire detail sequence.
-  const preview = project.modules.find(module => module.slots.some(slot => slot?.type === "video"))
-    || project.modules.find(module => module.slots.some(slot => slot?.type === "image"))
+  const preview = project.modules.find(module => module.slots?.some(slot => slot?.type === "video"))
+    || project.modules.find(module => module.slots?.some(slot => slot?.type === "image"))
     || project.modules[0];
   return preview ? renderWorkModule(preview, project) : "";
 }
@@ -376,6 +378,51 @@ function renderWorkPreview(project) {
 function workCategory(category) {
   return WORK_CATEGORIES.find(value => value.toLowerCase() === category?.toLowerCase()) || "Video";
 }
+
+// This tab's most recent listing → project transition. Never persist across visits.
+let projectOverviewOrigin = null;
+let pendingOverviewRestore = null;
+
+function overviewHref(fallback) {
+  return projectOverviewOrigin?.projectHash === location.hash ? projectOverviewOrigin.hash : fallback;
+}
+
+function restoreOverviewPosition() {
+  const pending = pendingOverviewRestore;
+  const work = app.querySelector(".work:not([aria-busy='true'])");
+  if (!pending || pending.started || pending.hash !== location.hash || !work) return;
+  pending.started = true;
+  // Lazy images need loading even while the return view is concealed. Their
+  // natural dimensions can determine the height of automatic-height modules.
+  const images = [...work.querySelectorAll(".project-preview:not([hidden]) img")];
+  const ready = images.map(image => new Promise(resolve => {
+    if (image.complete) return resolve();
+    image.addEventListener("load", resolve, {once: true});
+    image.addEventListener("error", resolve, {once: true});
+    image.loading = "eager";
+  }));
+  Promise.all([...ready, document.fonts?.ready]).then(() => requestAnimationFrame(() => {
+    if (pendingOverviewRestore !== pending || location.hash !== pending.hash) return;
+    // Scroll and reveal in the same pre-paint callback: never paint the top first.
+    window.scrollTo({left: pending.x, top: pending.y, behavior: "instant"});
+    lastScrollY = window.scrollY;
+    app.style.visibility = pending.visibility;
+    pendingOverviewRestore = null;
+  }));
+}
+
+document.addEventListener("click", event => {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const link = event.target.closest("a");
+  if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
+  const href = link.getAttribute("href") || "";
+  if (app.querySelector(".work:not([aria-busy='true'])") && /^#\/?project\//.test(href)) {
+    projectOverviewOrigin = {projectHash: href, hash: location.hash, x: window.scrollX, y: window.scrollY};
+  } else if (link.matches(".header-overview") && projectOverviewOrigin?.projectHash === location.hash) {
+    pendingOverviewRestore = {...projectOverviewOrigin, visibility: app.style.visibility};
+    app.style.visibility = "hidden";
+  }
+});
 
 function renderWork(category = "Video") {
   const selectedCategory = workCategory(category);
@@ -395,15 +442,20 @@ function renderWork(category = "Video") {
     : sanityContent.selectedWork[category.toLowerCase()].map(id => sanityContent.projectsById[id])
       .filter(project => project && (project.selectedWorkPreview || project.modulesValid !== false)))
       .map(project => ({project, category})));
-  const projects = selectedProjects.map(({project: p, category}, i) => `
+  const projects = selectedProjects.map(({project: p, category}, i) => {
+    const rows = p.selectedWorkPreview ? p.selectedWorkPreview.composition || [p.selectedWorkPreview] : p.modules;
+    const spacerOnly = rows.length > 0 && rows.every(module => module.type === "spacer");
+    return `
     <article class="project-preview" data-text-color="${p.textColor || "auto"}" data-category="${category}" data-project="${escapeModuleAttribute(p.id)}"${category === selectedCategory ? "" : " hidden"}>
-      ${p.detailPageEnabled === false ? "" : `<a class="project-link" href="#project/${encodeURIComponent(p.id)}" aria-label="Open ${escapeModuleAttribute(p.title)}"></a>`}
+      ${p.detailPageEnabled === false || spacerOnly ? "" : `<a class="project-link" href="#project/${encodeURIComponent(p.id)}" aria-label="Open ${escapeModuleAttribute(p.title)}"></a>`}
       <div class="project-modules">${renderWorkPreview(p)}</div>
-      ${i === selectedProjects.length - 1 ? `<span class="project-kind">${category}</span>` : ""}
-    </article>`).join("");
+      ${i === selectedProjects.length - 1 && !spacerOnly ? `<span class="project-kind">${category}</span>` : ""}
+    </article>`;
+  }).join("");
   app.innerHTML = `<section class="work" data-category="${selectedCategory}" data-source="${useLocal(selectedCategory) ? "local" : "sanity"}"><div class="projects">${projects}</div></section>`;
   renderedWorkPages.set(app.querySelector(".work"), source);
   cleanupPage = initProjectVideos(app);
+  restoreOverviewPosition();
 }
 
 function renderArchive() {
@@ -572,6 +624,18 @@ function renderArchive() {
   syncLayout();
 }
 
+function renderInfoContactLink(link) {
+  if (!["email", "instagram"].includes(link.destination)) {
+    return `<a href="${escapeModuleAttribute(link.href)}">${escapeModuleAttribute(link.label)}</a>`;
+  }
+  const contact = sanityContent?.siteSettings?.contacts[link.destination];
+  if (!contact) return "";
+  const instagram = link.destination === "instagram";
+  const value = instagram ? new URL(contact.href).pathname.split("/").filter(Boolean)[0] || new URL(contact.href).hostname : contact.value;
+  const escapedValue = escapeModuleAttribute(value);
+  return `${instagram ? "Instagram" : "Mail"}: <a class="info-contact-value" href="${escapeModuleAttribute(contact.href)}" data-value="${escapedValue}"${instagram ? ' target="_blank" rel="noopener noreferrer"' : ""}><span>${escapedValue}</span></a>`;
+}
+
 function applySanityInfo() {
   const section = app.querySelector(".info");
   const info = sanityContent?.infoPage;
@@ -597,8 +661,7 @@ function applySanityInfo() {
     ".info-cv p": lines(info.cv.map(entry => [entry.period, entry.text].filter(Boolean).join(" "))),
     ".info-work p": lines(info.work),
     ".info-skills p": lines(info.skills),
-    ".info-contact p": info.contactLinks.map(link =>
-      `<a href="${escapeModuleAttribute(link.href)}">${escapeModuleAttribute(link.label)}</a>`).join("<br>"),
+    ".info-contact p": info.contactLinks.map(renderInfoContactLink).join("<br>"),
     ".info-clients p": lines(info.selectedClients)
   };
   for (const [selector, html] of Object.entries(content)) {
@@ -607,6 +670,52 @@ function applySanityInfo() {
     const paragraph = section.querySelector(selector);
     if (paragraph.innerHTML !== html) paragraph.innerHTML = html;
   }
+  if (info.additionalIntroduction.trim()) {
+    const additional = document.createElement("p");
+    additional.className = "info-intro info-additional-intro";
+    additional.innerHTML = lines([info.additionalIntroduction]);
+    section.querySelector(".info-intro").after(additional);
+  }
+  const details = section.querySelector(".info-details");
+  for (const id of ["news", "publications"]) {
+    if (!info[id].length) continue;
+    const node = document.createElement("section");
+    node.className = `info-${id}`;
+    const heading = document.createElement("h2");
+    heading.textContent = info[`${id}Label`];
+    const paragraph = document.createElement("p");
+    paragraph.innerHTML = info[id].map(entry => {
+      const label = lines([[entry.title, entry.additionalInfo].filter(Boolean).join(" ")]);
+      return entry.href ? `<a href="${escapeModuleAttribute(entry.href)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label;
+    }).join("<br>");
+    node.append(heading, paragraph);
+    details.append(node);
+  }
+  const sectionSelectors = {
+    cv: ".info-cv", work: ".info-work", skills: ".info-skills",
+    news: ".info-news", publications: ".info-publications",
+    contactLinks: ".info-contact", selectedClients: ".info-clients"
+  };
+  const orderedSections = info.sectionOrder.map(id => section.querySelector(sectionSelectors[id])).filter(Boolean);
+  const columns = section.querySelector(".info-columns");
+  const arrange = () => {
+    // Desktop pins Clients to the right. Mobile retains the saved sequence and
+    // the existing spacing between the stacked columns, without duplicate DOM.
+    const side = mobileMenuBreakpoint.matches ? orderedSections.at(-1) : section.querySelector(".info-clients");
+    const ordered = [...orderedSections.filter(node => node !== side), side];
+    ordered.forEach((node, index) => {
+      const isSide = node === side;
+      node.classList.toggle("info-column", isSide);
+      node.classList.toggle("info-side-section", isSide);
+      const parent = isSide ? columns : details;
+      const position = isSide ? 1 : index;
+      if (parent.children[position] !== node) parent.insertBefore(node, parent.children[position] || null);
+    });
+  };
+  arrange();
+  const layoutEvents = new AbortController();
+  mobileMenuBreakpoint.addEventListener("change", arrange, {signal: layoutEvents.signal});
+  cleanupPage = () => layoutEvents.abort();
   hydratedInfoPages.add(section);
 }
 
@@ -646,9 +755,9 @@ function renderInfo() {
         <section class="info-cv"><h2>CV</h2><p>2022 – 2025 Work at Eps51<br>2014 – 2021 Academy of Fine Arts</p></section>
         <section class="info-work"><h2>Work</h2><p>EPS51<br>Berlin<br>Artistic Director of Der Fahrende Raum<br>Buchhandlung Walther König at Haus der Kunst, Munich</p></section>
         <section class="info-skills"><h2>Skills</h2><p>Video<br>Graphic<br>Animation</p></section>
-        <section class="info-contact"><h2>Contact</h2><p><a href="mailto:mail@nicolas-kawohl.com">Mail</a><br><a href="https://www.instagram.com/nicocaw/">Instagram</a></p></section>
+        <section class="info-contact"><h2>Contact</h2><p></p></section>
       </div>
-      <section class="info-column info-clients">
+      <section class="info-column info-side-section info-clients">
         <h2>Selected Clients</h2>
         <p>Eps51<br>Welt<br>William Fan<br>DNA Club Munich<br>Fachhochschule Potsdam<br>Rethink<br>Icon Magazine<br>Richert Beil<br>European Month of Photography<br>Ahlberg ME<br>Gectalt Jewelry<br>German Press Days<br>Dawid Tomaszewski<br>Horror Vacui<br>On time PR<br>Uhren Magazin<br>CLAV<br>BFW<br>Henkel<br>Some Magazine<br>S/O Berlin Das Stue<br>Bacq Berlin<br>The Alqemist<br>Runtime<br>Friedman Berlin<br>Frederik Constantin Victor<br>MGUN Berlin<br>Zinnober Blumen<br>Suprema<br>Hong Bock<br>The Green Bean<br>Perfect Skin<br>Necklacy</p>
       </section>
@@ -749,7 +858,7 @@ function renderProject(id) {
     // create fallback players that would have to be replaced when it completes.
     document.body.className = "is-detail";
     setCurrentPage(localProject ? `work/${localProject.category.toLowerCase()}` : "work");
-    document.querySelector(".header-overview").href = localProject ? `#work/${localProject.category.toLowerCase()}` : "#work";
+    document.querySelector(".header-overview").href = overviewHref(localProject ? `#work/${localProject.category.toLowerCase()}` : "#work");
     app.innerHTML = `<article class="detail" data-project-id="${escapeModuleAttribute(id || "")}" aria-busy="true" aria-label="Loading project"></article>`;
     return;
   }
@@ -765,7 +874,7 @@ function renderProject(id) {
   const paragraphs = value => value.trim() ? value.trim().split(/\r?\n\s*\r?\n/).map(paragraph =>
     `<p>${escapeModuleAttribute(paragraph).replace(/\r?\n/g, "<br>")}</p>`).join("") : "";
   document.body.className = "is-detail";
-  document.querySelector(".header-overview").href = `#work/${project.category.toLowerCase()}`;
+  document.querySelector(".header-overview").href = overviewHref(`#work/${project.category.toLowerCase()}`);
   setCurrentPage(`work/${project.category.toLowerCase()}`);
   const description = `${project.title} explores image, material and movement through a sequence of composed visual studies. The work brings contrasting surfaces and perspectives into a shared visual language, creating an open dialogue between detail and landscape.`;
   const infoMarkup = publishedProject || typeof project.description === "string"
@@ -807,6 +916,11 @@ function renderProject(id) {
 }
 
 function route() {
+  if (pendingOverviewRestore && location.hash !== pendingOverviewRestore.hash) {
+    app.style.visibility = pendingOverviewRestore.visibility;
+    pendingOverviewRestore = null;
+  }
+  if (projectOverviewOrigin && location.hash !== projectOverviewOrigin.projectHash) projectOverviewOrigin = null;
   const activeHash = location.hash.replace(/^#\/?/, "") || "home";
   const [activePage, activeId] = activeHash.split("/");
   const detail = app.querySelector(".detail");
@@ -826,8 +940,10 @@ function route() {
   else if (page === "imprint" || page === "privacy-policy") renderLegal(page);
   else if (page === "work") renderWork(id);
   else ({ home: renderHome, archive: renderArchive, info: renderInfo }[page] || renderHome)();
-  window.scrollTo(0, 0);
-  lastScrollY = 0;
+  if (!pendingOverviewRestore) {
+    window.scrollTo(0, 0);
+    lastScrollY = 0;
+  }
 }
 
 window.addEventListener("scroll", () => {

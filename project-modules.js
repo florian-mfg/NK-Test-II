@@ -32,6 +32,11 @@ function moduleImagePosition(image) {
 
 function renderProjectModule(module, title = "", mode = "detail") {
   if (!["overview", "detail"].includes(mode)) throw new Error("Invalid project playback mode");
+  if (module.type === "spacer") {
+    const size = module.size ?? "medium";
+    if (!["small", "medium", "large"].includes(size)) throw new Error("Invalid spacer size");
+    return `<div class="project-module project-module-spacer spacer-${size}" data-module-type="spacer" aria-hidden="true"></div>`;
+  }
   const spans = Object.hasOwn(PROJECT_MODULE_TYPES, module.type) && PROJECT_MODULE_TYPES[module.type];
   const height = module.height ?? "auto";
   if (!spans || !PROJECT_MODULE_HEIGHTS.includes(height)) throw new Error("Invalid project module type or height");

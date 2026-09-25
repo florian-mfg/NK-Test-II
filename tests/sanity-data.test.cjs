@@ -16,6 +16,25 @@ const doc = (type, fields = {}) => ({_id: type, _type: type, ...fields});
 const fixture = (extra = {}) => ({projects: [], ...extra});
 const plain = value => JSON.parse(JSON.stringify(value));
 
+test('Spacers normalize to size-only modules in details and ordered overview compositions without mutation', () => {
+  for (const size of ['small', 'medium', 'large', undefined]) {
+    const source = {type: 'spacer', _type: 'spacer', size, slots: [slot()], order: 'reverse', height: 'large'};
+    const before = JSON.stringify(source);
+    assert.deepEqual(data.normalizeModule(source), {module: {type: 'spacer', size: size ?? 'medium'}, issues: []});
+    assert.equal(JSON.stringify(source), before);
+  }
+  assert.equal(data.normalizeModule({type: 'spacer', size: 'bad'}).module, null);
+  const modules = [row(), {type: 'spacer', size: 'small'}, {type: 'spacer'}, row('half-half')];
+  const result = data.normalize(fixture({projects: [project('spaced', 'Video', {
+    modules, selectedWorkPreview: {composition: modules.map(module => ({...module, _type: `preview-${module.type}`}))},
+  })]})).projectsById.spaced;
+  assert.equal(result.modulesValid, true);
+  assert.deepEqual(result.modules.map(module => module.type), ['full', 'spacer', 'spacer', 'half-half']);
+  assert.deepEqual(result.selectedWorkPreview.composition, result.modules);
+  assert.match(data.query, /modules\[\]\{_type,type,size/);
+  assert.match(data.query, /composition\[\]\{_type,type,size/);
+});
+
 function isolated(fetch) {
   const sandbox = {URL, AbortController, setTimeout, clearTimeout, fetch, VimeoMedia: require('../vimeo-media.js'), ProjectCategories: require('../project-categories.js')};
   vm.runInNewContext(adapterSource, sandbox);
@@ -80,6 +99,21 @@ test('empty and omitted trailing slots retain position and discard stale media',
   assert.equal(result.module.slots[2], null);
   assert.equal(data.normalizeModule(row()).module.slots[0].alt, undefined);
   assert.equal(data.normalizeModule(row('half-half', [null, null])).module.slots.every(s => s === null), true);
+});
+
+test('Spacers between every pair of media layouts preserve their exact rendering', () => {
+  const renderer = vm.createContext({URL, document: {baseURI: 'https://example.com/'}});
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../project-modules.js'), 'utf8'), renderer);
+  const names = ['full', 'half-half', 'half-quarter-quarter', 'quarter-quarter-quarter-quarter', 'third-third-third', 'two-thirds-one-third'];
+  for (const first of names) for (const last of names) for (const mode of ['detail', 'overview']) {
+    const a = data.normalizeModule(row(first)).module;
+    const b = data.normalizeModule(row(last)).module;
+    const gaps = ['small', 'medium', 'large'].map(size => ({type: 'spacer', size}));
+    const render = module => renderer.renderProjectModule(module, 'Title', mode);
+    assert.equal(renderer.renderProjectModules([a, ...gaps, b], 'Title', mode), render(a) + gaps.map(render).join('') + render(b));
+    for (const gap of gaps) assert.match(render(gap), /aria-hidden="true"><\/div>$/);
+  }
+  assert.throws(() => renderer.renderProjectModule({type: 'spacer', size: 'bad'}), /Invalid spacer size/);
 });
 
 test('text sizes and paragraph whitespace survive, including overview text', () => {

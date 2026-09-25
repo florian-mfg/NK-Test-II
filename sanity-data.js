@@ -46,12 +46,12 @@
     "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,textColor,backgroundVideoUrl,videoTitle,poster${imageFields}},
     "siteSettings": *[_type == "siteSettings" && _id == "siteSettings"][0]{_id,_type,brandName,email,instagram,phone,defaultPageTitle,defaultDescription,socialImage${imageFields},footerLinks[]{label,destination}},
     "navigation": *[_type == "navigation" && _id == "navigation"][0]{_id,_type,homeLabel,items[]{label,destination},categories[]{label,destination},mobileContact{label,destination}},
-    "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,cvLabel,workLabel,skillsLabel,contactLabel,selectedClientsLabel,cv[]{period,text},work,skills,contactLinks[]{label,destination},selectedClients},
+    "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,additionalIntroduction,sectionOrder[]{section},cvLabel,workLabel,skillsLabel,newsLabel,publicationsLabel,contactLabel,selectedClientsLabel,cv[]{period,text},work,skills,news[]{title,additionalInfo,url},publications[]{title,additionalInfo,url},contactLinks[]{label,destination},selectedClients},
     "projects": *[_type == "project" && ${published}] | order(_id asc) {
       _id,_type,title,slug,category,categories,year,additionalInfo,description,detailPageEnabled,textColor,
       selectedWorkPreview{type,alt,vimeoUrl,playback,image${imageFields},poster${imageFields},
-        composition[]{_type,type,height,order,slots[]{type,alt,vimeoUrl,playback,image${imageFields},poster${imageFields}}}},
-      modules[]{_type,type,height,order,slots[]{type,text,textSize,alt,vimeoUrl,playback,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
+        composition[]{_type,type,size,height,order,slots[]{type,alt,vimeoUrl,playback,image${imageFields},poster${imageFields}}}},
+      modules[]{_type,type,size,height,order,slots[]{type,text,textSize,alt,vimeoUrl,playback,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
     "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,displayTitle,year,additionalInfo,textColor,initialLayout,previewImages[]${imageFields.slice(0, -1)},portraitPosition}}},
@@ -137,6 +137,13 @@
   function moduleValue(value, issues, path) {
     if (!record(value)) { issue(issues, path, 'invalid_module', 'Expected a module object.'); return null; }
     const type = value.type ?? value._type;
+    if (type === 'spacer') {
+      const size = value.size ?? 'medium';
+      if ((value._type && value._type !== type) || !['small', 'medium', 'large'].includes(size)) {
+        issue(issues, path, 'invalid_module', 'Invalid spacer type or size.'); return null;
+      }
+      return {type, size};
+    }
     const count = own(layouts, type) ? layouts[type] : 0;
     const height = value.height ?? 'auto';
     let order = value.order ?? 'default';
@@ -190,16 +197,20 @@
       if (['image', 'video'].includes(value.type)) return moduleValue({type: 'full', slots: [value]}, issues, path);
       return invalid('Choose one preview composition.');
     }
-    if (!Array.isArray(value.composition) || value.composition.length !== 1) return invalid('Expected exactly one preview composition.');
-    const row = value.composition[0];
-    if (!record(row) || !own(layouts, row.type) || (row._type && row._type !== `preview-${row.type}`)) {
-      return invalid('Unknown or mismatched preview composition.');
-    }
-    if (!Array.isArray(row.slots) || row.slots.some(slot => slot != null && (!record(slot) || !['empty', 'image', 'video'].includes(slot.type)))) {
-      return invalid('Preview slots support Image, Vimeo Video or Empty.');
-    }
-    // Namespaced Studio types share the exact module normalizer and renderer.
-    return moduleValue({...row, _type: row.type}, issues, `${path}.composition[0]`);
+    if (!Array.isArray(value.composition)) return invalid('Expected preview compositions.');
+    const modules = value.composition.map((row, index) => {
+      if (!record(row) || (!own(layouts, row.type) && row.type !== 'spacer') || (row._type && row._type !== `preview-${row.type}`)) {
+        return invalid('Unknown or mismatched preview composition.');
+      }
+      if (row.type !== 'spacer' && (!Array.isArray(row.slots) || row.slots.some(slot => slot != null && (!record(slot) || !['empty', 'image', 'video'].includes(slot.type))))) {
+        return invalid('Preview slots support Image, Vimeo Video or Empty.');
+      }
+      // Namespaced Studio types share the exact module normalizer and renderer.
+      return moduleValue({...row, _type: row.type}, issues, `${path}.composition[${index}]`);
+    });
+    if (modules.some(module => !module)) return null;
+    // Preserve the existing normalized shape for every single-row preview.
+    return modules.length === 1 ? modules[0] : {composition: modules};
   }
 
   function normalizeModule(value) {
@@ -226,6 +237,17 @@
       if (text(item)) return [item];
       issue(issues, `${path}[${index}]`, 'invalid_text', 'Empty or non-text list item omitted.');
       return [];
+    });
+  }
+  function infoEntries(value) {
+    return (Array.isArray(value) ? value : []).flatMap(entry => {
+      if (!record(entry) || !text(entry.title)) return [];
+      let href = null;
+      try {
+        const url = new URL(text(entry.url));
+        if (['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && !/[\r\n]/.test(entry.url)) href = url.href;
+      } catch { /* Missing or invalid optional URLs render as plain text. */ }
+      return [{title: entry.title, additionalInfo: string(entry.additionalInfo), href}];
     });
   }
   function sharedLink(value, settings, allowed, issues, path) {
@@ -332,11 +354,20 @@
     }
 
     const infoDoc = singleton(raw, 'infoPage', issues, availability);
+    const defaultInfoOrder = ['cv', 'work', 'skills', 'news', 'publications', 'contactLinks', 'selectedClients'];
+    // Ignore unknown/duplicate identifiers and append omitted sections. Ordering
+    // metadata must never suppress valid legacy Info content or contact links.
+    const savedInfoOrder = Array.isArray(infoDoc?.sectionOrder)
+      ? infoDoc.sectionOrder.map(item => item?.section).filter(id => defaultInfoOrder.includes(id)) : [];
     const infoPage = infoDoc ? {
       introduction: string(infoDoc.introduction),
+      additionalIntroduction: string(infoDoc.additionalIntroduction),
+      sectionOrder: [...new Set([...savedInfoOrder, ...defaultInfoOrder])],
       cvLabel: text(infoDoc.cvLabel) || 'CV',
       workLabel: text(infoDoc.workLabel) || 'Work',
       skillsLabel: text(infoDoc.skillsLabel) || 'Skills',
+      newsLabel: text(infoDoc.newsLabel) || 'News',
+      publicationsLabel: text(infoDoc.publicationsLabel) || 'Publications',
       contactLabel: text(infoDoc.contactLabel) || 'Contact',
       selectedClientsLabel: text(infoDoc.selectedClientsLabel) || 'Selected Clients',
       cv: array(infoDoc.cv, issues, 'infoPage.cv').flatMap((entry, index) => {
@@ -344,6 +375,7 @@
         issue(issues, `infoPage.cv[${index}]`, 'invalid_cv', 'CV entry without text omitted.'); return [];
       }),
       work: stringList(infoDoc.work, issues, 'infoPage.work'), skills: stringList(infoDoc.skills, issues, 'infoPage.skills'),
+      news: infoEntries(infoDoc.news), publications: infoEntries(infoDoc.publications),
       selectedClients: stringList(infoDoc.selectedClients, issues, 'infoPage.selectedClients'),
       contactLinks: linkList(infoDoc.contactLinks, siteSettings, ['email', 'instagram', 'phone'], issues, 'infoPage.contactLinks')
     } : null;

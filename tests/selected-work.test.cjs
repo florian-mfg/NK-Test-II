@@ -49,6 +49,36 @@ const content = (fields = {}, projects = [project('one'), project('two'), projec
 const ids = app => [...app.window.document.querySelectorAll('.project-preview:not([hidden])')].map(element => element.dataset.project);
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('Spacer sequences render without slots, titles or links inside gaps and retain project interaction', async () => {
+  const app = setup();
+  try {
+    const media = {_type: 'preview-full', type: 'full', height: 'small', slots: [{type: 'image', image: {asset: {_ref: 'image-abc-1200x800-jpg'}}}]};
+    const gaps = ['small', 'medium', 'large'].map(size => ({_type: 'preview-spacer', type: 'spacer', size}));
+    const composition = [media, ...gaps, media];
+    await app.settle(success(content({video: [{_ref: 'doc-one'}, {_ref: 'doc-two'}]}, [
+      project('one', 'Video', {selectedWorkPreview: {composition}, modules: composition.map(row => ({...row, _type: row.type}))}),
+      project('two', 'Video', {selectedWorkPreview: {composition: [gaps[1]]}}),
+    ])));
+    const d = app.window.document;
+    const article = d.querySelector('[data-project="one"]');
+    assert.deepEqual([...article.querySelectorAll('[data-module-type]')].map(node => node.dataset.moduleType), ['full', 'spacer', 'spacer', 'spacer', 'full']);
+    for (const gap of article.querySelectorAll('.project-module-spacer')) {
+      assert.equal(gap.innerHTML, '');
+      assert.equal(gap.getAttribute('aria-hidden'), 'true');
+      assert.equal(gap.closest('a'), null);
+      assert.equal(gap.classList.contains('is-empty'), false);
+    }
+    assert.equal(article.querySelectorAll('.project-slot').length, 2);
+    assert.equal(article.querySelectorAll('.project-title').length, 2);
+    assert.equal(article.querySelector('.project-link').getAttribute('href'), '#project/one');
+    assert.equal(d.querySelector('[data-project="two"] a'), null);
+    assert.equal(d.querySelector('[data-project="two"]').textContent.trim(), '');
+    app.window.location.hash = '#project/one'; app.window.route();
+    assert.equal(d.querySelectorAll('.detail .project-module-spacer').length, 3);
+    assert.equal(d.querySelectorAll('.detail .project-slot').length, 2);
+  } finally {app.dom.window.close();}
+});
+
 test('published references control category grouping and exact ordering; teasers reuse existing playback mode', async () => {
   const app = setup();
   try {

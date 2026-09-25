@@ -16,7 +16,7 @@ export const layouts = [
 
 // Both detail modules and overview compositions share these exact fields/defaults.
 export function createProjectModules({namePrefix = '', slotType = 'mediaSlot'} = {}) {
-  return layouts.map(({name, title, widths}) => {
+  const mediaModules = layouts.map(({name, title, widths}) => {
     const arrangements =
       name === 'half-quarter-quarter'
         ? [
@@ -118,6 +118,24 @@ export function createProjectModules({namePrefix = '', slotType = 'mediaSlot'} =
       },
     })
   })
+  return [...mediaModules, defineType({
+    name: `${namePrefix}spacer`, title: 'Spacer', type: 'object',
+    description: 'Adds vertical whitespace between content modules.',
+    initialValue: {type: 'spacer', size: 'medium'},
+    fields: [
+      defineField({name: 'type', type: 'string', hidden: true, readOnly: true,
+        validation: rule => rule.custom(value => value === 'spacer' || 'Module type must be spacer.')}),
+      defineField({name: 'size', title: 'Spacing size', type: 'string',
+        description: 'Adds vertical whitespace between content modules.',
+        options: {layout: 'radio', list: [
+          {title: 'Small', value: 'small'}, {title: 'Medium', value: 'medium'}, {title: 'Large', value: 'large'},
+        ]},
+        validation: rule => rule.custom(value => value == null || ['small', 'medium', 'large'].includes(value) || 'Choose Small, Medium or Large.')}),
+    ],
+    preview: {select: {size: 'size'}, prepare: ({size = 'medium'}) => ({
+      title: `Spacer — ${size[0].toUpperCase()}${size.slice(1)}`, subtitle: 'Empty vertical space',
+    })},
+  })]
 }
 
 export const projectModules = createProjectModules()
