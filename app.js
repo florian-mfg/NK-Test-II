@@ -369,7 +369,7 @@ function renderWorkPreview(project) {
     return modules.map(module => renderWorkModule(module, project)).join("");
   }
   // One reference owns one preview, not the project's entire detail sequence.
-  const preview = project.modules.find(module => module.slots?.some(slot => slot?.type === "video"))
+  const preview = project.modules.find(module => module.slots?.some(slot => slot?.type === "video" || slot?.type === "mp4"))
     || project.modules.find(module => module.slots?.some(slot => slot?.type === "image"))
     || project.modules[0];
   return preview ? renderWorkModule(preview, project) : "";
@@ -480,7 +480,7 @@ function renderArchive() {
   app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true">${entries[0]?.images?.[0] ? image(entries[0].images[0]) : ""}</div><div class="archive-list">${entries.map(entryMarkup).join("")}</div></section>`;
   renderedIndexPages.set(app.querySelector(".archive"), entries);
   const bg = document.querySelector(".archive-background");
-  const bgImage = bg.querySelector("img");
+  let bgImage = bg.querySelector("img");
   if (bgImage) bgImage.loading = "eager";
   const list = document.querySelector(".archive-list");
   const rows = [...list.querySelectorAll(".archive-row")];
@@ -490,24 +490,86 @@ function renderArchive() {
   let activeRow = -1;
   let frame = 0;
   let scrollFrame;
+  let activeVideo = null;
+  let cleanupVideo = () => {};
+  const stopVideo = () => {
+    cleanupVideo();
+    cleanupVideo = () => {};
+    activeVideo = null;
+  };
   const showEntryImage = (entry, imageIndex) => {
-    if (!bgImage || !entry?.images?.length) {
+    const items = entry?.media || entry?.images?.map((src, i) => ({
+      type: "image", src, ...entry.previewImages?.[i]
+    })) || [];
+    const media = items[imageIndex % items.length];
+    if (!media) {
+      stopVideo();
+      bg.replaceChildren();
+      bgImage = null;
       bg.classList.remove("visible");
       return;
     }
     bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
-    const media = entry.previewImages?.[imageIndex % entry.images.length];
+    if (media.type === "vimeo" || media.type === "mp4") {
+      if (activeVideo === media) return;
+      stopVideo();
+      if (bgImage) bgImage.onload = null;
+      bgImage = null;
+      bg.replaceChildren();
+      bg.classList.remove("half", "portrait-left", "portrait-center");
+      bg.classList.add("full", "visible", "is-video");
+      activeVideo = media;
+      if (media.type === "vimeo") {
+        // Reuse the existing autoplay embed, SDK sizing and teardown unchanged.
+        const template = document.createElement("template");
+        template.innerHTML = renderProjectModule({type: "full", slots: [
+          {type: "video", vimeoUrl: media.src, playback: "autoplay"}
+        ]}, entry.title, "overview");
+        bg.append(template.content.querySelector(".project-vimeo"));
+        cleanupVideo = initProjectVideos(bg);
+      } else {
+        const video = document.createElement("video");
+        video.autoplay = true;
+        video.muted = true;
+        video.defaultMuted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.controls = false;
+        video.preload = "auto";
+        video.src = media.src;
+        bg.append(video);
+        // Autoplay policy or an unavailable file must not interrupt Index navigation.
+        video.play()?.catch(() => {});
+        cleanupVideo = () => {
+          video.pause();
+          video.removeAttribute("src");
+          video.load();
+          video.remove();
+        };
+      }
+      return;
+    }
+    if (activeVideo) {
+      stopVideo();
+      bg.replaceChildren();
+    }
+    bg.classList.remove("is-video");
+    if (!bgImage) {
+      bgImage = document.createElement("img");
+      bgImage.loading = "eager";
+      bg.append(bgImage);
+    }
     bgImage.alt = media?.alt ?? "";
     // Reuse the module image crop/hotspot mapping for the active Index image.
     const position = moduleImagePosition(media);
     bgImage.style.cssText = position ? position.slice(' style="'.length, -1) : "";
-    const src = entry.images[imageIndex % entry.images.length];
+    const src = media.src;
     if (bgImage.getAttribute("src") !== src) bgImage.src = src;
     const width = media?.cropRect?.width ?? media?.width ?? (bgImage.complete ? bgImage.naturalWidth : 0);
     const height = media?.cropRect?.height ?? media?.height ?? (bgImage.complete ? bgImage.naturalHeight : 0);
     const half = !mobile.matches && width > 0 && height > width;
     const portraitPosition = media?.portraitPosition ||
-      ((entry.layout === "half") !== ((imageIndex % entry.images.length) % 2 === 1) ? "right" : "center");
+      ((entry.layout === "half") !== ((imageIndex % items.length) % 2 === 1) ? "right" : "center");
     bg.classList.toggle("portrait-left", half && portraitPosition === "left");
     bg.classList.toggle("portrait-center", half && portraitPosition === "center");
     bg.classList.toggle("half", half);
@@ -620,6 +682,8 @@ function renderArchive() {
   cleanupPage = () => {
     events.abort();
     cancelAnimationFrame(scrollFrame);
+    if (bgImage) bgImage.onload = null;
+    stopVideo();
   };
   syncLayout();
 }

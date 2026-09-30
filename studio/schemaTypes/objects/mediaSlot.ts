@@ -21,19 +21,20 @@ export const mediaSlot = defineType({
         list: [
           {title: 'Empty', value: 'empty'},
           {title: 'Image', value: 'image'},
-          {title: 'Video', value: 'video'},
+          {title: 'Vimeo Video', value: 'video'},
+          {title: 'MP4 Video', value: 'mp4'},
           {title: 'Text', value: 'text'},
         ],
       },
-      description: 'Empty preserves this slot’s space. Choose Image, Video, or Text to fill it.',
+      description: 'Empty preserves this slot’s space. Choose Image, Vimeo Video, MP4 Video, or Text to fill it.',
       validation: (rule) =>
         rule
           .required()
           .custom(
             (value) =>
               !value ||
-              ['empty', 'image', 'video', 'text'].includes(value) ||
-              'Choose Empty, Image, Video, or Text.',
+              ['empty', 'image', 'video', 'mp4', 'text'].includes(value) ||
+              'Choose Empty, Image, Vimeo Video, MP4 Video, or Text.',
           ),
     }),
     defineField({
@@ -103,40 +104,45 @@ export const mediaSlot = defineType({
         {title: 'Autoplay', value: 'autoplay'},
         {title: 'Manual', value: 'manual'},
       ]},
-      hidden: ({parent}) => parent?.type !== 'video',
+      hidden: ({parent}) => !['video', 'mp4'].includes(parent?.type),
       validation: (rule) => rule.custom((value) =>
         !value || ['autoplay', 'manual'].includes(value) || 'Choose Autoplay or Manual.'),
     }),
     defineField({
       name: 'video',
-      title: 'Legacy uploaded video (migration only)',
+      title: 'MP4 upload',
       type: 'file',
-      readOnly: true,
-      description: 'Preserved existing upload. Paste its replacement Vimeo URL above; this file is no longer used for project playback. No data is deleted automatically.',
-      hidden: ({value}) => !value?.asset,
+      options: {accept: 'video/mp4'},
+      hidden: ({parent}) => parent?.type !== 'mp4',
+      validation: (rule) =>
+        rule.custom((value, context) =>
+          (context.parent as {type?: string})?.type !== 'mp4' ||
+          /^file-[a-zA-Z0-9]+-mp4$/.test(value?.asset?._ref || '')
+            ? true : 'Upload an MP4 video.',
+        ),
     }),
     defineField({
       name: 'poster',
       title: 'Video preview image',
       type: 'image',
       options: {hotspot: true},
-      hidden: ({parent}) => parent?.type !== 'video',
+      hidden: ({parent}) => !['video', 'mp4'].includes(parent?.type),
     }),
     defineField({
       name: 'alt',
       title: 'Alt text',
       type: 'string',
       description: 'Describe the image or video for people using screen readers.',
-      hidden: ({parent}) => !['image', 'video'].includes(parent?.type),
+      hidden: ({parent}) => !['image', 'video', 'mp4'].includes(parent?.type),
     }),
   ],
   preview: {
     select: {type: 'type', alt: 'alt', image: 'image', poster: 'poster', text: 'text'},
     prepare({type, alt, image, poster, text}) {
       return {
-        title: type === 'image' ? 'Image' : type === 'video' ? 'Video' : type === 'text' ? 'Text' : 'Empty',
+        title: type === 'image' ? 'Image' : type === 'mp4' ? 'MP4 Video' : type === 'video' ? 'Vimeo Video' : type === 'text' ? 'Text' : 'Empty',
         subtitle: type === 'empty' ? 'Intentional empty space' : type === 'text' ? text || 'No text' : alt || 'No alt text',
-        media: type === 'image' ? image : type === 'video' ? poster : undefined,
+        media: type === 'image' ? image : ['video', 'mp4'].includes(type) ? poster : undefined,
       }
     },
   },

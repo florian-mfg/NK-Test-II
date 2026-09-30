@@ -2,7 +2,7 @@ import {defineArrayMember, defineField, defineType} from 'sanity'
 import {mediaSlot} from './mediaSlot'
 import {createProjectModules, layouts} from './projectModules'
 
-// Identical image/Vimeo fields, with no Text or uploaded-video option.
+// Shared image and video fields, without Text.
 export const previewMediaSlot = defineType({
   name: 'previewMediaSlot',
   title: 'Preview slot',
@@ -19,6 +19,7 @@ export const previewMediaSlot = defineType({
           {title: 'Empty', value: 'empty'},
           {title: 'Image', value: 'image'},
           {title: 'Vimeo Video', value: 'video'},
+          {title: 'MP4 Video', value: 'mp4'},
         ],
       },
       description: 'Empty preserves this slot’s space.',
@@ -27,12 +28,12 @@ export const previewMediaSlot = defineType({
           .required()
           .custom(
             (value) =>
-              ['empty', 'image', 'video'].includes(value || '') ||
-              'Choose Empty, Image or Vimeo Video.',
+              ['empty', 'image', 'video', 'mp4'].includes(value || '') ||
+              'Choose Empty, Image, Vimeo Video or MP4 Video.',
           ),
     }),
     ...mediaSlot.fields.filter((field) =>
-      ['image', 'vimeoUrl', 'playback', 'poster', 'alt'].includes(field.name),
+      ['image', 'vimeoUrl', 'video', 'playback', 'poster', 'alt'].includes(field.name),
     ),
   ],
   preview: mediaSlot.preview,
@@ -61,7 +62,7 @@ export const selectedWorkPreview = defineType({
     // Full Width; the migration moves it into the editor without re-uploading.
     defineField({name: 'type', type: 'string', hidden: true}),
     ...mediaSlot.fields
-      .filter((field) => ['image', 'vimeoUrl', 'playback', 'poster', 'alt'].includes(field.name))
+      .filter((field) => ['image', 'vimeoUrl', 'video', 'playback', 'poster', 'alt'].includes(field.name))
       .map((field) => ({...field, hidden: true, validation: undefined})),
   ],
   validation: (rule) =>
@@ -81,7 +82,7 @@ export const selectedWorkPreview = defineType({
     prepare({composition, image, poster}) {
       const row = composition?.[0]
       const media = row?.slots?.find(
-        (slot: {type?: string}) => slot.type === 'image' || slot.type === 'video',
+        (slot: {type?: string}) => slot.type === 'image' || slot.type === 'video' || slot.type === 'mp4',
       )
       return {
         title: row?.type === 'spacer' ? 'Spacer' : layouts.find((layout) => layout.name === row?.type)?.title || 'Full Width',

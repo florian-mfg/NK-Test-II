@@ -245,3 +245,52 @@ test('manual overview controls only toggle their own player and never bubble nav
   dispose();
  }finally{env.dom.window.close();}
 });
+
+test('Taipei share URL and common Vimeo variants survive Selected Work and detail data paths', async () => {
+  const urls = [
+    ['https://vimeo.com/1230995762?share=copy&fl=sv&fe=ci', ''],
+    ['https://vimeo.com/1230995762', ''],
+    ['https://player.vimeo.com/video/1230995762', ''],
+    ['https://vimeo.com/1230995762/abc123?share=copy&fl=sv&fe=ci', 'abc123'],
+    ['https://vimeo.com/1230995762?h=abc123&share=copy', 'abc123'],
+    ['https://player.vimeo.com/video/1230995762?h=abc123&autoplay=0', 'abc123'],
+  ];
+  const env = environment();
+  const {players} = mockPlayers(env.window);
+  try {
+    for (const [vimeoUrl, hash] of urls) for (const playback of [undefined, 'autoplay', 'manual']) {
+      const slot = {type:'video', vimeoUrl, playback};
+      const result = adapter.normalize({projects:[{
+        _id:'taipei', _type:'project', title:'Taipei', slug:{current:'taipei'}, category:'Video',
+        selectedWorkPreview:{composition:[{_type:'preview-full',type:'full',slots:[slot]}]},
+        modules:[{_type:'full',type:'full',slots:[slot]}],
+      }], selectedWork:{_id:'selectedWork',_type:'selectedWork',video:[{_ref:'taipei'}],commissioned:[],graphic:[]}});
+      assert.deepEqual(result.issues,[]);
+      assert.deepEqual(result.selectedWork.video,['taipei']);
+      const project = result.projectsById.taipei;
+      for (const mode of ['overview','detail']) {
+        env.root.innerHTML = env.window.renderProjectModule(mode==='overview'?project.selectedWorkPreview:project.modules[0], 'Taipei', mode);
+        const frame = env.root.querySelector('iframe');
+        const src = new URL(frame.dataset.projectVideoSrc);
+        assert.equal(src.origin,'https://player.vimeo.com');
+        assert.equal(src.pathname,'/video/1230995762');
+        assert.equal(src.searchParams.get('h') || '',hash);
+        for (const name of ['share','fl','fe']) assert.equal(src.searchParams.has(name),false);
+        const autoplay = (playback || (mode==='overview'?'autoplay':'manual'))==='autoplay';
+        for (const name of ['autoplay','background','muted','loop']) assert.equal(src.searchParams.get(name),autoplay?'1':'0');
+        assert.equal(src.searchParams.get('controls'),'0');
+        const dispose = env.window.initProjectVideos(env.root);
+        await flush();
+        assert.equal(frame.src,src.href);
+        assert.equal(frame.style.visibility,'');
+        const button = env.root.querySelector('button');
+        if (!autoplay) {
+          button.click(); await flush(); assert.equal(button.textContent,'(Pause)');
+          button.click(); await flush(); assert.equal(button.textContent,'(Play)');
+        } else assert.equal(button,null);
+        dispose();
+        assert.equal(players.at(-1).calls.at(-1),'destroy');
+      }
+    }
+  } finally {env.dom.window.close();}
+});

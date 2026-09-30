@@ -1,3 +1,4 @@
+import {legacyIndexImage, indexMedia} from './indexMedia'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {
   textColorField,
@@ -146,42 +147,14 @@ export const indexEntry = defineType({
     }),
     defineField({
       name: 'previewImages',
-      title: 'Preview images',
+      title: 'Preview media',
       type: 'array',
-      description: 'Choose 1–3 images and drag them to set their browsing order.',
+      description: 'Choose 1–3 images or videos and drag them to set their browsing order. Use Media item for the Image / Vimeo / MP4 selector; existing images remain editable.',
       options: {sortable: true},
       validation: (rule) => rule.required().min(1).max(3),
       of: [
-        defineArrayMember({
-          type: 'image',
-          options: {hotspot: true},
-          fields: [
-            defineField({
-              name: 'alt',
-              title: 'Alt text',
-              type: 'string',
-              description: 'Describe the image for screen readers.',
-            }),
-            defineField({
-              name: 'portraitPosition',
-              title: 'Portrait position',
-              type: 'string',
-              initialValue: 'center',
-              description: 'Desktop portrait images use half the viewport width. Landscape images are always full bleed; mobile display is unchanged. Leave unset to preserve the legacy position.',
-              options: {
-                list: [
-                  {title: 'Left Half', value: 'left'},
-                  {title: 'Centered', value: 'center'},
-                  {title: 'Right Half', value: 'right'},
-                ],
-              },
-              validation: (rule) => rule.custom((value) =>
-                !value || ['left', 'center', 'right'].includes(value) || 'Choose a portrait position.'),
-            }),
-          ],
-          validation: (rule) =>
-            rule.required().custom((value) => (value?.asset ? true : 'Upload a preview image.')),
-        }),
+        legacyIndexImage,
+        indexMedia,
       ],
     }),
     // Retain the stored legacy value for compatibility, but remove it from editing.
@@ -197,7 +170,7 @@ export const indexEntry = defineType({
       return {
         title: title || 'Untitled Index entry',
         subtitle: String(year ?? 'Independent Index entry'),
-        media,
+        media: media?.mediaType === 'image' ? media.image : media?.mediaType ? undefined : media,
       }
     },
   },

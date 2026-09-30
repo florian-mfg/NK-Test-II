@@ -317,7 +317,7 @@ test('independent Selected Work image and Vimeo previews normalize without chang
     assert.deepEqual(result.projects[0].modules, baseline.modules);
     assert.equal(result.projects[0].modulesValid, true);
   }
-  assert.ok(data.query.includes('selectedWorkPreview{type,alt,vimeoUrl,playback,image'));
+  assert.ok(data.query.includes('selectedWorkPreview{type,alt,vimeoUrl,playback,video{asset->{_id,url,mimeType}},image'));
 });
 
 test('preview normalization preserves missing slots and explicit permutations without mutating source data', () => {

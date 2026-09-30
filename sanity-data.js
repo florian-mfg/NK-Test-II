@@ -49,12 +49,12 @@
     "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,additionalIntroduction,sectionOrder[]{section},cvLabel,workLabel,skillsLabel,newsLabel,publicationsLabel,contactLabel,selectedClientsLabel,cv[]{period,text},work,skills,news[]{title,additionalInfo,url},publications[]{title,additionalInfo,url},contactLinks[]{label,destination},selectedClients},
     "projects": *[_type == "project" && ${published}] | order(_id asc) {
       _id,_type,title,slug,category,categories,year,additionalInfo,description,detailPageEnabled,textColor,
-      selectedWorkPreview{type,alt,vimeoUrl,playback,image${imageFields},poster${imageFields},
-        composition[]{_type,type,size,height,order,slots[]{type,alt,vimeoUrl,playback,image${imageFields},poster${imageFields}}}},
-      modules[]{_type,type,size,height,order,slots[]{type,text,textSize,alt,vimeoUrl,playback,image${imageFields},video{asset->{_id,url}},poster${imageFields}}}
+      selectedWorkPreview{type,alt,vimeoUrl,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields},
+        composition[]{_type,type,size,height,order,slots[]{type,alt,vimeoUrl,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields}}}},
+      modules[]{_type,type,size,height,order,slots[]{type,text,textSize,alt,vimeoUrl,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
-    "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,displayTitle,year,additionalInfo,textColor,initialLayout,previewImages[]${imageFields.slice(0, -1)},portraitPosition}}},
+    "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,displayTitle,year,additionalInfo,textColor,initialLayout,previewImages[]${imageFields.slice(0, -1)},portraitPosition,_type,mediaType,vimeoUrl,image${imageFields.slice(0, -1)},portraitPosition},video{asset->{_id,url,mimeType}}}}},
     "legalPages": *[_type == "legalPage" && _id in ["legal-imprint","legal-privacy-policy"]]{_id,_type,pageType,title,body}
   }`;
 
@@ -170,6 +170,23 @@
         const media = image(slot.image, issues, slotPath);
         if (media) return {type: 'image', src: media.src, alt: typeof slot.alt === 'string' ? slot.alt : undefined, image: media};
       }
+      if (record(slot) && slot.type === 'mp4') {
+        // Same Sanity file reference and CDN validation policy as Index uploads.
+        const file = slot.video?.asset;
+        const id = file?._ref || file?._id;
+        const match = typeof id === 'string' && id.match(/^file-([a-zA-Z0-9]+)-mp4$/);
+        const src = https(file?.url) || (match ? `https://cdn.sanity.io/files/${config.projectId}/${config.dataset}/${match[1]}.mp4` : null);
+        const url = src && new URL(src);
+        if (url && url.hostname === 'cdn.sanity.io' &&
+            url.pathname.startsWith(`/files/${config.projectId}/${config.dataset}/`) &&
+            url.pathname.endsWith('.mp4') && (!file?.mimeType || file.mimeType === 'video/mp4')) {
+          const posterImage = slot.poster ? image(slot.poster, issues, `${slotPath}.poster`) : null;
+          return {type: 'mp4', src, ...(['autoplay', 'manual'].includes(slot.playback) ? {playback: slot.playback} : {}),
+            alt: typeof slot.alt === 'string' ? slot.alt : undefined,
+            ...(posterImage ? {poster: posterImage.src, posterImage} : {})};
+        }
+        issue(issues, slotPath, 'invalid_video', 'Invalid Project MP4 asset.');
+      }
       if (record(slot) && slot.type === 'video') {
         const media = vimeo.parseVimeoUrl(slot.vimeoUrl);
         if (media) {
@@ -202,8 +219,8 @@
       if (!record(row) || (!own(layouts, row.type) && row.type !== 'spacer') || (row._type && row._type !== `preview-${row.type}`)) {
         return invalid('Unknown or mismatched preview composition.');
       }
-      if (row.type !== 'spacer' && (!Array.isArray(row.slots) || row.slots.some(slot => slot != null && (!record(slot) || !['empty', 'image', 'video'].includes(slot.type))))) {
-        return invalid('Preview slots support Image, Vimeo Video or Empty.');
+      if (row.type !== 'spacer' && (!Array.isArray(row.slots) || row.slots.some(slot => slot != null && (!record(slot) || !['empty', 'image', 'video', 'mp4'].includes(slot.type))))) {
+        return invalid('Preview slots support Image, Vimeo Video, MP4 Video or Empty.');
       }
       // Namespaced Studio types share the exact module normalizer and renderer.
       return moduleValue({...row, _type: row.type}, issues, `${path}.composition[${index}]`);
@@ -430,23 +447,48 @@
       const title = text(entry.displayTitle);
       const images = array(entry.previewImages, issues, `${path}.previewImages`);
       if (images.length < 1 || images.length > 3) {
-        issue(issues, path, 'invalid_entry', 'Index entry requires 1–3 preview images.'); return [];
+        issue(issues, path, 'invalid_entry', 'Index entry requires 1–3 preview media items.'); return [];
       }
       const previews = images.map((item, i) => {
-        const preview = image(item, issues, `${path}.previewImages[${i}]`);
+        const mediaPath = `${path}.previewImages[${i}]`;
+        if (item?.mediaType === 'vimeo') {
+          const video = vimeo.parseVimeoUrl(item.vimeoUrl);
+          if (!video) issue(issues, mediaPath, 'invalid_video', 'Invalid Index Vimeo URL.');
+          return video;
+        }
+        if (item?.mediaType === 'mp4') {
+          const file = item.video?.asset;
+          const id = file?._ref || file?._id;
+          const match = typeof id === 'string' && id.match(/^file-([a-zA-Z0-9]+)-mp4$/);
+          const src = https(file?.url) || (match ? `https://cdn.sanity.io/files/${config.projectId}/${config.dataset}/${match[1]}.mp4` : null);
+          const url = src && new URL(src);
+          if (!url || url.hostname !== 'cdn.sanity.io' ||
+              !url.pathname.startsWith(`/files/${config.projectId}/${config.dataset}/`) ||
+              !url.pathname.endsWith('.mp4') || (file?.mimeType && file.mimeType !== 'video/mp4')) {
+            issue(issues, mediaPath, 'invalid_video', 'Invalid Index MP4 asset.'); return null;
+          }
+          return {type: 'mp4', src};
+        }
+        if (item?.mediaType && item.mediaType !== 'image') {
+          issue(issues, mediaPath, 'invalid_media', 'Unknown Index media type.'); return null;
+        }
+        const source = item?.mediaType === 'image' ? item.image : item;
+        const preview = image(source, issues, mediaPath);
         if (!preview) return null;
         // Preserve the first legacy cycle: right-half frames stay right; full
         // frames become centered when the image is portrait. No stored writes.
         const legacyRight = (entry.initialLayout === 'half') !== (i % 2 === 1);
-        return {...preview, portraitPosition: ['left', 'center', 'right'].includes(item.portraitPosition)
-          ? item.portraitPosition : legacyRight ? 'right' : 'center'};
+        return {...preview, portraitPosition: ['left', 'center', 'right'].includes(source.portraitPosition)
+          ? source.portraitPosition : legacyRight ? 'right' : 'center'};
       }).filter(Boolean);
-      if (!title || !previews.length) { issue(issues, path, 'invalid_entry', 'Index entry without a title or usable preview images omitted.'); return []; }
+      if (!title || !previews.length) { issue(issues, path, 'invalid_entry', 'Index entry without a title or usable preview media omitted.'); return []; }
       const layout = ['full', 'half'].includes(entry.initialLayout) ? entry.initialLayout : 'full';
       if (entry.initialLayout != null && entry.initialLayout !== layout) issue(issues, `${path}.initialLayout`, 'invalid_layout', 'Invalid initial layout replaced with full.');
       return [{textColor: textColor(entry.textColor), key: text(entry._key) || `entry-${index}`, title,
         year: year(entry.year), additionalInfo: string(entry.additionalInfo),
-        layout, images: previews.map(preview => preview.src), previewImages: previews}];
+        layout, media: previews.map(preview => ({type: 'image', ...preview})),
+        images: previews.filter(preview => !preview.type).map(preview => preview.src),
+        previewImages: previews.filter(preview => !preview.type)}];
     })} : null;
 
     const legalPages = {imprint: null, 'privacy-policy': null};

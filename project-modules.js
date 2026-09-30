@@ -65,10 +65,11 @@ function renderProjectModule(module, title = "", mode = "detail") {
     const label = escapeModuleAttribute(slot.alt ?? title);
     let media;
     if (slot.type === "image") media = `<img src="${moduleMediaUrl(slot.src)}" alt="${label}" loading="lazy" decoding="async"${moduleImagePosition(slot.image)}>`;
-    else if (slot.type === "video") {
-      const video = VimeoMedia.parseVimeoUrl(slot.vimeoUrl ?? slot.src);
-      if (!video) throw new Error("Project videos require a Vimeo URL");
-      const url = new URL(video.embedUrl);
+    else if (slot.type === "video" || slot.type === "mp4") {
+      const native = slot.type === "mp4";
+      const video = native ? null : VimeoMedia.parseVimeoUrl(slot.vimeoUrl ?? slot.src);
+      if (!native && !video) throw new Error("Project videos require a Vimeo URL");
+      const url = native ? null : new URL(video.embedUrl);
       const playback = ["autoplay", "manual"].includes(slot.playback)
         ? slot.playback : mode === "overview" ? "autoplay" : "manual";
       const teaser = playback === "autoplay";
@@ -76,10 +77,10 @@ function renderProjectModule(module, title = "", mode = "detail") {
         muted: teaser ? "1" : "0", loop: teaser ? "1" : "0", controls: "0",
         autopause: "0", title: "0", byline: "0", portrait: "0", badge: "0",
         keyboard: "0", playsinline: "1", dnt: "1"};
-      for (const [key, value] of Object.entries(options)) url.searchParams.set(key, value);
+      for (const [key, value] of Object.entries(options)) if (url) url.searchParams.set(key, value);
       media = `<div class="project-vimeo" data-playback="${playback}">
         ${slot.poster ? `<img class="project-video-poster" src="${moduleMediaUrl(slot.poster)}" alt="" aria-hidden="true"${moduleImagePosition(slot.posterImage)}>` : ""}
-        <iframe data-project-video-src="${escapeModuleAttribute(url.href)}" title="${label || "Project video"}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe>
+        ${native ? `<video data-project-native-src="${moduleMediaUrl(slot.src)}" aria-label="${label || "Project video"}" playsinline preload="metadata" ${teaser ? "autoplay muted loop" : ""}></video>` : `<iframe data-project-video-src="${escapeModuleAttribute(url.href)}" title="${label || "Project video"}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe>`}
         ${teaser ? "" : `<button class="project-video-toggle" type="button" aria-label="Play video" disabled>(Play)</button>`}
       </div>`;
     } else throw new Error("Unsupported project media type");

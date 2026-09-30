@@ -189,10 +189,10 @@ test('structure opens fixed documents with explicit legal initial values', () =>
   }
 })
 
-test('shared video slots accept Vimeo URLs and preserve uploads only for migration', () => {
+test('shared video slots accept Vimeo URLs and native MP4 uploads', () => {
   const slot = schemaTypes.find(type => type.name === 'mediaSlot')
   const [validate] = validators(field(slot, 'vimeoUrl'))
-  for (const url of ['https://vimeo.com/12345', 'https://vimeo.com/12345/secret', 'https://player.vimeo.com/video/12345?h=secret&autoplay=1']) {
+  for (const url of ['https://vimeo.com/1230995762?share=copy&fl=sv&fe=ci', 'https://vimeo.com/12345', 'https://vimeo.com/12345/secret', 'https://player.vimeo.com/video/12345?h=secret&autoplay=1']) {
     assert.equal(validate(url, {parent: {type: 'video'}}), true)
   }
   for (const url of [undefined, '', 'https://example.com/12345', 'https://vimeo.com/not-a-video', 'http://vimeo.com/12345']) {
@@ -200,11 +200,20 @@ test('shared video slots accept Vimeo URLs and preserve uploads only for migrati
   }
   assert.equal(validate(undefined, {parent: {type: 'empty'}}), true)
   assert.equal(validate('bad retained value', {parent: {type: 'image'}}), true)
-  const legacy = field(slot, 'video')
-  assert.equal(legacy.readOnly, true)
-  assert.equal(legacy.hidden({value: undefined}), true)
-  assert.equal(legacy.hidden({value: {asset: {_ref: 'file-old-mp4'}}}), false)
-  assert.equal(legacy.validation, undefined)
+  const upload = field(slot, 'video')
+  assert.equal(upload.readOnly, undefined)
+  assert.equal(upload.options.accept, 'video/mp4')
+  assert.equal(upload.hidden({parent: {type: 'video'}}), true)
+  assert.equal(upload.hidden({parent: {type: 'mp4'}}), false)
+  const [validateUpload] = validators(upload)
+  assert.equal(validateUpload({asset: {_ref: 'file-demo-mp4'}}, {parent: {type: 'mp4'}}), true)
+  for (const value of [undefined, {asset: {_ref: 'file-demo-webm'}}]) {
+    assert.notEqual(validateUpload(value, {parent: {type: 'mp4'}}), true)
+    assert.equal(validateUpload(value, {parent: {type: 'video'}}), true)
+  }
+  assert.equal(field(slot, 'vimeoUrl').hidden({parent: {type: 'mp4'}}), true)
+  assert.equal(field(slot, 'image').hidden({parent: {type: 'mp4'}}), true)
+  for (const name of ['poster', 'playback', 'alt']) assert.equal(field(slot, name).hidden({parent: {type: 'mp4'}}), false)
   for (const name of ['full', 'half-half', 'half-quarter-quarter', 'quarter-quarter-quarter-quarter', 'third-third-third', 'two-thirds-one-third']) {
     assert.equal(field(schemaTypes.find(type => type.name === name), 'slots').of[0].type, 'mediaSlot')
   }
@@ -216,9 +225,9 @@ test('Selected Work Preview supports ordered compositions and reuses module geom
   const detailSlot = schemaTypes.find(type => type.name === 'mediaSlot')
   assert.equal(field(project, 'selectedWorkPreview').type, 'selectedWorkPreview')
   assert.equal(field(project, 'selectedWorkPreview').validation, undefined)
-  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'vimeoUrl', 'playback', 'poster', 'alt'])
+  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'vimeoUrl', 'playback', 'video', 'poster', 'alt'])
   const [validate] = validators(field(slot, 'type'))
-  for (const type of ['image', 'video', 'empty']) assert.equal(validate(type), true)
+  for (const type of ['image', 'video', 'mp4', 'empty']) assert.equal(validate(type), true)
   for (const type of ['text', undefined]) assert.notEqual(validate(type), true)
   for (const name of ['image', 'vimeoUrl', 'poster', 'alt']) assert.equal(field(slot, name), field(detailSlot, name))
   const composition = field(preview, 'composition')
