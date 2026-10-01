@@ -180,7 +180,7 @@ test('live Selected Work uses the published explicit image preview and opens its
   assert.equal(result.ok,true,JSON.stringify(result.error));
   assert.ok(result.data.selectedWork);
   const project = result.data.selectedWork.video.map(id=>result.data.projectsById[id]).find(p=>
-    p?.selectedWorkPreview?.type==='full' && p.selectedWorkPreview.slots[0]?.type==='image' && p.detailPageEnabled && p.modules.some(m=>m.slots.some(s=>s?.type==='video')));
+    p?.selectedWorkPreview?.type==='full' && p.selectedWorkPreview.slots[0]?.type==='image' && p.detailPageEnabled && p.modules.some(m=>m.slots?.some(s=>s?.type==='video')));
   assert.ok(project, 'A published Video project with an image preview and Vimeo detail is required');
   const app=setup();
   try {

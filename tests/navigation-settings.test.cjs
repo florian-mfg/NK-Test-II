@@ -15,6 +15,8 @@ function setup(hash = '#archive', mobile = false) {
   window.scrollTo = (x, y) => {scrollCalls.push([x, y]); window.scrollY = y;};
   window.matchMedia = () => ({matches: mobile, addEventListener() {}});
   window.HTMLElement.prototype.scrollTo = function({top}) { this.scrollTop = top; };
+  // jsdom does not load/decode images; these unit fixtures are immediately ready.
+  window.HTMLImageElement.prototype.decode = function() { return {then: ready => ready()}; };
   window.ResizeObserver = class {observe() {}};
   window.HTMLCanvasElement.prototype.getContext = () => ({measureText: text => ({width: text.length * 50, actualBoundingBoxLeft: 0, actualBoundingBoxRight: text.length * 50})});
   Object.defineProperty(window.document, 'fonts', {value: {ready: Promise.resolve(), addEventListener() {}}});

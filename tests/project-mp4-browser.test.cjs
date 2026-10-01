@@ -2,6 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const path=require('node:path');
+const {checkDetailVideos}=require('./project-video-browser-helpers.cjs');
 
 test('native MP4 playback, posters, module geometry, navigation and cleanup on desktop/mobile', {skip:!process.env.BROWSER_TEST},async()=>{
  const {chromium}=require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
@@ -15,7 +16,8 @@ test('native MP4 playback, posters, module geometry, navigation and cleanup on d
  });
  const raw={projects,selectedWork:{_id:'selectedWork',_type:'selectedWork',commissioned:projects.map(p=>({_ref:p._id})),video:[],graphic:[]}};
  try {
-  const page=await browser.newPage({hasTouch:true});
+  for(const width of [1440,390]) {
+  const page=await browser.newPage({hasTouch:width===390,viewport:{width,height:900}});
     const encoded=await page.evaluate(async()=>{
       const canvas=document.createElement('canvas');canvas.width=160;canvas.height=90;
       const context=canvas.getContext('2d');
@@ -47,7 +49,6 @@ test('native MP4 playback, posters, module geometry, navigation and cleanup on d
    if(url.pathname.includes('/data/query/'))return route.fulfill({json:{result:raw}});
    return route.fulfill({contentType:'text/html',body:'<!doctype html><html></html>'});
   });
-  for(const width of [1440,390]) {
    await page.setViewportSize({width,height:900});
    await page.goto('https://preview.test/#work/commissioned');
    await page.waitForSelector('.project-video-toggle:not([disabled])');
@@ -111,35 +112,14 @@ test('native MP4 playback, posters, module geometry, navigation and cleanup on d
    }else await page.touchscreen.tap(point.x,point.y);
    await page.waitForURL('**/#project/p0');
    await page.waitForFunction(()=>window.previousVideos.every(video=>video.paused && !video.hasAttribute('src')));
-   await page.waitForSelector('.detail .project-video-toggle:not([disabled])');
-   await page.waitForFunction(()=>getComputedStyle(document.querySelector('.detail .project-video-toggle')).color==='rgb(255, 255, 255)');
-   const detailButton=page.locator('.detail .project-video-toggle');
-   if(width>700) await detailButton.click();else await detailButton.tap();
-   await page.waitForFunction(node=>node.textContent==='(Pause)',await detailButton.elementHandle());
-   assert.equal(new URL(page.url()).hash,'#project/p0');
-   for (let index=1; index<projects.length; index++) {
-     await page.evaluate(index=>{location.hash='project/p'+index;},index);
-     await page.waitForSelector(`.detail[data-project-id="p${index}"] video`,{state:"attached"});
-     const videos=page.locator('.detail video');
-     assert.equal(await videos.count(),Object.values(layouts)[index]);
-     const autoplay=page.locator('.detail video[autoplay]').first();
-     await autoplay.scrollIntoViewIfNeeded();
-     await page.waitForFunction(node=>!node.paused && node.currentTime>0,await autoplay.elementHandle());
-     const geometry=await autoplay.evaluate(node=>{
-       const video=node.getBoundingClientRect(),box=node.parentElement.getBoundingClientRect();
-       return {width:video.width,height:video.height,boxWidth:box.width,boxHeight:box.height,fit:getComputedStyle(node).objectFit};
-     });
-     assert.equal(geometry.width,geometry.boxWidth);
-     assert.equal(geometry.height,geometry.boxHeight);
-     assert.equal(geometry.fit,'cover');
-     const button=page.locator('.detail .project-video-toggle').first();
-     await button.scrollIntoViewIfNeeded();
-     await button.click();
-     await page.waitForFunction(node=>node.textContent==='(Pause)',await button.elementHandle());
-     await button.click();
-     await page.waitForFunction(node=>node.textContent==='(Play)',await button.elementHandle());
+   await page.waitForSelector('.detail [data-video-ready]');
+   for(let index=0;index<projects.length;index++) {
+    await page.evaluate(index=>{location.hash='project/p'+index;},index);
+    await page.waitForSelector(`.detail[data-project-id="p${index}"] [data-video-ready]`);
+    await checkDetailVideos(page,width,true);
    }
-  }
   assert.ok((await page.evaluate(()=>window.playbackCalls)).includes('pause'));
+  await page.close();
+  }
  }finally{await browser.close();}
 });

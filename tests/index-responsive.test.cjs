@@ -29,6 +29,11 @@ test('Index preview positions use exact desktop viewport halves and retain mobil
   });
   await page.goto('https://preview.test/#archive');
   await page.waitForSelector('.archive[data-source="sanity"]');
+  const readyImage = async (row, frame = 0) => {
+   const file = raw.indexPage.entries[row].previewImages[frame].asset._ref.slice(6).replace(/-jpg$/, '.jpg');
+   await page.waitForFunction(file => document.querySelector('.archive-background img')?.currentSrc.includes(file), file);
+  };
+  await readyImage(0);
   const geometry = () => page.locator('.archive-background').evaluate(bg=>{
    const rect=bg.getBoundingClientRect(), img=bg.querySelector('img');
    return {x:rect.x,width:rect.width,height:rect.height,fit:getComputedStyle(img).objectFit};
@@ -48,9 +53,11 @@ test('Index preview positions use exact desktop viewport halves and retain mobil
   assert.equal(await active(),'0');
   await page.mouse.move(1,Math.ceil(boxes[1].top));
   assert.equal(await active(),'1');
+  await readyImage(1);
   assert.deepEqual(await geometry(),{x:720,width:720,height:900,fit:'cover'});
   await page.mouse.move(1,boxes[0].top+1);
   assert.equal(await active(),'0');
+  await readyImage(0);
   assert.deepEqual(await geometry(),{x:0,width:720,height:900,fit:'cover'});
   for(const width of [1440,701,700,390]) {
    await page.setViewportSize({width,height:900});
@@ -64,6 +71,7 @@ test('Index preview positions use exact desktop viewport halves and retain mobil
     } else {
      await row.hover();
      for(let index=0;index<3;index++) {
+      await readyImage(rowIndex,index);
       const landscape=rowIndex===1&&index===1;
       assert.deepEqual(await geometry(),{x:width*offsets[index],width:landscape?width:width/2,height:900,fit:'cover'});
       await row.click();

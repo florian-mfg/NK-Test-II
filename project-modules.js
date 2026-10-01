@@ -78,10 +78,10 @@ function renderProjectModule(module, title = "", mode = "detail") {
         autopause: "0", title: "0", byline: "0", portrait: "0", badge: "0",
         keyboard: "0", playsinline: "1", dnt: "1"};
       for (const [key, value] of Object.entries(options)) if (url) url.searchParams.set(key, value);
-      media = `<div class="project-vimeo" data-playback="${playback}">
+      media = `<div class="project-vimeo" data-playback="${playback}"${mode === "detail" ? ' data-project-detail-video' : ""}>
         ${slot.poster ? `<img class="project-video-poster" src="${moduleMediaUrl(slot.poster)}" alt="" aria-hidden="true"${moduleImagePosition(slot.posterImage)}>` : ""}
         ${native ? `<video data-project-native-src="${moduleMediaUrl(slot.src)}" aria-label="${label || "Project video"}" playsinline preload="metadata" ${teaser ? "autoplay muted loop" : ""}></video>` : `<iframe data-project-video-src="${escapeModuleAttribute(url.href)}" title="${label || "Project video"}" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe>`}
-        ${teaser ? "" : `<button class="project-video-toggle" type="button" aria-label="Play video" disabled>(Play)</button>`}
+        ${teaser && mode !== "detail" ? "" : `<button class="project-video-toggle" type="button" aria-label="Play video" disabled>(Play)</button>`}
       </div>`;
     } else throw new Error("Unsupported project media type");
     return `<figure class="project-slot" ${style}>${media}</figure>`;

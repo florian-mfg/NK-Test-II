@@ -15,6 +15,8 @@ function setup(hash = '#archive', mobile = false) {
   window.scrollTo = (x, y) => {scrollCalls.push([x, y]); window.scrollY = y;};
   window.matchMedia = () => ({matches: mobile, addEventListener() {}});
   window.HTMLElement.prototype.scrollTo = function({top}) { this.scrollTop = top; };
+  // jsdom does not load/decode images; these unit fixtures are immediately ready.
+  window.HTMLImageElement.prototype.decode = function() { return {then: ready => ready()}; };
   window.ResizeObserver = class {observe() {}};
   window.HTMLCanvasElement.prototype.getContext = () => ({measureText: text => ({width: text.length * 50, actualBoundingBoxLeft: 0, actualBoundingBoxRight: text.length * 50})});
   Object.defineProperty(window.document, 'fonts', {value: {ready: Promise.resolve(), addEventListener() {}}});
@@ -83,27 +85,27 @@ test('desktop hover/click cycles only Index images and uses cropped orientation 
  try {
   const crop={left:.25,right:.25,top:0,bottom:0};
   await app.settle(success(content([entry('Images',{project:{_ref:'enabled'},initialLayout:'half',previewImages:[img('first',{crop,hotspot:{x:.375,y:.6,width:.1,height:.1},alt:'First alt'}),img('second',{alt:'Second alt'})]})],[project('enabled')])));
-  const row=rows(app)[0], bg=app.window.document.querySelector('.archive-background'), image=bg.querySelector('img');
+  const row=rows(app)[0], bg=app.window.document.querySelector('.archive-background'), image=()=>bg.querySelector('img');
   fire(app,row,'mousemove');
-  assert.ok(image.src.includes('/first-1200x800.jpg'));
-  assert.equal(new URL(image.src).searchParams.get('rect'),'300,0,600,800');
-  assert.equal(image.style.objectPosition,'25% 60%');
-  assert.equal(image.alt,'First alt');
+  assert.ok(image().src.includes('/first-1200x800.jpg'));
+  assert.equal(new URL(image().src).searchParams.get('rect'),'300,0,600,800');
+  assert.equal(image().style.objectPosition,'25% 60%');
+  assert.equal(image().alt,'First alt');
   assert.ok(bg.classList.contains('half'));
   row.querySelector('.archive-additional-info').click();
-  assert.ok(image.src.includes('/second-1200x800.jpg'));
-  assert.equal(image.style.objectPosition,'');
-  assert.equal(image.alt,'Second alt');
+  assert.ok(image().src.includes('/second-1200x800.jpg'));
+  assert.equal(image().style.objectPosition,'');
+  assert.equal(image().alt,'Second alt');
   assert.ok(bg.classList.contains('full'));
   assert.equal(app.window.location.hash,'#archive');
   fire(app,row,'click');
-  assert.ok(image.src.includes('/first-1200x800.jpg'));
+  assert.ok(image().src.includes('/first-1200x800.jpg'));
   assert.ok(bg.classList.contains('half'));
   fire(app,row,'mouseleave');
   assert.equal(bg.classList.contains('visible'),true);
   fire(app,row,'mousemove');
   row.firstElementChild.click();await flush();
-  assert.ok(image.src.includes('/second-1200x800.jpg'));
+  assert.ok(image().src.includes('/second-1200x800.jpg'));
   assert.equal(app.window.location.hash,'#archive');
   assert.equal(row.querySelector('a'),null);
  }finally{app.dom.window.close();}
@@ -274,32 +276,32 @@ test('desktop starts on the first preview and changes only inside actual vertica
    entry('Third',{previewImages:[portrait('third','right')]})
   ])));
   const bg=app.window.document.querySelector('.archive-background');
-  const image=bg.querySelector('img');
+  const image=()=>bg.querySelector('img');
   const selected=()=>rows(app).findIndex(row=>row.getAttribute('aria-current')==='true');
   const move=(y,x=0)=>app.window.dispatchEvent(new app.window.MouseEvent('mousemove',{clientY:y,clientX:x}));
   rows(app).forEach((row,index)=>{row.getBoundingClientRect=()=>({top:100+index*50,bottom:150+index*50});});
   assert.equal(selected(),0);
   assert.ok(bg.classList.contains('visible'));
   assert.ok(bg.classList.contains('portrait-left'));
-  assert.ok(image.src.includes('/first-'));
+  assert.ok(image().src.includes('/first-'));
   for(const y of [0,100,125,149.99]) {move(y);assert.equal(selected(),0);}
   rows(app)[0].click();
-  assert.ok(image.src.includes('/cycle-'));
+  assert.ok(image().src.includes('/cycle-'));
   move(149,1200);
-  assert.ok(image.src.includes('/cycle-')); // Moving within a row never resets cycling.
+  assert.ok(image().src.includes('/cycle-')); // Moving within a row never resets cycling.
   move(150);
   assert.equal(selected(),1);
-  assert.ok(image.src.includes('/landscape-'));
+  assert.ok(image().src.includes('/landscape-'));
   assert.ok(bg.classList.contains('full'));
   move(199.99);assert.equal(selected(),1);
   move(200);assert.equal(selected(),2);
-  assert.ok(image.src.includes('/third-'));
+  assert.ok(image().src.includes('/third-'));
   assert.ok(bg.classList.contains('half'));
   move(300);assert.equal(selected(),2);
   assert.ok(bg.classList.contains('visible'));
   move(149.99);
   assert.equal(selected(),0);
-  assert.ok(image.src.includes('/first-'));
+  assert.ok(image().src.includes('/first-'));
   assert.ok(bg.classList.contains('portrait-left'));
  }finally{app.dom.window.close();}
 });

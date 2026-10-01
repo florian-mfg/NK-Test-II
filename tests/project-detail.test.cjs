@@ -82,14 +82,12 @@ test('direct detail waits for Sanity, renders published metadata/modules safely 
     assert.equal(app.players.length, 1);
     assert.deepEqual(app.players[0].calls, []);
     const button = document.querySelector('.project-video-toggle');
-    button.click(); await flush();
-    assert.equal(button.textContent, '(Pause)');
-    button.click(); await flush();
     assert.equal(button.textContent, '(Play)');
+    assert.equal(document.querySelectorAll('.detail-sound-control').length, 1);
     app.window.renderProject('ethereal-tides');
     app.window.route();
     assert.equal(document.querySelector('iframe'), frame);
-    assert.deepEqual(app.players[0].calls, ['play', 'pause']);
+    assert.deepEqual(app.players[0].calls, []);
     assert.equal(app.requests(), 1);
   } finally {app.dom.window.close();}
 });

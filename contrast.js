@@ -29,7 +29,7 @@
   root.Contrast = api;
   if (!root.document) return;
   const document = root.document, cache = new Map();
-  const targets = '.site-header > a, .site-header .main-nav a, .mobile-menu-toggle, .project-title > span, .project-kind, .detail-back, .detail-info-label, .archive-list, .project-video-toggle';
+  const targets = '.site-header > a, .site-header .main-nav a, .mobile-menu-toggle, .project-title > span, .project-kind, .detail-back, .detail-info-label, .detail-sound-control, .archive-list, .project-video-toggle';
   let timer, cursorTimer, cursorPoint;
   function imageData(src) {
     if (cache.has(src)) return cache.get(src);

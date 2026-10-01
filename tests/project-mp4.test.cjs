@@ -30,7 +30,7 @@ test('MP4 normalization and rendering retain every layout, height, order and con
         assert.equal(video.playsInline,true);
         assert.equal(video.hasAttribute('src'),false);
       }
-      assert.equal(root.querySelectorAll('button').length,autoplay?0:count);
+      assert.equal(root.querySelectorAll('button').length,autoplay && mode!=='detail'?0:count);
     }
     for (const asset of [{_ref:'file-demo-webm'}, {url:'https://evil.test/demo.mp4'}, {url:'https://cdn.sanity.io/files/other/production/demo.mp4'}, {_ref:'file-demo-mp4',mimeType:'video/webm'}]) {
       const result=adapter.normalizeModule({type:'full',slots:[{...slot,video:{asset}}]});
@@ -43,7 +43,7 @@ test('native manual events, denied playback, hidden slots and cleanup use shared
   const {dom, window, root} = environment();
   try {
     window.ResizeObserver=class {observe(){} disconnect(){}};
-    const html=window.renderProjectModule(adapter.normalizeModule({type:'full',slots:[slot]}).module);
+    const html=window.renderProjectModule(adapter.normalizeModule({type:'full',slots:[{...slot,playback:'manual'}]}).module, '', 'overview');
     root.innerHTML='<article hidden>'+html+'</article>'+html;
     const video=root.lastElementChild.querySelector('video');
     let plays=0, pauses=0, loads=0;

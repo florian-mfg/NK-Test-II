@@ -147,9 +147,10 @@ test('live published Frontpage reaches the existing homepage renderer', {skip: !
     assert.equal(frame.title, title);
     assertBackground(frame);
     app.window.renderInfo();
-    assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
-    assert.equal(app.window.document.querySelector('.info-work p').textContent, 'Eps51');
-    assert.equal(app.window.document.querySelector('.info-skills p').textContent, 'Tattooboss');
+    const info = result.data.infoPage;
+    assert.equal(app.window.document.querySelector('.info-intro').textContent, info.introduction.replace(/\r?\n/g, ''));
+    assert.equal(app.window.document.querySelector('.info-work p').textContent, info.work.join('').replace(/\r?\n/g, ''));
+    assert.equal(app.window.document.querySelector('.info-skills p').textContent, info.skills.join('').replace(/\r?\n/g, ''));
     assert.equal(app.requests(), 1);
   } finally {app.dom.window.close();}
 });

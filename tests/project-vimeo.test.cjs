@@ -121,11 +121,11 @@ function mockPlayers(window) {
   return {players, observers};
 }
 
-test('detail custom button follows Vimeo events, handles rejection, covers slot and cleans up', async () => {
+test('manual overview custom button follows Vimeo events, handles rejection, covers slot and cleans up', async () => {
   const env = environment();
   const {players, observers} = mockPlayers(env.window);
   try {
-    env.root.innerHTML = env.window.renderProjectModule(adapter.normalizeModule(row()).module, 'Title');
+    env.root.innerHTML = env.window.renderProjectModule(adapter.normalizeModule(row('full', [{...video, playback:'manual'}])).module, 'Title', 'overview');
     const box = env.root.querySelector('.project-vimeo');
     box.getBoundingClientRect = () => ({width: 400, height: 500});
     const dispose = env.window.initProjectVideos(env.root);
@@ -220,7 +220,7 @@ test('per-slot playback overrides context across all compositions, retaining def
      for(const key of ['autoplay','muted','loop','background']) assert.equal(url.searchParams.get(key),expected==='autoplay'?'1':'0');
      assert.equal(url.searchParams.get('controls'),'0');
      assert.equal(url.searchParams.get('playsinline'),'1');
-     assert.equal(Boolean(slot.querySelector('button')),expected==='manual');
+     assert.equal(Boolean(slot.querySelector('button')),mode==='detail'||expected==='manual');
     });
    }
   }
@@ -281,10 +281,13 @@ test('Taipei share URL and common Vimeo variants survive Selected Work and detai
         assert.equal(src.searchParams.get('controls'),'0');
         const dispose = env.window.initProjectVideos(env.root);
         await flush();
+        if (mode === 'detail') { src.searchParams.set('muted','1'); src.searchParams.set('autoplay','0'); src.searchParams.set('background','0'); }
         assert.equal(frame.src,src.href);
         assert.equal(frame.style.visibility,'');
         const button = env.root.querySelector('button');
-        if (!autoplay) {
+        if (mode === 'detail') {
+          assert.equal(button.textContent, '(Play)');
+        } else if (!autoplay) {
           button.click(); await flush(); assert.equal(button.textContent,'(Pause)');
           button.click(); await flush(); assert.equal(button.textContent,'(Play)');
         } else assert.equal(button,null);

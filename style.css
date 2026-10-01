@@ -204,11 +204,16 @@ body.mobile-menu-open { overflow: hidden; }
 .archive-background img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .7s ease; }
 .archive-background.visible img { opacity: 1; }
 
-/* Index videos alone fill the viewport; image half-width positioning stays intact. */
+/* Index video backgrounds fill the viewport; image half-width positioning stays intact. */
 .archive-background.is-video { inset: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
 .archive-background.is-video > video,
 .archive-background.is-video > .project-vimeo { display: block; width: 100%; height: 100%; }
 .archive-background.is-video > video { object-fit: cover; object-position: center; }
+@media (min-width: 701px) {
+  .archive-background.is-video > video.is-portrait-video {
+    width: auto; height: 100vh; margin-inline: auto; object-fit: contain;
+  }
+}
 
 .archive-list { width: 100%; position: relative; z-index: 2; }
 .archive-row { display: grid; grid-template-columns: 51% minmax(0, 1fr); width: 100%; border: 0; padding: .12rem 0; color: inherit; background: transparent; text-align: left; cursor: pointer; line-height: 1.28; }
@@ -273,9 +278,10 @@ body.mobile-menu-open { overflow: hidden; }
   .detail-back { max-width: calc(100% - 2 * var(--pad)); overflow-wrap: anywhere; }
 }
 .detail-back { position: fixed; z-index: 50; top: 50%; left: var(--pad); transform: translateY(-50%); font-size: var(--text-size); line-height: 1; transition: opacity .2s ease; }
-.detail-info-label { position: fixed; z-index: 50; bottom: var(--pad); left: var(--pad); border: 0; padding: 0; background: transparent; color: inherit; font: inherit; font-size: var(--menu-text-size); line-height: 1.1; cursor: pointer; transition: opacity .2s ease; }
-.detail-info-label:hover, .detail-info-label:focus-visible { font-style: italic; }
-.detail-info-label:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
+.detail-info-label, .detail-sound-control { position: fixed; z-index: 50; bottom: var(--pad); left: var(--pad); border: 0; padding: 0; background: transparent; color: inherit; font: inherit; font-size: var(--menu-text-size); line-height: 1.1; cursor: pointer; transition: opacity .2s ease; }
+.detail-info-label:hover, .detail-info-label:focus-visible,
+.detail-sound-control:hover, .detail-sound-control:focus-visible { font-style: italic; }
+.detail-info-label:focus-visible, .detail-sound-control:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
 .detail-back.is-hidden { opacity: 0; pointer-events: none; }
 .detail-info-layer { position: fixed; z-index: 90; inset: 0; visibility: hidden; pointer-events: none; transition: visibility 0s linear .65s; }
 .detail-info-layer.open { visibility: visible; pointer-events: auto; transition-delay: 0s; }
@@ -293,7 +299,7 @@ body.mobile-menu-open { overflow: hidden; }
 .info h3,
 .info p,
 .detail-back,
-.detail-info-label,
+.detail-info-label, .detail-sound-control,
 .detail-info-close,
 .detail-info-popup p,
 .open-cursor,
@@ -412,7 +418,7 @@ body { --contrast-color: #ffffff; }
 body:is(.is-work, .is-detail, .is-info) { --contrast-color: #000000; }
 .site-header > a, .site-header .main-nav a, .mobile-menu-toggle,
 .project-title > span, .project-kind, .open-cursor,
-.detail-back, .detail-info-label, .archive-list {
+.detail-back, .detail-info-label, .detail-sound-control, .archive-list {
   color: var(--contrast-color);
 }
 .archive-row:hover { color: inherit; }
@@ -425,4 +431,13 @@ body.is-detail :is(.detail-info-popup, .detail-info-close, .detail-info-popup p,
   content: ""; position: absolute; left: 0; width: var(--menu-font-size); height: calc(.7 * var(--menu-font-size));
   background: currentColor;
   mask: url("material/Arrow-back-1.svg") center / contain no-repeat;
+}
+
+/* Project audio shares Info's fixed baseline; playback remains within each video. */
+.detail-sound-control { left: auto; right: var(--pad); }
+[data-project-detail-video] .project-video-toggle {
+  transform: translateY(calc(-1 * var(--project-control-lift, 0px)));
+}
+@media (hover: none), (pointer: coarse) {
+  .detail-sound-control::after { content: ""; position: absolute; right: 0; bottom: 0; width: 100%; height: 100%; min-width: 44px; min-height: 44px; }
 }

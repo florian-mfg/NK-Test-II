@@ -477,11 +477,10 @@ function renderArchive() {
     const attributes = `class="archive-row" data-index="${index}" data-year="${escapeModuleAttribute(entry.year || "")}"`;
     return `<button ${attributes} type="button"><span>${title}</span>${info}</button>`;
   };
-  app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true">${entries[0]?.images?.[0] ? image(entries[0].images[0]) : ""}</div><div class="archive-list">${entries.map(entryMarkup).join("")}</div></section>`;
+  app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true"></div><div class="archive-list">${entries.map(entryMarkup).join("")}</div></section>`;
   renderedIndexPages.set(app.querySelector(".archive"), entries);
   const bg = document.querySelector(".archive-background");
-  let bgImage = bg.querySelector("img");
-  if (bgImage) bgImage.loading = "eager";
+  let imageRequest = 0;
   const list = document.querySelector(".archive-list");
   const rows = [...list.querySelectorAll(".archive-row")];
   if (!rows.length) return;
@@ -498,6 +497,7 @@ function renderArchive() {
     activeVideo = null;
   };
   const showEntryImage = (entry, imageIndex) => {
+    const request = ++imageRequest;
     const items = entry?.media || entry?.images?.map((src, i) => ({
       type: "image", src, ...entry.previewImages?.[i]
     })) || [];
@@ -505,22 +505,19 @@ function renderArchive() {
     if (!media) {
       stopVideo();
       bg.replaceChildren();
-      bgImage = null;
       bg.classList.remove("visible");
       return;
     }
-    bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
     if (media.type === "vimeo" || media.type === "mp4") {
+      bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
       if (activeVideo === media) return;
       stopVideo();
-      if (bgImage) bgImage.onload = null;
-      bgImage = null;
       bg.replaceChildren();
       bg.classList.remove("half", "portrait-left", "portrait-center");
       bg.classList.add("full", "visible", "is-video");
       activeVideo = media;
       if (media.type === "vimeo") {
-        // Reuse the existing autoplay embed, SDK sizing and teardown unchanged.
+        // Reuse the existing autoplay embed, SDK dimensions and teardown.
         const template = document.createElement("template");
         template.innerHTML = renderProjectModule({type: "full", slots: [
           {type: "video", vimeoUrl: media.src, playback: "autoplay"}
@@ -536,11 +533,17 @@ function renderArchive() {
         video.playsInline = true;
         video.controls = false;
         video.preload = "auto";
+        const sizeVideo = () => video.classList.toggle("is-portrait-video",
+          video.videoWidth > 0 && video.videoHeight > video.videoWidth);
+        video.addEventListener("loadedmetadata", sizeVideo);
+        video.addEventListener("resize", sizeVideo);
         video.src = media.src;
         bg.append(video);
         // Autoplay policy or an unavailable file must not interrupt Index navigation.
         video.play()?.catch(() => {});
         cleanupVideo = () => {
+          video.removeEventListener("loadedmetadata", sizeVideo);
+          video.removeEventListener("resize", sizeVideo);
           video.pause();
           video.removeAttribute("src");
           video.load();
@@ -549,35 +552,29 @@ function renderArchive() {
       }
       return;
     }
-    if (activeVideo) {
-      stopVideo();
-      bg.replaceChildren();
-    }
-    bg.classList.remove("is-video");
-    if (!bgImage) {
-      bgImage = document.createElement("img");
-      bgImage.loading = "eager";
-      bg.append(bgImage);
-    }
-    bgImage.alt = media?.alt ?? "";
-    // Reuse the module image crop/hotspot mapping for the active Index image.
+    // Keep the displayed bitmap and its layout together while the next image
+    // loads. Mutating a visible img.src can leave its old bitmap in the new layout.
+    const nextImage = document.createElement("img");
+    nextImage.loading = "eager";
+    nextImage.alt = media.alt ?? "";
     const position = moduleImagePosition(media);
-    bgImage.style.cssText = position ? position.slice(' style="'.length, -1) : "";
-    const src = media.src;
-    if (bgImage.getAttribute("src") !== src) bgImage.src = src;
-    const width = media?.cropRect?.width ?? media?.width ?? (bgImage.complete ? bgImage.naturalWidth : 0);
-    const height = media?.cropRect?.height ?? media?.height ?? (bgImage.complete ? bgImage.naturalHeight : 0);
-    const half = !mobile.matches && width > 0 && height > width;
-    const portraitPosition = media?.portraitPosition ||
-      ((entry.layout === "half") !== ((imageIndex % items.length) % 2 === 1) ? "right" : "center");
-    bg.classList.toggle("portrait-left", half && portraitPosition === "left");
-    bg.classList.toggle("portrait-center", half && portraitPosition === "center");
-    bg.classList.toggle("half", half);
-    bg.classList.toggle("full", !half);
-    bgImage.onload = () => {
-      if (bg.classList.contains("visible")) showEntryImage(entry, imageIndex);
-    };
-    bg.classList.add("visible");
+    nextImage.style.cssText = position ? position.slice(' style="'.length, -1) : "";
+    nextImage.src = media.src;
+    nextImage.decode().then(() => {
+      if (request !== imageRequest || events.signal.aborted) return;
+      const width = media.cropRect?.width ?? media.width ?? nextImage.naturalWidth;
+      const height = media.cropRect?.height ?? media.height ?? nextImage.naturalHeight;
+      const half = !mobile.matches && width > 0 && height > width;
+      const portraitPosition = media.portraitPosition ||
+        ((entry.layout === "half") !== ((imageIndex % items.length) % 2 === 1) ? "right" : "center");
+      // All layout state and the decoded bitmap commit in one task, before paint.
+      stopVideo();
+      bg.className = `archive-background visible ${half ? "half" : "full"}${
+        half && portraitPosition === "left" ? " portrait-left" :
+        half && portraitPosition === "center" ? " portrait-center" : ""}`;
+      bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
+      bg.replaceChildren(nextImage);
+    }, () => {}); // Keep the current preview if the requested image cannot decode.
   };
   const updateMobileEntry = () => {
     if (!mobile.matches) return;
@@ -591,7 +588,8 @@ function renderArchive() {
       else row.removeAttribute("aria-current");
     });
     activeRow = next;
-    showEntryImage(entries[next], 0);
+    frame = 0;
+    showEntryImage(entries[next], frame);
   };
   list.addEventListener("scroll", () => {
     if (!mobile.matches || scrollFrame) return;
@@ -650,14 +648,16 @@ function renderArchive() {
   }, { passive: true, signal: events.signal });
   rows.forEach(row => {
     row.addEventListener("click", () => {
-      if (mobile.matches) {
+      const rowIndex = Number(row.dataset.index);
+      if (mobile.matches && activeRow !== rowIndex) {
         list.scrollTo({ top: row.offsetTop, behavior: "auto" });
         updateMobileEntry();
         return;
       }
-      const rowIndex = Number(row.dataset.index);
       const entry = entries[rowIndex];
       if (activeRow === rowIndex) {
+        // Native click covers mouse, touch and keyboard once. Background pointer
+        // gestures exclude buttons, so they cannot also handle this interaction.
         frame += 1;
         showEntryImage(entry, frame);
       } else activateDesktopEntry(rowIndex);
@@ -682,7 +682,6 @@ function renderArchive() {
   cleanupPage = () => {
     events.abort();
     cancelAnimationFrame(scrollFrame);
-    if (bgImage) bgImage.onload = null;
     stopVideo();
   };
   syncLayout();

@@ -2,6 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const path=require('node:path');
+const {checkDetailVideos}=require('./project-video-browser-helpers.cjs');
 
 test('manual overview controls are reachable on desktop/mobile without stealing project navigation', {skip:!process.env.BROWSER_TEST},async()=>{
  const {chromium}=require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
@@ -15,7 +16,8 @@ test('manual overview controls are reachable on desktop/mobile without stealing 
  });
  const raw={projects,selectedWork:{_id:'selectedWork',_type:'selectedWork',commissioned:projects.map(p=>({_ref:p._id})),video:[],graphic:[]}};
  try {
-  const page=await browser.newPage({hasTouch:true});
+  for(const width of [1440,390]) {
+  const page=await browser.newPage({hasTouch:width===390,viewport:{width,height:900}});
   await page.addInitScript(()=>{
    window.playbackCalls=[];
    window.Vimeo={Player:class {
@@ -23,6 +25,8 @@ test('manual overview controls are reachable on desktop/mobile without stealing 
     on(name,callback){this.events[name]=callback;} off(name){delete this.events[name];}
     ready(){return Promise.resolve();} destroy(){return Promise.resolve();}
     getVideoWidth(){return Promise.resolve(1920);} getVideoHeight(){return Promise.resolve(1080);}
+    setMuted(value){this.frame.dataset.muted=String(value);return Promise.resolve();}
+    setVolume(){return Promise.resolve();}
     play(){window.playbackCalls.push('play');this.events.play();return Promise.resolve();}
     pause(){window.playbackCalls.push('pause');this.events.pause();return Promise.resolve();}
    }};
@@ -36,7 +40,6 @@ test('manual overview controls are reachable on desktop/mobile without stealing 
    if(url.pathname.includes('/data/query/'))return route.fulfill({json:{result:raw}});
    return route.fulfill({contentType:'text/html',body:'<!doctype html><html></html>'});
   });
-  for(const width of [1440,390]) {
    await page.setViewportSize({width,height:900});
    await page.goto('https://preview.test/#work/commissioned');
    await page.waitForSelector('.project-video-toggle:not([disabled])');
@@ -90,13 +93,14 @@ test('manual overview controls are reachable on desktop/mobile without stealing 
     await page.mouse.click(point.x,point.y);
    }else await page.touchscreen.tap(point.x,point.y);
    await page.waitForURL('**/#project/p0');
-   await page.waitForSelector('.detail .project-video-toggle:not([disabled])');
-   await page.waitForFunction(()=>getComputedStyle(document.querySelector('.detail .project-video-toggle')).color==='rgb(255, 255, 255)');
-   const detailButton=page.locator('.detail .project-video-toggle');
-   if(width>700) await detailButton.click();else await detailButton.tap();
-   assert.equal(await detailButton.textContent(),'(Pause)');
-   assert.equal(new URL(page.url()).hash,'#project/p0');
-  }
+   await page.waitForSelector('.detail [data-video-ready]');
+   for(let index=0;index<projects.length;index++) {
+    await page.evaluate(index=>{location.hash='project/p'+index;},index);
+    await page.waitForSelector(`.detail[data-project-id="p${index}"] [data-video-ready]`);
+    await checkDetailVideos(page,width,false);
+   }
   assert.ok((await page.evaluate(()=>window.playbackCalls)).includes('pause'));
+  await page.close();
+  }
  }finally{await browser.close();}
 });
