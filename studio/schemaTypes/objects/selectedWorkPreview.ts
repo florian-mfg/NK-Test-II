@@ -18,22 +18,23 @@ export const previewMediaSlot = defineType({
         list: [
           {title: 'Empty', value: 'empty'},
           {title: 'Image', value: 'image'},
-          {title: 'Vimeo Video', value: 'video'},
           {title: 'MP4 Video', value: 'mp4'},
         ],
       },
       description: 'Empty preserves this slot’s space.',
-      validation: (rule) =>
-        rule
-          .required()
-          .custom(
-            (value) =>
-              ['empty', 'image', 'video', 'mp4'].includes(value || '') ||
-              'Choose Empty, Image, Vimeo Video or MP4 Video.',
-          ),
+      // Sanity adds an enum error from options.list. Reset that inferred rule
+      // so stored unsupported values warn without becoming selectable.
+      validation: (rule) => {
+        const compatible = (rule as typeof rule & {reset(): typeof rule}).reset()
+        return [
+          compatible.required(),
+          compatible.custom(value => !value || ['empty', 'image', 'mp4'].includes(value)
+            ? true : 'Unsupported stored media is omitted from the website. Choose supported media to replace it.').warning(),
+        ]
+      },
     }),
     ...mediaSlot.fields.filter((field) =>
-      ['image', 'vimeoUrl', 'video', 'playback', 'poster', 'alt'].includes(field.name),
+      ['image', 'video', 'playback', 'poster', 'alt'].includes(field.name),
     ),
   ],
   preview: mediaSlot.preview,
@@ -62,7 +63,7 @@ export const selectedWorkPreview = defineType({
     // Full Width; the migration moves it into the editor without re-uploading.
     defineField({name: 'type', type: 'string', hidden: true}),
     ...mediaSlot.fields
-      .filter((field) => ['image', 'vimeoUrl', 'video', 'playback', 'poster', 'alt'].includes(field.name))
+      .filter((field) => ['image', 'video', 'playback', 'poster', 'alt'].includes(field.name))
       .map((field) => ({...field, hidden: true, validation: undefined})),
   ],
   validation: (rule) =>
@@ -72,7 +73,7 @@ export const selectedWorkPreview = defineType({
       if (
         (value.composition == null ||
           (Array.isArray(value.composition) && !value.composition.length)) &&
-        (value.type === 'image' || value.type === 'video')
+        typeof value.type === 'string'
       )
         return true
       return 'Choose at least one preview composition or Spacer.'
@@ -82,7 +83,7 @@ export const selectedWorkPreview = defineType({
     prepare({composition, image, poster}) {
       const row = composition?.[0]
       const media = row?.slots?.find(
-        (slot: {type?: string}) => slot.type === 'image' || slot.type === 'video' || slot.type === 'mp4',
+        (slot: {type?: string}) => slot.type === 'image' || slot.type === 'mp4',
       )
       return {
         title: row?.type === 'spacer' ? 'Spacer' : layouts.find((layout) => layout.name === row?.type)?.title || 'Full Width',

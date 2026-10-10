@@ -54,10 +54,10 @@ test('slugs retain legacy route IDs but reject unsafe routes', () => {
   }
 })
 
-test('Index requires its own title and 1–3 previews and has no Project relationship', () => {
+test('standalone Index retains its own metadata and previews with an optional identity link', () => {
   assert.deepEqual(
     indexEntry.fields.map((item) => item.name),
-    ['textColor', 'displayTitle', 'year', 'additionalInfo', 'previewImages', 'initialLayout'],
+    ['project', 'textColor', 'displayTitle', 'year', 'additionalInfo', 'previewImages', 'initialLayout'],
   )
   const [validate] = validators(field(indexEntry, 'displayTitle'))
   assert.equal(validate('Independent entry'), true)
@@ -189,17 +189,10 @@ test('structure opens fixed documents with explicit legal initial values', () =>
   }
 })
 
-test('shared video slots accept Vimeo URLs and native MP4 uploads', () => {
+test('shared video slots offer only native MP4 uploads', () => {
   const slot = schemaTypes.find(type => type.name === 'mediaSlot')
-  const [validate] = validators(field(slot, 'vimeoUrl'))
-  for (const url of ['https://vimeo.com/1230995762?share=copy&fl=sv&fe=ci', 'https://vimeo.com/12345', 'https://vimeo.com/12345/secret', 'https://player.vimeo.com/video/12345?h=secret&autoplay=1']) {
-    assert.equal(validate(url, {parent: {type: 'video'}}), true)
-  }
-  for (const url of [undefined, '', 'https://example.com/12345', 'https://vimeo.com/not-a-video', 'http://vimeo.com/12345']) {
-    assert.notEqual(validate(url, {parent: {type: 'video'}}), true)
-  }
-  assert.equal(validate(undefined, {parent: {type: 'empty'}}), true)
-  assert.equal(validate('bad retained value', {parent: {type: 'image'}}), true)
+  assert.equal(field(slot,'vimeoUrl'),undefined)
+  assert.deepEqual(field(slot,'type').options.list.map(option=>option.value),['empty','image','mp4','text'])
   const upload = field(slot, 'video')
   assert.equal(upload.readOnly, undefined)
   assert.equal(upload.options.accept, 'video/mp4')
@@ -211,7 +204,6 @@ test('shared video slots accept Vimeo URLs and native MP4 uploads', () => {
     assert.notEqual(validateUpload(value, {parent: {type: 'mp4'}}), true)
     assert.equal(validateUpload(value, {parent: {type: 'video'}}), true)
   }
-  assert.equal(field(slot, 'vimeoUrl').hidden({parent: {type: 'mp4'}}), true)
   assert.equal(field(slot, 'image').hidden({parent: {type: 'mp4'}}), true)
   for (const name of ['poster', 'playback', 'alt']) assert.equal(field(slot, name).hidden({parent: {type: 'mp4'}}), false)
   for (const name of ['full', 'half-half', 'half-quarter-quarter', 'quarter-quarter-quarter-quarter', 'third-third-third', 'two-thirds-one-third']) {
@@ -225,11 +217,11 @@ test('Selected Work Preview supports ordered compositions and reuses module geom
   const detailSlot = schemaTypes.find(type => type.name === 'mediaSlot')
   assert.equal(field(project, 'selectedWorkPreview').type, 'selectedWorkPreview')
   assert.equal(field(project, 'selectedWorkPreview').validation, undefined)
-  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'vimeoUrl', 'playback', 'video', 'poster', 'alt'])
+  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'playback', 'video', 'poster', 'alt'])
   const [validate] = validators(field(slot, 'type'))
-  for (const type of ['image', 'video', 'mp4', 'empty']) assert.equal(validate(type), true)
-  for (const type of ['text', undefined]) assert.notEqual(validate(type), true)
-  for (const name of ['image', 'vimeoUrl', 'poster', 'alt']) assert.equal(field(slot, name), field(detailSlot, name))
+  for (const type of ['image', 'mp4', 'empty']) assert.equal(validate(type), true)
+  for (const type of ['text']) assert.notEqual(validate(type), true)
+  for (const name of ['image', 'poster', 'alt']) assert.equal(field(slot, name), field(detailSlot, name))
   const composition = field(preview, 'composition')
   const names = ['full', 'half-half', 'half-quarter-quarter', 'quarter-quarter-quarter-quarter', 'third-third-third', 'two-thirds-one-third']
   assert.deepEqual(composition.of.map(item => item.type), [...names.map(name => `preview-${name}`), 'preview-spacer'])
@@ -420,15 +412,15 @@ test('media-driven documents expose one optional Auto/Black/White text color con
 })
 
 
-test('Vimeo playback is an optional per-slot choice immediately after its URL', () => {
+test('MP4 playback is an optional per-slot choice', () => {
   for (const name of ['mediaSlot', 'previewMediaSlot']) {
     const slot = schemaTypes.find(type => type.name === name)
     const playback = field(slot, 'playback')
-    assert.equal(slot.fields[slot.fields.indexOf(field(slot, 'vimeoUrl')) + 1], playback)
+    assert.ok(slot.fields.includes(playback))
     assert.equal(playback.title, 'Playback')
     assert.deepEqual(playback.options.list.map(option => option.value), ['autoplay', 'manual'])
     assert.equal(playback.initialValue, undefined) // Contextual defaults must not become stored overrides.
-    assert.equal(playback.hidden({parent: {type: 'video'}}), false)
+    assert.equal(playback.hidden({parent: {type: 'mp4'}}), false)
     for (const type of ['image', 'empty', 'text']) assert.equal(playback.hidden({parent: {type}}), true)
     const [validate] = validators(playback)
     for (const value of [undefined, '', 'autoplay', 'manual']) assert.equal(validate(value), true)

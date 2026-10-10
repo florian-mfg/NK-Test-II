@@ -36,7 +36,7 @@ test('Spacers normalize to size-only modules in details and ordered overview com
 });
 
 function isolated(fetch) {
-  const sandbox = {URL, AbortController, setTimeout, clearTimeout, fetch, VimeoMedia: require('../vimeo-media.js'), ProjectCategories: require('../project-categories.js')};
+  const sandbox = {URL, AbortController, setTimeout, clearTimeout, fetch, ProjectCategories: require('../project-categories.js')};
   vm.runInNewContext(adapterSource, sandbox);
   return sandbox.SanityData;
 }
@@ -126,7 +126,7 @@ test('text sizes and paragraph whitespace survive, including overview text', () 
 });
 
 test('invalid modules are isolated without silently compacting project compositions', () => {
-  for (const malformed of [null, row('unknown'), row('full', [], {height: 'giant'}), row('half-half', [slot()], {order: 'middle'}), row('full', [slot(), slot()]), row('full', [{type: 'text', text: ' '}]), row('full', [{type: 'video', video: {asset: {_ref: 'file-hash-mov'}}}]), row('full', [{type: 'image'}])]) {
+  for (const malformed of [null, row('unknown'), row('full', [], {height: 'giant'}), row('half-half', [slot()], {order: 'middle'}), row('full', [slot(), slot()]), row('full', [{type: 'text', text: ' '}]), row('full', [{type: 'mp4', video: {asset: {_ref: 'file-hash-mov'}}}]), row('full', [{type: 'image'}])]) {
     assert.equal(data.normalizeModule(malformed).module, null);
     const result = data.normalize(fixture({projects: [project('broken', 'Video', {modules: [row(), malformed, row()]}), project('good')]}));
     assert.equal(result.projectsById.broken.modulesValid, false);
@@ -150,10 +150,9 @@ test('native image references and resolved assets map equally; crop/hotspot surv
   assert.equal(data.normalizeImage({asset: {url: 'https://cdn.sanity.io/images/other/private/a.jpg'}}).image, null);
 });
 
-test('Vimeo slots and posters normalize without introducing playback policy', () => {
-  const result = data.normalizeModule(row('full', [{type: 'video', vimeoUrl: 'https://vimeo.com/12345/private', poster: img('Poster'), alt: 'Video'}]));
-  assert.equal(result.module.slots[0].src, 'https://vimeo.com/12345/private');
-  assert.equal(result.module.slots[0].vimeo.embedUrl, 'https://player.vimeo.com/video/12345?h=private');
+test('MP4 slots and posters normalize without introducing playback policy', () => {
+  const result = data.normalizeModule(row('full', [{type: 'mp4', video:{asset:{_ref:'file-demo-mp4'}}, poster: img('Poster'), alt: 'Video'}]));
+  assert.equal(result.module.slots[0].src, 'https://cdn.sanity.io/files/ck6xe2er/production/demo.mp4');
   assert.equal(result.module.slots[0].poster, 'https://cdn.sanity.io/images/ck6xe2er/production/abc123-1200x800.jpg');
   assert.equal(result.module.slots[0].alt, 'Video');
   assert.equal('autoplay' in result.module.slots[0], false);
@@ -207,7 +206,8 @@ test('Index metadata and 1–3 preview images are independent of Projects and le
   assert.ok(result.indexPage.entries.every(e => !('projectId' in e) && !('detailHref' in e)));
   assert.equal(result.issues.filter(e => e.code === 'invalid_entry').length, 3);
   const projection = data.query.split('"indexPage":')[1].split('"legalPages":')[0];
-  assert.doesNotMatch(projection, /project|yearOverride/);
+  assert.match(projection, /project\{_ref\}/);
+  assert.doesNotMatch(projection, /yearOverride/);
 });
 
 test('settings, Info and navigation resolve shared contacts without HTML injection', () => {
@@ -221,15 +221,14 @@ test('settings, Info and navigation resolve shared contacts without HTML injecti
   assert.deepEqual(result.navigation.items.map(i => i.href), ['#work']);
 });
 
-test('homepage supports Vimeo privacy hashes and direct video', () => {
-  for (const url of ['https://vimeo.com/12345/secret', 'https://player.vimeo.com/video/12345?h=secret']) {
-    const home = data.normalize(fixture({homePage: doc('homePage', {backgroundVideoUrl: url, videoTitle: 'Film', poster: img()})})).homePage;
-    assert.equal(home.video.type, 'vimeo');
-    assert.equal(home.video.embedUrl, 'https://player.vimeo.com/video/12345?h=secret');
-    assert.ok(home.poster.src);
+test('homepage accepts only direct Sanity MP4 uploads and ignores legacy URLs without writes', () => {
+  const raw = fixture({homePage: doc('homePage', {video:{asset:{_ref:'file-demo-mp4'}}})});
+  assert.deepEqual(data.normalize(raw).homePage.video,{type:'mp4',src:'https://cdn.sanity.io/files/ck6xe2er/production/demo.mp4'});
+  for(const backgroundVideoUrl of ['https://vimeo.com/12345/secret','https://example.com/video.mp4']) {
+    const input=fixture({homePage:doc('homePage',{backgroundVideoUrl})}),before=JSON.stringify(input);
+    assert.equal(data.normalize(input).homePage.video,null);
+    assert.equal(JSON.stringify(input),before);
   }
-  assert.equal(data.normalize(fixture({homePage: doc('homePage', {backgroundVideoUrl: 'https://example.com/film.mp4'})})).homePage.video.type, 'file');
-  assert.equal(data.normalize(fixture({homePage: doc('homePage', {backgroundVideoUrl: 'javascript:alert(1)'})})).homePage.video, null);
 });
 
 test('legal text stays structured; unsafe links and unknown content are removed', () => {
@@ -288,13 +287,13 @@ test('caller cancellation is handled before and during a request', async () => {
   assert.equal((await pending).error.code, 'aborted');
 });
 
-test('independent Selected Work image and Vimeo previews normalize without changing detail modules', () => {
+test('independent Selected Work image and MP4 previews normalize without changing detail modules', () => {
   const original = project('one');
   const baseline = data.normalize(fixture({projects: [original]})).projects[0];
   const previewImage = {...img(), crop: {left: .1, right: .2, top: .25, bottom: 0}, hotspot: {x: .4, y: .5, width: .2, height: .3}};
   for (const selectedWorkPreview of [
     {type: 'image', image: previewImage, alt: 'Preview alt'},
-    {type: 'video', vimeoUrl: 'https://player.vimeo.com/video/98765?h=private&autoplay=0', poster: previewImage, alt: 'Preview film'}
+    {type:'mp4',video:{asset:{_ref:'file-demo-mp4'}}, poster: previewImage, alt: 'Preview film'}
   ]) {
     const normalized = data.normalize(fixture({projects: [{...original, selectedWorkPreview}]}));
     const result = normalized.projects[0];
@@ -307,17 +306,17 @@ test('independent Selected Work image and Vimeo previews normalize without chang
     const image = result.selectedWorkPreview.slots[0].image || result.selectedWorkPreview.slots[0].posterImage;
     assert.deepEqual(image.hotspot, previewImage.hotspot);
     assert.equal(new URL(image.src).searchParams.get('rect'), '120,200,840,600');
-    if (selectedWorkPreview.type === 'video') assert.equal(result.selectedWorkPreview.slots[0].vimeo.embedUrl, 'https://player.vimeo.com/video/98765?h=private');
+    if (selectedWorkPreview.type === 'mp4') assert.ok(result.selectedWorkPreview.slots[0].src.endsWith('/demo.mp4'));
   }
   assert.equal(baseline.selectedWorkPreview, null);
-  for (const selectedWorkPreview of [{type: 'text', text: 'Forbidden'}, {type: 'empty'}, {type: 'image'}, {type: 'video', vimeoUrl: 'https://example.com/file.mp4'}]) {
+  for (const selectedWorkPreview of [{type: 'text', text: 'Forbidden'}, {type: 'empty'}, {type: 'image'}, {type:'mp4',video:{asset:{_ref:'file-demo-webm'}}}]) {
     const result = data.normalize(fixture({projects: [{...original, selectedWorkPreview}]}));
     assert.equal(result.projects[0].selectedWorkPreview, null);
     assert.ok(result.issues.some(issue => issue.path.includes('selectedWorkPreview')));
     assert.deepEqual(result.projects[0].modules, baseline.modules);
     assert.equal(result.projects[0].modulesValid, true);
   }
-  assert.ok(data.query.includes('selectedWorkPreview{type,alt,vimeoUrl,playback,video{asset->{_id,url,mimeType}},image'));
+  assert.ok(data.query.includes('selectedWorkPreview{type,alt,playback,video{asset->{_id,url,mimeType}},image'));
 });
 
 test('preview normalization preserves missing slots and explicit permutations without mutating source data', () => {

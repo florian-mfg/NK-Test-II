@@ -7,12 +7,12 @@
     <title>Nicolas Kawohl</title>
     <link rel="stylesheet" href="style.css" />
     <script src="projects.js" defer></script>
-    <script src="vimeo-media.js" defer></script>
     <script src="project-modules.js" defer></script>
     <script src="project-video.js" defer></script>
     <script src="project-categories.js" defer></script>
     <script src="sanity-data.js" defer></script>
     <script src="contrast.js" defer></script>
+    <script src="frontpage-media-fade.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -40,10 +40,12 @@
       </div>
       <nav aria-label="Mobile site pages">
         <div class="mobile-menu-work">
-          <a class="mobile-menu-label" href="#work" data-route="work">Selected Work</a>
+          <button class="mobile-menu-label" type="button" data-route="work" aria-expanded="false" aria-controls="mobile-work-submenu">Selected Work</button>
+          <div class="mobile-work-submenu" id="mobile-work-submenu" hidden>
           <a href="#work/video" data-route="work/video">Video</a>
           <a href="#work/commissioned" data-route="work/commissioned">Commissioned</a>
           <a href="#work/graphic" data-route="work/graphic">Graphic</a>
+          </div>
         </div>
         <a class="mobile-menu-section" href="#archive" data-route="archive">Index</a>
         <a class="mobile-menu-section" href="#info" data-route="info">Info</a>

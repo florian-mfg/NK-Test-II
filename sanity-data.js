@@ -20,7 +20,6 @@
  */
 (function (root) {
   'use strict';
-  const vimeo = typeof module !== 'undefined' && module.exports ? require('./vimeo-media.js') : root.VimeoMedia;
 
   const {projectCategories} = typeof module !== 'undefined' && module.exports ? require('./project-categories.js') : root.ProjectCategories;
 
@@ -40,21 +39,23 @@
     destination: `work/${label.toLowerCase()}`, href: `#work/${label.toLowerCase()}`
   })));
   const imageFields = '{asset->{_id,url,metadata{dimensions{width,height}}},crop,hotspot,alt}';
+  const indexMediaFields = `{_type,mediaType,${imageFields.slice(1, -1)},portraitPosition,image${imageFields.slice(0, -1)},portraitPosition},video{asset->{_id,url,mimeType}}}`;
   const published = '!(_id in path("drafts.**")) && !(_id in path("versions.**"))';
   // Fixed singleton IDs, explicit projections, no per-slot network calls.
   const query = `{
-    "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,textColor,backgroundVideoUrl,videoTitle,poster${imageFields}},
+    "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,textColor,video{asset->{_id,url,mimeType}},videoTitle,poster${imageFields}},
     "siteSettings": *[_type == "siteSettings" && _id == "siteSettings"][0]{_id,_type,brandName,email,instagram,phone,defaultPageTitle,defaultDescription,socialImage${imageFields},footerLinks[]{label,destination}},
     "navigation": *[_type == "navigation" && _id == "navigation"][0]{_id,_type,homeLabel,items[]{label,destination},categories[]{label,destination},mobileContact{label,destination}},
     "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,additionalIntroduction,sectionOrder[]{section},cvLabel,workLabel,skillsLabel,newsLabel,publicationsLabel,contactLabel,selectedClientsLabel,cv[]{period,text},work,skills,news[]{title,additionalInfo,url},publications[]{title,additionalInfo,url},contactLinks[]{label,destination},selectedClients},
     "projects": *[_type == "project" && ${published}] | order(_id asc) {
       _id,_type,title,slug,category,categories,year,additionalInfo,description,detailPageEnabled,textColor,
-      selectedWorkPreview{type,alt,vimeoUrl,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields},
-        composition[]{_type,type,size,height,order,slots[]{type,alt,vimeoUrl,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields}}}},
-      modules[]{_type,type,size,height,order,slots[]{type,text,textSize,alt,vimeoUrl,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields}}}
+      indexmaterial{textColor,media[]${indexMediaFields}},
+      selectedWorkPreview{type,alt,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields},
+        composition[]{_type,type,size,height,order,slots[]{type,alt,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields}}}},
+      modules[]{_type,type,size,height,order,slots[]{type,text,textSize,alt,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
-    "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,displayTitle,year,additionalInfo,textColor,initialLayout,previewImages[]${imageFields.slice(0, -1)},portraitPosition,_type,mediaType,vimeoUrl,image${imageFields.slice(0, -1)},portraitPosition},video{asset->{_id,url,mimeType}}}}},
+    "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,_type,project{_ref},displayTitle,year,additionalInfo,textColor,initialLayout,previewImages[]${indexMediaFields}}},
     "legalPages": *[_type == "legalPage" && _id in ["legal-imprint","legal-privacy-policy"]]{_id,_type,pageType,title,body}
   }`;
 
@@ -134,6 +135,8 @@
     };
   }
 
+  const omittedModule = Object.freeze({type: 'unsupported'});
+
   function moduleValue(value, issues, path) {
     if (!record(value)) { issue(issues, path, 'invalid_module', 'Expected a module object.'); return null; }
     const type = value.type ?? value._type;
@@ -159,6 +162,7 @@
       issue(issues, path, 'invalid_slots', 'Invalid slot collection.'); return null;
     }
     let valid = true;
+    let unsupported = false;
     const slots = Array.from({length: count}, (_, index) => {
       const slot = value.slots[index];
       const slotPath = `${path}.slots[${index}]`;
@@ -188,19 +192,14 @@
         issue(issues, slotPath, 'invalid_video', 'Invalid Project MP4 asset.');
       }
       if (record(slot) && slot.type === 'video') {
-        const media = vimeo.parseVimeoUrl(slot.vimeoUrl);
-        if (media) {
-          const posterImage = slot.poster ? image(slot.poster, issues, `${slotPath}.poster`) : null;
-          return {type: 'video', ...(['autoplay', 'manual'].includes(slot.playback) ? {playback: slot.playback} : {}), src: media.src, vimeo: media, alt: typeof slot.alt === 'string' ? slot.alt : undefined,
-            ...(posterImage ? {poster: posterImage.src, posterImage} : {})};
-        }
-        issue(issues, slotPath, slot.video?.asset ? 'legacy_video_requires_migration' : 'invalid_vimeo',
-          slot.video?.asset ? 'Uploaded video retained in Sanity; supply a Vimeo URL before connecting this project.' : 'Expected an HTTPS Vimeo video URL.');
+        unsupported = true;
+        return null; // Retain surviving slot widths without mounting unsupported media.
       }
       valid = false;
       issue(issues, slotPath, 'invalid_slot', 'Non-empty slot has invalid or missing content.');
       return null;
     });
+    if (valid && unsupported && slots.every(slot => slot === null)) return omittedModule;
     return valid ? {type, height, order: Array.isArray(order) ? [...order] : order, slots} : null;
   }
 
@@ -211,7 +210,8 @@
     // Older single-media previews retain their exact media in a full/auto row.
     // Explicit compositions win; malformed compositions never revive stale media.
     if (value.composition == null || (Array.isArray(value.composition) && !value.composition.length)) {
-      if (['image', 'video'].includes(value.type)) return moduleValue({type: 'full', slots: [value]}, issues, path);
+      if (value.type === 'video') return {composition: []};
+      if (['image', 'mp4'].includes(value.type)) return moduleValue({type: 'full', slots: [value]}, issues, path);
       return invalid('Choose one preview composition.');
     }
     if (!Array.isArray(value.composition)) return invalid('Expected preview compositions.');
@@ -220,19 +220,22 @@
         return invalid('Unknown or mismatched preview composition.');
       }
       if (row.type !== 'spacer' && (!Array.isArray(row.slots) || row.slots.some(slot => slot != null && (!record(slot) || !['empty', 'image', 'video', 'mp4'].includes(slot.type))))) {
-        return invalid('Preview slots support Image, Vimeo Video, MP4 Video or Empty.');
+        return invalid('Preview slots support Image, MP4 Video or Empty.');
       }
       // Namespaced Studio types share the exact module normalizer and renderer.
       return moduleValue({...row, _type: row.type}, issues, `${path}.composition[${index}]`);
     });
     if (modules.some(module => !module)) return null;
+    const supported = modules.filter(module => module !== omittedModule);
+    if (!supported.length) return {composition: []};
     // Preserve the existing normalized shape for every single-row preview.
-    return modules.length === 1 ? modules[0] : {composition: modules};
+    return supported.length === 1 ? supported[0] : {composition: supported};
   }
 
   function normalizeModule(value) {
     const issues = [];
-    return {module: moduleValue(value, issues, 'module'), issues};
+    const module = moduleValue(value, issues, 'module');
+    return {module: module === omittedModule ? null : module, issues};
   }
   function normalizeImage(value) {
     const issues = [];
@@ -303,6 +306,52 @@
     });
   }
 
+  // Standalone and Project-owned media share the existing Index contract.
+  function indexEntryValue(entry, index, issues, path) {
+    if (!record(entry)) { issue(issues, path, 'invalid_entry', 'Invalid Index entry omitted.'); return []; }
+    const title = text(entry.displayTitle);
+    const images = array(entry.previewImages, issues, `${path}.previewImages`);
+    if (images.length < 1 || images.length > 3) {
+      issue(issues, path, 'invalid_entry', 'Index entry requires 1–3 preview media items.'); return [];
+    }
+    const previews = images.filter(item => !item?.mediaType || ['image', 'mp4'].includes(item.mediaType)).map((item, i) => {
+      const mediaPath = `${path}.previewImages[${i}]`;
+      if (item?.mediaType && !['image', 'mp4'].includes(item.mediaType)) return null;
+      if (item?.mediaType === 'mp4') {
+        const file = item.video?.asset;
+        const id = file?._ref || file?._id;
+        const match = typeof id === 'string' && id.match(/^file-([a-zA-Z0-9]+)-mp4$/);
+        const src = https(file?.url) || (match ? `https://cdn.sanity.io/files/${config.projectId}/${config.dataset}/${match[1]}.mp4` : null);
+        const url = src && new URL(src);
+        if (!url || url.hostname !== 'cdn.sanity.io' ||
+            !url.pathname.startsWith(`/files/${config.projectId}/${config.dataset}/`) ||
+            !url.pathname.endsWith('.mp4') || (file?.mimeType && file.mimeType !== 'video/mp4')) {
+          issue(issues, mediaPath, 'invalid_video', 'Invalid Index MP4 asset.'); return null;
+        }
+        return {type: 'mp4', src};
+      }
+      if (item?.mediaType && item.mediaType !== 'image') {
+        issue(issues, mediaPath, 'invalid_media', 'Unknown Index media type.'); return null;
+      }
+      const source = item?.mediaType === 'image' ? item.image : item;
+      const preview = image(source, issues, mediaPath);
+      if (!preview) return null;
+      // Preserve the first legacy cycle: right-half frames stay right; full
+      // frames become centered when the image is portrait. No stored writes.
+      const legacyRight = (entry.initialLayout === 'half') !== (images.indexOf(item) % 2 === 1);
+      return {...preview, portraitPosition: ['left', 'center', 'right'].includes(source.portraitPosition)
+        ? source.portraitPosition : legacyRight ? 'right' : 'center'};
+    }).filter(Boolean);
+    if (!title || !previews.length) { issue(issues, path, 'invalid_entry', 'Index entry without a title or usable preview media omitted.'); return []; }
+    const layout = ['full', 'half'].includes(entry.initialLayout) ? entry.initialLayout : 'full';
+    if (entry.initialLayout != null && entry.initialLayout !== layout) issue(issues, `${path}.initialLayout`, 'invalid_layout', 'Invalid initial layout replaced with full.');
+    return [{textColor: textColor(entry.textColor), key: text(entry._key) || `entry-${index}`, title,
+      year: year(entry.year), additionalInfo: string(entry.additionalInfo),
+      layout, media: previews.map(preview => ({type: 'image', ...preview})),
+      images: previews.filter(preview => !preview.type).map(preview => preview.src),
+      previewImages: previews.filter(preview => !preview.type)}];
+  }
+
   function normalize(input) {
     const issues = [];
     const availability = {};
@@ -332,20 +381,15 @@
     const homeDoc = singleton(raw, 'homePage', issues, availability);
     let homePage = null;
     if (homeDoc) {
-      const src = https(homeDoc.backgroundVideoUrl);
-      let video = null;
-      if (src) {
-        const url = new URL(src);
-        const match = /^(?:www\.)?vimeo\.com$/.test(url.hostname) ? url.pathname.match(/^\/(\d+)(?:\/([a-zA-Z0-9]+))?\/?$/)
-          : url.hostname === 'player.vimeo.com' ? url.pathname.match(/^\/video\/(\d+)\/?$/) : null;
-        if (match) {
-          const embed = new URL(`https://player.vimeo.com/video/${match[1]}`);
-          const privacyHash = url.searchParams.get('h') || match[2];
-          if (privacyHash) embed.searchParams.set('h', privacyHash);
-          video = {type: 'vimeo', src, id: match[1], embedUrl: embed.href};
-        } else if (/\.(mp4|webm)$/i.test(url.pathname)) video = {type: 'file', src};
-      }
-      if (!video) issue(issues, 'homePage.backgroundVideoUrl', 'invalid_video', 'Expected a Vimeo video or direct HTTPS MP4/WebM URL.');
+      const file = homeDoc.video?.asset;
+      const id = file?._ref || file?._id;
+      const match = typeof id === 'string' && id.match(/^file-([a-zA-Z0-9]+)-mp4$/);
+      const src = https(file?.url) || (match ? `https://cdn.sanity.io/files/${config.projectId}/${config.dataset}/${match[1]}.mp4` : null);
+      const url = src && new URL(src);
+      const video = url && url.hostname === 'cdn.sanity.io' &&
+        url.pathname.startsWith(`/files/${config.projectId}/${config.dataset}/`) &&
+        url.pathname.endsWith('.mp4') && (!file?.mimeType || file.mimeType === 'video/mp4') ? {type: 'mp4', src} : null;
+      if (homeDoc.video && !video) issue(issues, 'homePage.video', 'invalid_video', 'Expected a directly uploaded MP4 asset.');
       homePage = {textColor: textColor(homeDoc.textColor), video, videoTitle: string(homeDoc.videoTitle), poster: homeDoc.poster ? image(homeDoc.poster, issues, 'homePage.poster') : null};
     }
 
@@ -400,6 +444,7 @@
     const projects = [];
     const projectsById = Object.create(null);
     const byDocumentId = new Map();
+    const linkedIndexEntries = new Map();
     availability.projects = Array.isArray(raw.projects) ? 'present' : raw.projects == null ? 'missing' : 'invalid';
     for (const [index, value] of array(raw.projects, issues, 'projects').entries()) {
       const path = `projects[${index}]`;
@@ -412,18 +457,32 @@
         issue(issues, path, 'duplicate_project', 'Duplicate slug or document ID omitted.'); continue;
       }
       const rows = array(value.modules, issues, `${path}.modules`);
-      const modules = rows.map((row, rowIndex) => moduleValue(row, issues, `${path}.modules[${rowIndex}]`));
+      const normalizedRows = rows.map((row, rowIndex) => moduleValue(row, issues, `${path}.modules[${rowIndex}]`));
+      const modules = normalizedRows.filter(module => module !== omittedModule);
       const modulesValid = (value.modules == null || Array.isArray(value.modules)) && modules.every(Boolean);
       const project = {id, textColor: textColor(value.textColor), documentId: value._id, title: value.title, category: memberships[0], categories: memberships,
         year: year(value.year), additionalInfo: string(value.additionalInfo), description: string(value.description),
         selectedWorkPreview: previewValue(value.selectedWorkPreview, issues, `${path}.selectedWorkPreview`),
         detailPageEnabled: value.detailPageEnabled !== false, modulesValid, modules: modulesValid ? modules : [],
+        ...(normalizedRows.length && normalizedRows.every(module => module === omittedModule) ? {unsupportedMediaOnly: true} : {}),
         // Details can keep healthy rows without rebalancing malformed compositions.
         // A valid layout/height/order gets its original empty frame; unknown layouts
         // stay null. Keep the strict modules contract for future overview consumers.
-        detailModules: modules.map((module, rowIndex) => module ||
-          (record(rows[rowIndex]) ? moduleValue({...rows[rowIndex], slots: []}, [], `${path}.modules[${rowIndex}]`) : null))};
+        detailModules: normalizedRows.flatMap((module, rowIndex) => module === omittedModule ? [] : [module ||
+          (record(rows[rowIndex]) ? moduleValue({...rows[rowIndex], slots: []}, [], `${path}.modules[${rowIndex}]`) : null)])};
       projects.push(project); projectsById[id] = project; byDocumentId.set(value._id, project);
+      const material = value.indexmaterial;
+      if (record(material) && material.media != null) {
+        const media = array(material.media, issues, `${path}.indexmaterial.media`);
+        if (media.length) {
+          const [entry] = indexEntryValue({
+            _key: `project-${value._id}`, displayTitle: project.title,
+            year: value.year, additionalInfo: project.additionalInfo,
+            textColor: material.textColor, previewImages: media,
+          }, index, issues, `${path}.indexmaterial`);
+          if (entry) linkedIndexEntries.set(value._id, {...entry, projectDocumentId: value._id});
+        }
+      }
     }
     const workDoc = singleton(raw, 'selectedWork', issues, availability);
     const selectedWork = workDoc ? Object.fromEntries(categories.map(category => {
@@ -441,55 +500,37 @@
     })) : null;
 
     const indexDoc = singleton(raw, 'indexPage', issues, availability);
-    const indexPage = indexDoc ? {entries: array(indexDoc.entries, issues, 'indexPage.entries').flatMap((entry, index) => {
+    const orderedIndexItems = indexDoc ? array(indexDoc.entries, issues, 'indexPage.entries') : [];
+    // Match only explicit document IDs. An explicit reference controls placement;
+    // otherwise replace the first linked legacy entry in its existing position.
+    const explicitIndexProjects = new Set(orderedIndexItems.filter(entry =>
+      entry?._type === 'indexProjectReference' && linkedIndexEntries.has(entry.project?._ref)
+    ).map(entry => entry.project._ref));
+    const indexEntries = [], seenIndexProjects = new Set();
+    for (const [index, entry] of orderedIndexItems.entries()) {
       const path = `indexPage.entries[${index}]`;
-      if (!record(entry)) { issue(issues, path, 'invalid_entry', 'Invalid Index entry omitted.'); return []; }
-      const title = text(entry.displayTitle);
-      const images = array(entry.previewImages, issues, `${path}.previewImages`);
-      if (images.length < 1 || images.length > 3) {
-        issue(issues, path, 'invalid_entry', 'Index entry requires 1–3 preview media items.'); return [];
+      const documentId = entry?.project?._ref;
+      const linked = linkedIndexEntries.get(documentId);
+      if (entry?._type === 'indexProjectReference') {
+        if (!linked) {
+          issue(issues, path, 'ineligible_index_project', 'Missing or unpublished Project, or no usable Indexmaterial; reference omitted.');
+          continue;
+        }
+      } else if (linked && explicitIndexProjects.has(documentId)) {
+        continue;
       }
-      const previews = images.map((item, i) => {
-        const mediaPath = `${path}.previewImages[${i}]`;
-        if (item?.mediaType === 'vimeo') {
-          const video = vimeo.parseVimeoUrl(item.vimeoUrl);
-          if (!video) issue(issues, mediaPath, 'invalid_video', 'Invalid Index Vimeo URL.');
-          return video;
-        }
-        if (item?.mediaType === 'mp4') {
-          const file = item.video?.asset;
-          const id = file?._ref || file?._id;
-          const match = typeof id === 'string' && id.match(/^file-([a-zA-Z0-9]+)-mp4$/);
-          const src = https(file?.url) || (match ? `https://cdn.sanity.io/files/${config.projectId}/${config.dataset}/${match[1]}.mp4` : null);
-          const url = src && new URL(src);
-          if (!url || url.hostname !== 'cdn.sanity.io' ||
-              !url.pathname.startsWith(`/files/${config.projectId}/${config.dataset}/`) ||
-              !url.pathname.endsWith('.mp4') || (file?.mimeType && file.mimeType !== 'video/mp4')) {
-            issue(issues, mediaPath, 'invalid_video', 'Invalid Index MP4 asset.'); return null;
-          }
-          return {type: 'mp4', src};
-        }
-        if (item?.mediaType && item.mediaType !== 'image') {
-          issue(issues, mediaPath, 'invalid_media', 'Unknown Index media type.'); return null;
-        }
-        const source = item?.mediaType === 'image' ? item.image : item;
-        const preview = image(source, issues, mediaPath);
-        if (!preview) return null;
-        // Preserve the first legacy cycle: right-half frames stay right; full
-        // frames become centered when the image is portrait. No stored writes.
-        const legacyRight = (entry.initialLayout === 'half') !== (i % 2 === 1);
-        return {...preview, portraitPosition: ['left', 'center', 'right'].includes(source.portraitPosition)
-          ? source.portraitPosition : legacyRight ? 'right' : 'center'};
-      }).filter(Boolean);
-      if (!title || !previews.length) { issue(issues, path, 'invalid_entry', 'Index entry without a title or usable preview media omitted.'); return []; }
-      const layout = ['full', 'half'].includes(entry.initialLayout) ? entry.initialLayout : 'full';
-      if (entry.initialLayout != null && entry.initialLayout !== layout) issue(issues, `${path}.initialLayout`, 'invalid_layout', 'Invalid initial layout replaced with full.');
-      return [{textColor: textColor(entry.textColor), key: text(entry._key) || `entry-${index}`, title,
-        year: year(entry.year), additionalInfo: string(entry.additionalInfo),
-        layout, media: previews.map(preview => ({type: 'image', ...preview})),
-        images: previews.filter(preview => !preview.type).map(preview => preview.src),
-        previewImages: previews.filter(preview => !preview.type)}];
-    })} : null;
+      if (linked) {
+        if (!seenIndexProjects.has(documentId)) indexEntries.push(linked);
+        seenIndexProjects.add(documentId);
+      } else {
+        indexEntries.push(...indexEntryValue(entry, index, issues, path));
+      }
+    }
+    // Predictable fallback never reorders the manually arranged entries.
+    for (const [documentId, entry] of [...linkedIndexEntries].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)) {
+      if (!seenIndexProjects.has(documentId)) indexEntries.push(entry);
+    }
+    const indexPage = indexDoc || indexEntries.length ? {entries: indexEntries} : null;
 
     const legalPages = {imprint: null, 'privacy-policy': null};
     availability.legalPages = Array.isArray(raw.legalPages) ? 'present' : raw.legalPages == null ? 'missing' : 'invalid';

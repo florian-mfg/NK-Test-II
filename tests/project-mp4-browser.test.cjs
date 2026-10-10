@@ -54,7 +54,7 @@ test('native MP4 playback, posters, module geometry, navigation and cleanup on d
    await page.waitForSelector('.project-video-toggle:not([disabled])');
    for(let index=0;index<projects.length;index++) {
     const article=page.locator('.project-preview').nth(index);
-    const frames=article.locator('.project-vimeo');
+    const frames=article.locator('.project-video');
     for(const box of await frames.all()) {
      const mode=await box.getAttribute('data-playback');
      const video=box.locator('video');
@@ -99,7 +99,7 @@ test('native MP4 playback, posters, module geometry, navigation and cleanup on d
      assert.equal(await button.getAttribute('aria-label'),'Play video');
     }
    }
-   await page.evaluate(()=>{window.previousVideos=[...document.querySelectorAll('.project-vimeo video')];});
+   await page.evaluate(()=>{window.previousVideos=[...document.querySelectorAll('.project-video video')];});
    const first=page.locator('.project-preview').first();
    await first.scrollIntoViewIfNeeded();
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));

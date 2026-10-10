@@ -30,7 +30,7 @@ function setup(hash = '#info', mobile = false) {
   let resolve, reject, requests = 0;
   const pending = new Promise((yes, no) => {resolve = yes; reject = no;});
   window.SanityData = {load: () => {requests++; return pending;}};
-  for (const file of ['projects.js', 'vimeo-media.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
+  for (const file of ['projects.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
   window.fitWorkMenu();
   const flush = () => new Promise(yes => setImmediate(yes));
   return {window, dom, scrollCalls, setMobile: value => {breakpoint.matches = value; breakpoint.dispatchEvent(new window.Event('change'));}, requests: () => requests, reject: async () => {reject(new Error('offline')); await flush();},

@@ -16,17 +16,7 @@ function setup(hash = '#project/ethereal-tides') {
   window.matchMedia = () => ({matches: false, addEventListener() {}});
   window.ResizeObserver = class {observe() {} disconnect() {}};
   const players = [];
-  window.Vimeo = {Player: class {
-    constructor(frame) {this.frame = frame; this.events = {}; this.calls = []; players.push(this);}
-    on(event, handler) {this.events[event] = handler;}
-    off(event) {delete this.events[event];}
-    ready() {return Promise.resolve();}
-    getVideoWidth() {return Promise.resolve(1920);}
-    getVideoHeight() {return Promise.resolve(1080);}
-    play() {this.calls.push("play"); this.events.play(); return Promise.resolve();}
-    pause() {this.calls.push("pause"); this.events.pause(); return Promise.resolve();}
-    destroy() {this.calls.push("destroy"); return Promise.resolve();}
-  }};
+  require('./native-media-stubs.cjs').installNativeMediaStubs(window, players);
   window.HTMLCanvasElement.prototype.getContext = () => ({measureText: text => ({width: text.length * 50, actualBoundingBoxLeft: 0, actualBoundingBoxRight: text.length * 50})});
   Object.defineProperty(window.document, 'fonts', {value: {ready: Promise.resolve(), addEventListener() {}}});
   const dialog = window.document.querySelector('.mobile-menu');
@@ -35,7 +25,7 @@ function setup(hash = '#project/ethereal-tides') {
   let resolve, reject, requests = 0;
   const pending = new Promise((yes, no) => {resolve = yes; reject = no;});
   window.SanityData = {load: () => {requests++; return pending;}};
-  for (const file of ['projects.js', 'vimeo-media.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
+  for (const file of ['projects.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
   window.fitWorkMenu();
   const flush = () => new Promise(yes => setImmediate(yes));
   return {window, dom, scrollCalls, players, requests: () => requests, reject: async () => {reject(new Error('offline')); await flush();},
@@ -43,7 +33,7 @@ function setup(hash = '#project/ethereal-tides') {
 }
 const success = data => ({ok: true, data, error: null});
 
-const slot = {type: 'video', vimeoUrl: 'https://vimeo.com/12345/secret?autoplay=1', alt: 'Published film'};
+const slot = {type:'mp4',video:{asset:{_ref:'file-demo-mp4'}}, alt: 'Published film'};
 const moduleRow = (type = 'full', slots = [slot], extra = {}) => ({_type: type, type, height: 'auto', slots, ...extra});
 const project = (extra = {}) => ({_id: 'published-project', _type: 'project', slug: {current: 'ethereal-tides'}, title: 'Published Tides', category: 'Video', year: 2026, additionalInfo: 'Client', description: 'First paragraph\nSecond line\n\n<script>plain text</script>', modules: [moduleRow()], ...extra});
 const content = (projects = [project()], extra = {}) => adapter.normalize({projects, ...extra});
@@ -73,12 +63,9 @@ test('direct detail waits for Sanity, renders published metadata/modules safely 
     assert.equal(app.scrollCalls.length, scrolls);
     assert.equal(app.window.scrollY, 150);
     assert.equal(document.querySelector('.site-header').outerHTML, header);
-    const frame = document.querySelector('[data-project-video-src]');
-    const url = new URL(frame.src);
-    assert.equal(url.pathname, '/video/12345');
-    assert.equal(url.searchParams.get('h'), 'secret');
-    assert.equal(url.searchParams.get('autoplay'), '0');
-    assert.equal(url.searchParams.get('controls'), '0');
+    const frame = document.querySelector('[data-project-native-src]');
+    assert.ok(frame.src.endsWith('/demo.mp4'));
+    assert.equal(frame.autoplay,false);assert.equal(frame.controls,false);assert.equal(frame.muted,true);
     assert.equal(app.players.length, 1);
     assert.deepEqual(app.players[0].calls, []);
     const button = document.querySelector('.project-video-toggle');
@@ -86,7 +73,7 @@ test('direct detail waits for Sanity, renders published metadata/modules safely 
     assert.equal(document.querySelectorAll('.detail-sound-control').length, 1);
     app.window.renderProject('ethereal-tides');
     app.window.route();
-    assert.equal(document.querySelector('iframe'), frame);
+    assert.equal(document.querySelector('video'), frame);
     assert.deepEqual(app.players[0].calls, []);
     assert.equal(app.requests(), 1);
   } finally {app.dom.window.close();}
@@ -158,7 +145,7 @@ test('malformed rows are isolated; valid modules keep order and known invalid ro
   const app = setup();
   try {
     const modules = [moduleRow('full', [{type: 'text', text: 'First', textSize: 'l'}]),
-      moduleRow('half-quarter-quarter', [{type: 'video', vimeoUrl: 'invalid'}], {height: 'medium', order: 'middle'}),
+      moduleRow('half-quarter-quarter', [{type:'mp4',video:{asset:{_ref:'file-demo-webm'}}}], {height: 'medium', order: 'middle'}),
       moduleRow('unknown'), moduleRow('half-half', [null, slot], {order: 'reverse'})];
     const data = content([project({modules})]);
     assert.equal(data.projects[0].modulesValid, false);
@@ -170,7 +157,7 @@ test('malformed rows are isolated; valid modules keep order and known invalid ro
     assert.ok(rows[0].querySelector('.text-size-l'));
     assert.deepEqual([...rows[1].children].map(slot => slot.style.getPropertyValue('--slot-span')), ['3', '6', '3']);
     assert.equal(rows[1].querySelectorAll('.is-empty').length, 3);
-    assert.ok(rows[2].children[0].querySelector('iframe'));
+    assert.ok(rows[2].children[0].querySelector('video'));
     assert.equal(app.window.document.querySelector('.detail').dataset.projectSource, 'sanity');
   } finally {app.dom.window.close();}
 });
@@ -194,10 +181,10 @@ test('published empty description/modules stay empty; image crop/hotspot and alt
   } finally {empty.dom.window.close();}
 });
 
-test('live published project modules and Vimeo source reach detail DOM and custom controls', {skip: !process.env.INFO_LIVE_SMOKE}, async () => {
+test('live published project modules and MP4 source reach detail DOM and custom controls', {skip: !process.env.INFO_LIVE_SMOKE}, async () => {
   const result = await adapter.load();
   assert.equal(result.ok, true, JSON.stringify(result.error));
-  const project = result.data.projects.find(p=>p.detailPageEnabled && p.modulesValid && p.modules.some(m=>m.slots.some(s=>s?.type==='video')));
+  const project = result.data.projects.find(p=>p.detailPageEnabled && p.modulesValid && p.modules.some(m=>m.slots?.some(s=>s?.type==='mp4' && s.playback !== 'autoplay')));
   assert.ok(project?.modulesValid);
   const app = setup(`#project/${project.id}`);
   try {
@@ -208,6 +195,7 @@ test('live published project modules and Vimeo source reach detail DOM and custo
     const rows = [...document.querySelectorAll('.detail .project-module')];
     assert.deepEqual(rows.map(row => row.dataset.moduleType), project.modules.map(row => row.type));
     for (const [index, module] of project.modules.entries()) {
+      if (module.type === 'spacer') { assert.equal(rows[index].children.length, 0); continue; }
       const order = Array.isArray(module.order) ? module.order : module.slots.map((_, i) => i);
       if (module.order === 'reverse') order.reverse();
       assert.equal(rows[index].children.length, module.slots.length);
@@ -218,16 +206,16 @@ test('live published project modules and Vimeo source reach detail DOM and custo
           assert.equal(element.querySelector('img').src, slot.src);
           assert.equal(element.querySelector('img').alt, slot.alt ?? project.title);
         }
-        if (slot?.type === 'video') {
-          const url = new URL(element.querySelector('iframe').src);
-          assert.equal(url.pathname, `/video/${slot.vimeo.id}`);
-          assert.equal(url.searchParams.get('autoplay'), '0');
-          assert.equal(url.searchParams.get('controls'), '0');
+        if (slot?.type === 'mp4') {
+          const url = new URL(element.querySelector('video').src);
+          assert.equal(url.href, slot.src);
+          assert.equal(element.querySelector('video').controls, false);
+
         }
       }
     }
-    assert.ok(app.players.length > 0, 'Published Vimeo slot must exist');
-    const button = document.querySelector('.project-video-toggle');
+    assert.ok(app.players.length > 0, 'Published MP4 slot must exist');
+    const button = document.querySelector('[data-playback="manual"] .project-video-toggle');
     button.click(); await flush();
     assert.equal(button.textContent, '(Pause)');
     button.click(); await flush();

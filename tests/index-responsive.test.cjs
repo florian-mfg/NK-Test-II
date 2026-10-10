@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 
 // BROWSER_TEST=1 PLAYWRIGHT_MODULE_PATH=/path/to/playwright-core node --test tests/index-responsive.test.cjs
-test('Index preview positions use exact desktop viewport halves and retain mobile full width', {skip: !process.env.BROWSER_TEST}, async () => {
+test('Index preview positions use intrinsic desktop widths and proportional mobile sizing', {skip: !process.env.BROWSER_TEST}, async () => {
  const {chromium} = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
  const browser = await chromium.launch({headless:true, executablePath:process.env.BROWSER_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
  const root = path.join(__dirname, '..');
@@ -35,13 +35,13 @@ test('Index preview positions use exact desktop viewport halves and retain mobil
   };
   await readyImage(0);
   const geometry = () => page.locator('.archive-background').evaluate(bg=>{
-   const rect=bg.getBoundingClientRect(), img=bg.querySelector('img');
+   const img=bg.querySelector('img'), rect=img.getBoundingClientRect();
    return {x:rect.x,width:rect.width,height:rect.height,fit:getComputedStyle(img).objectFit};
   });
   // No mouse movement is needed to activate the first entry and its position.
   assert.equal(await page.locator('.archive-row[aria-current="true"]').getAttribute('data-index'),'0');
   assert.ok(await page.locator('.archive-background').evaluate(bg=>bg.classList.contains('visible')));
-  assert.deepEqual(await geometry(),{x:0,width:720,height:900,fit:'cover'});
+  assert.deepEqual(await geometry(),{x:0,width:600,height:900,fit:'contain'});
   const boxes=await page.locator('.archive-row').evaluateAll(rows=>rows.map(row=>{
    const rect=row.getBoundingClientRect(); return {top:rect.top,bottom:rect.bottom};
   }));
@@ -54,11 +54,11 @@ test('Index preview positions use exact desktop viewport halves and retain mobil
   await page.mouse.move(1,Math.ceil(boxes[1].top));
   assert.equal(await active(),'1');
   await readyImage(1);
-  assert.deepEqual(await geometry(),{x:720,width:720,height:900,fit:'cover'});
+  assert.deepEqual(await geometry(),{x:840,width:600,height:900,fit:'contain'});
   await page.mouse.move(1,boxes[0].top+1);
   assert.equal(await active(),'0');
   await readyImage(0);
-  assert.deepEqual(await geometry(),{x:0,width:720,height:900,fit:'cover'});
+  assert.deepEqual(await geometry(),{x:0,width:600,height:900,fit:'contain'});
   for(const width of [1440,701,700,390]) {
    await page.setViewportSize({width,height:900});
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -67,13 +67,16 @@ test('Index preview positions use exact desktop viewport halves and retain mobil
     const row=page.locator('.archive-row').nth(rowIndex);
     if(mobile) {
      await row.click();
-     assert.deepEqual(await geometry(),{x:0,width,height:900,fit:'cover'});
+     assert.deepEqual(await geometry(),{x:(width-Math.min(width,600))/2,width:Math.min(width,600),height:Math.min(width,600)*1.5,fit:'contain'});
     } else {
      await row.hover();
      for(let index=0;index<3;index++) {
       await readyImage(rowIndex,index);
       const landscape=rowIndex===1&&index===1;
-      assert.deepEqual(await geometry(),{x:width*offsets[index],width:landscape?width:width/2,height:900,fit:'cover'});
+      const w = Math.min(600,width/2);
+      const position = raw.indexPage.entries[rowIndex].previewImages[index].portraitPosition;
+      assert.deepEqual(await geometry(),landscape ? {x:0,width,height:900,fit:'cover'} :
+        {x:position==='left'?0:position==='right'?width-w:(width-w)/2,width:w,height:w*1.5,fit:'contain'});
       await row.click();
      }
     }
@@ -93,7 +96,8 @@ test('Index preview positions use exact desktop viewport halves and retain mobil
    for(const next of [1,2,0]) {
     await page.touchscreen.tap(width/2,600);
     await settled(next);
-    assert.deepEqual(await geometry(),{x:0,width,height:844,fit:'cover'});
+    const g = await geometry(), w = Math.min(width,844*2/3);
+    assert.ok(Math.abs(g.width-w)<.1 && Math.abs(g.height-w*1.5)<.1 && Math.abs(g.x-(width-w)/2)<.1);
    }
    // Real native touch scrolling must work and releasing must not advance again.
    const session=await page.context().newCDPSession(page);

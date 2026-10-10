@@ -17,7 +17,8 @@ function setup(hash = '#archive', mobile = false) {
   window.HTMLElement.prototype.scrollTo = function({top}) { this.scrollTop = top; };
   // jsdom does not load/decode images; these unit fixtures are immediately ready.
   window.HTMLImageElement.prototype.decode = function() { return {then: ready => ready()}; };
-  window.ResizeObserver = class {observe() {}};
+  window.ResizeObserver = class {observe() {} disconnect() {}};
+  require('./native-media-stubs.cjs').installNativeMediaStubs(window, []);
   window.HTMLCanvasElement.prototype.getContext = () => ({measureText: text => ({width: text.length * 50, actualBoundingBoxLeft: 0, actualBoundingBoxRight: text.length * 50})});
   Object.defineProperty(window.document, 'fonts', {value: {ready: Promise.resolve(), addEventListener() {}}});
   const dialog = window.document.querySelector('.mobile-menu');
@@ -26,7 +27,7 @@ function setup(hash = '#archive', mobile = false) {
   let resolve, reject, requests = 0;
   const pending = new Promise((yes, no) => {resolve = yes; reject = no;});
   window.SanityData = {load: () => {requests++; return pending;}};
-  for (const file of ['projects.js', 'vimeo-media.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
+  for (const file of ['projects.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
   window.fitWorkMenu();
   const flush = () => new Promise(yes => setImmediate(yes));
   return {window, dom, scrollCalls, requests: () => requests, reject: async () => {reject(new Error('offline')); await flush();},

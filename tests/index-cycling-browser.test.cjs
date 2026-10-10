@@ -25,16 +25,9 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
     const raw = {projects: [], indexPage: {_id: 'indexPage', _type: 'indexPage', entries: [
       {displayTitle: 'Images', previewImages: [img('one'), img('two'), img('three')]},
       {displayTitle: 'Mixed', previewImages: [img('one'), {mediaType: 'mp4', video: {asset: {_ref: 'file-demo-mp4'}}}, img('three')]},
-      {displayTitle: 'Vimeo', previewImages: [img('one'), {mediaType: 'vimeo', vimeoUrl: 'https://vimeo.com/123456'}, img('three')]}
+      {displayTitle: 'Second MP4', previewImages: [img('one'), {mediaType: 'mp4', video: {asset: {_ref:'file-demo-mp4'}}}, img('three')]}
     ]}};
     await page.addInitScript(() => {
-      window.Vimeo = {Player: class {
-        constructor(frame) {this.frame = frame;}
-        on() {} off() {} ready() {return Promise.resolve();}
-        getVideoWidth() {return Promise.resolve(160);}
-        getVideoHeight() {return Promise.resolve(90);}
-        destroy() {this.frame.remove(); return Promise.resolve();}
-      }};
       window.indexClicks = 0;
       window.indexLayoutErrors = [];
       const sample = () => {
@@ -42,8 +35,8 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
         if (img?.currentSrc && img.naturalWidth && getComputedStyle(img).opacity > 0) {
           const id = img.currentSrc.match(/\/(one|two|three)-/)?.[1];
           const mobile = innerWidth <= 700, rect = img.getBoundingClientRect();
-          const x = mobile ? 0 : {one: .25, two: .5, three: 0}[id] * innerWidth;
-          if (rect.x !== x || rect.width !== innerWidth / (mobile ? 1 : 2)) window.indexLayoutErrors.push({id, x: rect.x, width: rect.width});
+          const x = mobile ? 0 : {one: (innerWidth-600)/2, two: innerWidth-600, three: 0}[id];
+          if (rect.x !== x || rect.width !== (mobile ? innerWidth : 600)) window.indexLayoutErrors.push({id, x: rect.x, width: rect.width});
         }
         requestAnimationFrame(sample);
       };
@@ -60,16 +53,14 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
     });
     const active = () => page.locator('.archive-background').evaluate(bg => {
       if (bg.querySelector('video')) return 'mp4';
-      if (bg.querySelector('iframe')) return 'vimeo';
       return new URL(bg.querySelector('img').src).pathname.match(/\/(one|two|three)-/)[1];
     });
     const expectActive = async (expected, message) => {
       await page.waitForFunction(expected => {
         const bg = document.querySelector('.archive-background');
         if (expected === 'mp4') return !!bg.querySelector('video');
-        if (expected === 'vimeo') return !!bg.querySelector('iframe');
         return bg.querySelector('img')?.currentSrc.includes(`/${expected}-`);
-      }, expected);
+      }, expected).catch(async error => { console.error(message, await active()); throw error; });
       assert.equal(await active(), expected, message);
     };
     const interact = async row => {
@@ -94,7 +85,7 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
       await page.waitForSelector('.archive[data-source="sanity"]');
       for (const index of [0, 1, 0, 2, 0]) {
         const row = await select(index);
-        const sequence = ['one', index === 1 ? 'mp4' : index === 2 ? 'vimeo' : 'two', 'three'];
+        const sequence = ['one', index === 1 ? 'mp4' : index === 2 ? 'mp4' : 'two', 'three'];
         await expectActive('one');
         const before = await page.evaluate(() => window.indexClicks);
         // No sleeps between distinct interactions; checks also catch the first click.

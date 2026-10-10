@@ -2,6 +2,7 @@ import {defineArrayMember, defineField, defineType} from 'sanity'
 import {projectModules} from '../objects/projectModules'
 import {ProjectCategoriesInput, projectCategories} from '../../components/ProjectCategoriesInput'
 import {categories, textColorField} from '../shared/content'
+import {indexMedia} from '../objects/indexMedia'
 
 export const project = defineType({
   name: 'project',
@@ -87,6 +88,23 @@ export const project = defineType({
       description: 'Add layouts and drag them into the order you want them to appear.',
       options: {sortable: true},
       of: projectModules.map(({name}) => defineArrayMember({type: name})),
+    }),
+    defineField({
+      name: 'indexmaterial',
+      title: 'Indexmaterial',
+      type: 'object',
+      description: 'Optional media for the Index. Title, year and additional info come from this Project. Publishing media makes it eligible for Index without changing Selected Work.',
+      options: {collapsible: true, collapsed: false},
+      fields: [
+        defineField({
+          name: 'media', title: 'Index media', type: 'array',
+          description: 'Upload up to 3 images or MP4s and drag to set their cycling order. Leave empty to omit this Project from Index. Arrange Project references under Content → Index; unlisted Projects follow in document-ID order.',
+          options: {sortable: true},
+          of: [indexMedia],
+          validation: rule => rule.max(3),
+        }),
+        {...textColorField(), description: 'Index text color only. Auto is the default; the Project detail text color remains independent.'},
+      ],
     }),
   ],
   preview: {

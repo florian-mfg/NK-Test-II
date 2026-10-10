@@ -1,13 +1,4 @@
 import {defineArrayMember, defineField} from 'sanity'
-import '../../../vimeo-media.js'
-
-const vimeoMedia = (
-  globalThis as typeof globalThis & {
-    VimeoMedia: typeof import('../../../vimeo-media.js')
-  }
-).VimeoMedia
-
-// Keep the native image member so existing documents need no migration.
 export const legacyIndexImage = defineArrayMember({
   type: 'image',
   options: {hotspot: true},
@@ -24,7 +15,7 @@ export const legacyIndexImage = defineArrayMember({
       type: 'string',
       initialValue: 'center',
       description:
-        'Desktop portrait images use half the viewport width. Landscape images are always full bleed; mobile display is unchanged. Leave unset to preserve the legacy position.',
+        'Desktop portrait images retain their natural proportions within half the viewport width. Landscape images are always full bleed; mobile display is unchanged. Leave unset to preserve the legacy position.',
       options: {
         list: [
           {title: 'Left Half', value: 'left'},
@@ -32,11 +23,8 @@ export const legacyIndexImage = defineArrayMember({
           {title: 'Right Half', value: 'right'},
         ],
       },
-      validation: (rule) =>
-        rule.custom(
-          (value) =>
-            !value || ['left', 'center', 'right'].includes(value) || 'Choose a portrait position.',
-        ),
+      validation: (rule) => rule.custom(value =>
+        !value || ['left','center','right'].includes(value) || 'Choose a portrait position.'),
     }),
   ],
   validation: (rule) =>
@@ -45,7 +33,7 @@ export const legacyIndexImage = defineArrayMember({
 
 export const indexMedia = defineArrayMember({
   name: 'indexMedia',
-  title: 'Media item (Image / Vimeo / MP4)',
+  title: 'Media item (Image / MP4)',
   type: 'object',
   initialValue: {mediaType: 'image'},
   fields: [
@@ -57,16 +45,19 @@ export const indexMedia = defineArrayMember({
         layout: 'radio',
         list: [
           {title: 'Image', value: 'image'},
-          {title: 'Vimeo Video', value: 'vimeo'},
           {title: 'MP4 Video', value: 'mp4'},
         ],
       },
-      validation: (rule) =>
-        rule
-          .required()
-          .custom(
-            (value) => ['image', 'vimeo', 'mp4'].includes(value || '') || 'Choose a media type.',
-          ),
+      // Sanity adds an enum error from options.list. Reset that inferred rule
+      // so stored unsupported values warn without becoming selectable.
+      validation: (rule) => {
+        const compatible = (rule as typeof rule & {reset(): typeof rule}).reset()
+        return [
+          compatible.required(),
+          compatible.custom(value => !value || ['image','mp4'].includes(value)
+            ? true : 'Unsupported stored media is omitted from the website. Choose supported media to replace it.').warning(),
+        ]
+      },
     }),
     defineField({
       name: 'image',
@@ -80,21 +71,6 @@ export const indexMedia = defineArrayMember({
           (context.parent as {mediaType?: string})?.mediaType !== 'image' || value?.asset
             ? true
             : 'Upload a preview image.',
-        ),
-    }),
-    defineField({
-      name: 'vimeoUrl',
-      title: 'Vimeo URL',
-      type: 'url',
-      description:
-        'Paste an HTTPS Vimeo video URL, including its privacy hash for unlisted videos.',
-      hidden: ({parent}) => parent?.mediaType !== 'vimeo',
-      validation: (rule) =>
-        rule.custom((value, context) =>
-          (context.parent as {mediaType?: string})?.mediaType !== 'vimeo' ||
-          vimeoMedia.parseVimeoUrl(value)
-            ? true
-            : 'Enter a valid Vimeo video URL.',
         ),
     }),
     defineField({
@@ -116,13 +92,12 @@ export const indexMedia = defineArrayMember({
     select: {
       type: 'mediaType',
       media: 'image',
-      url: 'vimeoUrl',
       filename: 'video.asset.originalFilename',
     },
-    prepare({type, media, url, filename}) {
+    prepare({type, media, filename}) {
       return {
-        title: type === 'vimeo' ? 'Vimeo Video' : type === 'mp4' ? 'MP4 Video' : 'Image',
-        subtitle: type === 'vimeo' ? url : type === 'mp4' ? filename : media?.alt,
+        title: type === 'mp4' ? 'MP4 Video' : type === 'image' ? 'Image' : 'Unsupported stored media',
+        subtitle: type === 'mp4' ? filename : media?.alt,
         media: type === 'image' ? media : undefined,
       }
     },

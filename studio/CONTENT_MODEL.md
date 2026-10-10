@@ -26,9 +26,8 @@ rechecking compatibility rather than assuming permanent vendor terms.
 
 Refresh http://localhost:3333 and create a Project. Enter a title, generate its
 slug, and add modules. Drag modules to reorder them or use their menu to delete
-them. Open a content slot and choose Empty, Image, Video, or Text. Images support native
-uploads, cropping, and hotspot selection. For Video, paste a Vimeo URL; no video
-upload is needed. Alt text lives on the slot.
+them. Open a content slot and choose Empty, Image, MP4 Video, or Text. Images support native
+uploads, cropping, and hotspot selection. For MP4 Video, upload an MP4 file directly to Sanity. Alt text lives on the slot.
 
 Slots have fixed counts and appear in their original width order, described
 above the slot list. Arrangement moves a slot together with its width and media,
@@ -39,8 +38,8 @@ ignored when Content is Empty. Each module can also be entirely empty.
 ## Mapping for the future data connection
 
 Project details now use published Sanity data by slug, with local fallback.
-Selected Work overviews now use the published singleton references in CMS order. Info and Frontpage remain connected
-through the same one-time public adapter request.
+Selected Work overviews now use the published singleton references in CMS order. Info uses the same one-time public adapter request. Frontpage data is normalized,
+but its fixed local opacity sequence is intentionally independent of CMS media.
 Sanity documents are not yet directly renderable: native assets are references,
 and Sanity object arrays use typed objects rather than null entries.
 
@@ -58,7 +57,7 @@ and Sanity object arrays use typed objects rather than null entries.
 | Slot `type: empty` | `null`, even if old image/video fields remain |
 | Slot `type: text` | `{type: 'text', text, textSize}` (s/m/l; defaults to s) (plain text; blank lines separate paragraphs) |
 | Slot `type: image` | `{type: 'image', src: resolvedImageUrl, alt}` |
-| Slot `type: video` | `{type: 'video', src: originalVimeoUrl, vimeo: {type, src, id, embedUrl}, alt, poster?, posterImage?}` |
+| Slot `type: mp4` | `{type: 'mp4', src: SanityFileUrl, alt, playback?, poster?, posterImage?}` |
 
 The `middle` value is the single arrangement adaptation needed for a native
 string dropdown/radio field. Reverse remains the renderer's literal reverse:
@@ -66,8 +65,8 @@ for Half + Quarter + Quarter it yields slot indices `[2, 1, 0]`.
 Sanity metadata (`_type`, `_key`, etc.) need not reach the renderer. The hidden
 or read-only layout fields are initialized automatically when adding modules.
 Image URL generation respects Sanity crop/hotspot data. Project video slots use
-validated Vimeo URLs, with overview/detail playback policy supplied by the shared
-renderer. Uploaded files are retained only for manual migration, not playback.
+validated Sanity MP4 assets, with overview/detail playback policy supplied by the
+shared renderer and native media controller.
 
 Empty slots retain their desktop widths. The existing responsive behavior still
 stacks occupied slots and hides empty slots at 700px and below.
@@ -77,7 +76,7 @@ stacks occupied slots and hides empty slots at 700px and below.
 - `schemaTypes/documents/project.ts`: Project fields and reorderable modules.
 - `schemaTypes/objects/projectModules.ts`: six layouts, shared controls,
   fixed slot counts, defaults, validation, and previews.
-- `schemaTypes/objects/mediaSlot.ts`: Empty/Image/Video/Text, images, Vimeo URL, legacy uploads, copy, alt, poster.
+- `schemaTypes/objects/mediaSlot.ts`: Empty/Image/MP4/Text, native image and MP4 uploads, copy, alt, poster.
 - `schemaTypes/index.ts`: registration, consumed by the existing sanity.config.ts.
 
 Uses native [array controls](https://www.sanity.io/docs/studio/array-type),
@@ -87,180 +86,78 @@ Uses native [array controls](https://www.sanity.io/docs/studio/array-type),
 ## Expanded Studio architecture
 
 See [STUDIO_ARCHITECTURE.md](STUDIO_ARCHITECTURE.md) for page singletons,
-Selected Work curation, independent Index entries, shared contacts, navigation,
+Selected Work curation, standalone and Project-linked Index entries, shared contacts, navigation,
 legal content, compatibility rules, and verification commands. The module mapping
 above remains unchanged. Project `description` is plain popup text;
 `detailPageEnabled` defaults to true for new documents and must also be interpreted
-as true when absent on older documents. Project details, Selected Work, Info and Frontpage are connected.
+as true when absent on older documents. Project details, Selected Work and Info are connected; Frontpage keeps its local sequence.
 
 
-## Permanent project-video requirement: Vimeo only
 
-All website videos must ultimately use Vimeo URLs, never Sanity video uploads.
-Project-media preparation and project DETAIL integration are implemented.
-Selected Work overviews now use published Sanity reference arrays; valid empty
-categories stay empty. `projects.js` is retained for migration fallback.
-Details prefer published projects, with local data retained as migration fallback.
-Frontpage and Info behavior are unchanged.
+## Supported media and legacy compatibility (2026-10-10)
 
-### Nico's editing workflow
+The active website and Studio support native Sanity images and MP4 uploads.
+Project slots additionally retain Empty and Text; overview slots retain Empty.
+Index supports native image members and Image/MP4 wrappers. No URL-based video
+integration or external player SDK is loaded.
 
-In Projects, add any of the six modules, open a content slot, select **Video**,
-and paste the video link into **Vimeo URL**. Normal `https://vimeo.com/12345`,
-unlisted `https://vimeo.com/12345/privacyHash`, and
-`https://player.vimeo.com/video/12345?h=privacyHash` links are accepted, including
-additional query parameters. Include the privacy hash for unlisted videos.
-Optionally provide alt text and a poster image. New uploaded-video fields are
-not offered. Image, Text and Empty continue to work as before.
+Project and overview MP4 files keep existing heights, arrangements, posters,
+autoplay/manual behavior, native inline playback, and custom Play/Pause controls.
+Project and Index Sound/Mute controls share the native audio ownership controller.
+Only the selected relevant player can become audible; route/media cleanup stops
+and releases sources. Index retains its white backdrop and intrinsic portrait
+positioning. Only the final Graphic category label is suppressed.
 
-### Shared schema, adapter and renderer
+Frontpage's former URL field is replaced by optional `video`, a Sanity MP4 upload.
+Its accessible title and poster remain. At the user's request, the existing local
+20-image deterministic opacity sequence stays unchanged: the upload is normalized
+but is not inserted into that sequence. Mouse distance and mobile touch/hold
+behavior are unchanged.
 
-- `vimeo-media.js` supplies one Vimeo URL validator/parser to the Studio, adapter
-  and renderer. It rejects non-HTTPS, other hosts, invalid paths/IDs, credentials,
-  custom ports, invalid/duplicate privacy hashes. Original URL is retained; only
-  video ID and privacy hash enter the canonical embed URL. Pasted UI/playback
-  options never override the selected rendering mode.
-- `sanity-data.js` projects `vimeoUrl` and normalizes a Vimeo descriptor. Invalid
-  videos still invalidate the module composition with diagnostics; project metadata
-  survives. Empty slots ignore all retained media. Image crop/hotspot, text sizes,
-  alt, order, heights, null positions and arrangement mappings remain unchanged.
-- All six compositions use the same `mediaSlot` and `project-modules.js`: Full,
-  Half + Half, Half + Quarter + Quarter, Quarter + Quarter + Quarter + Quarter,
-  Third + Third + Third, Two Thirds + One Third.
-- Selected Work still stores ordered project references, with no separate teaser
-  media fields. The same module slots support overview teasers and project details.
-  No Selected Work ordering or schema change was needed.
+Legacy Vimeo data is not changed, downloaded, converted, or migrated. Stored
+project slot `type: video` values become absent media. Unsupported Index media
+types are excluded from cycling, and entries without supported items are omitted.
+Mixed module rows retain valid images/MP4s and their original slot widths/order;
+unsupported-only rows disappear. Unsupported-only explicit previews remain empty
+and do not fall back to unrelated detail images.
 
-### Playback and geometry
+Studio no longer defines the old URL fields. Sanity may show an unknown-field
+notice for their stored values; they remain in the document unless an editor
+explicitly removes them. Selector lists contain only supported choices. Their
+inferred enum validation is reset before applying required validation plus a
+warning for unsupported stored values, so legacy records can still be opened,
+edited, reordered, duplicated, and published. Invalid selected image/MP4 assets
+still produce errors. Compiled-schema tests verify this without dataset writes.
+New uploads and content replacement are editorial actions; no migration is run.
 
-Overview mode uses autoplay + muted + loop + background, with native controls,
-title, portrait, byline and badges disabled. Detail mode explicitly disables
-background/autoplay/muting/looping and uses a custom Play/Pause icon button with
-Vimeo controls disabled. Sound follows the viewer's device settings. Buttons track
-actual play/pause/ended events rather than assuming a successful API command.
-Play rejection permits retry; unavailable embeds/SDK failures disable the button
-and expose the failure through its accessible label and tooltip.
-
-Manual video slots show a semantic `(Play)` / `(Pause)` text button. Player events
-update the text and accessible action label. Typography matches the standard
-interface, and the shared contrast controller supplies solid black or white.
-The keyboard focus outline and bottom-right placement remain; touch devices get
-an invisible target of at least 44×44px. Autoplay slots have no button. The unused
-SVG playback assets were removed during the conservative cleanup audit.
-
-`project-video.js` loads the official Vimeo Player SDK only when visible project
-Vimeo slots exist. Hidden overview categories never load their embeds. Route cleanup
-removes listeners/observers and destroys players; late SDK completion cannot create
-players after navigation. No project data is loaded from Sanity by this controller.
-
-The existing grid, slot spans, heights, ordering, spacing and mobile stacking are
-shared by both modes. Iframes are centered and resized to cover the slot like an
-image; they do not intercept project-link clicks. Auto-height uses the video's
-native ratio reported by Vimeo, with a temporary 16:9 ratio until metadata arrives.
-Fixed-height slots crop to cover. A poster is decorative behind the player. The
-pre-metadata aspect ratio and real Vimeo playback still need browser verification
-with the intended content, particularly portrait videos and mobile Safari.
-
-### Migration safety and audit
-
-Read-only public production audit on 2026-09-20 found **1 public Project and 0
-uploaded video references**, including retained assets in inactive slots. The
-unauthenticated query cannot rule out private drafts/releases. Inspect those in
-Studio before connecting Projects.
-
-The original `video` file field remains read-only and visible when populated,
-labelled **Legacy uploaded video (migration only)**. No documents/assets were
-written, deleted or migrated. Existing uploads remain stored, but are not accepted
-for project playback. An active video slot without a valid Vimeo URL receives
-validation feedback and a `legacy_video_requires_migration` adapter diagnostic.
-Supply an editorially chosen Vimeo equivalent manually; files cannot be converted
-into Vimeo URLs automatically. A valid Vimeo URL wins even if a legacy asset remains.
-
-### Remaining playback checks
-
-1. Verify intended Vimeo videos allow embedding from localhost and the deployed
-   GitHub Pages origin, including privacy hashes and owner-side embed settings.
-2. Confirm real autoplay teasers, custom detail Play/Pause, sound, posters and
-   desktop/mobile cover geometry. No layout changes are needed for the data hookup.
-3. Review any private drafts for legacy uploads, replace them with Vimeo URLs,
-   and resolve invalid module diagnostics before adopting a project composition.
-4. Selected Work is now connected. Keep public
-   tokenless Sanity reads, the existing hash routes and Free-plan-compatible setup.
-
-The SDK and iframe are served directly by Vimeo; no Vimeo API token, npm runtime
-package, Sanity video asset or frontend build is needed. Vimeo's own account/embed
-settings are separate from Sanity Free-plan compatibility. Vimeo documents account
-requirements for `background` and `controls=0`; verify the video owner's eligibility.
-Sources: [Vimeo Player SDK](https://github.com/vimeo/player.js),
-[Vimeo player parameters](https://help.vimeo.com/hc/en-us/articles/12426260232977-About-Player-Parameters).
-
-### Preparation verification (2026-09-20)
-
-- 41 frontend tests passed with live Sanity smoke tests enabled, including the
-  existing published Frontpage and Info values; 9 Studio tests passed.
-- TypeScript, ESLint, JavaScript syntax checks and Sanity schema validation passed
-  (zero schema warnings/errors).
-- Isolated Chrome geometry fixture passed 900 slot comparisons: six layouts,
-  five heights, both modes, landscape/portrait/square dimensions and desktop/mobile
-  viewport sizes. The fixture mocked Vimeo metadata; it tested actual browser CSS.
-- A separate real Vimeo playback fixture loaded the SDK but received an HTTP 401
-  during loading and timed out waiting for player readiness. Real project playback
-  is therefore **not verified** by this run. Check the intended video's permissions,
-  embedding origin and custom Play/Pause on the deployed site before integration.
-- The existing Studio test script references an unavailable `tsx` installation.
-  Tests ran with a temporary `/tmp` installation of the same runner; package files
-  and application dependencies were not changed. Install the runner in the usual
-  development environment before using `npm run test:architecture` there.
+The old `vimeo-media.js` parser and SDK-specific tests have been removed.
+Historical migration tests still retain legacy fields to prove lossless handling.
+The updated Studio needs a separate future redeployment before hosted editors see
+these local schema changes. Nothing has been deployed by this change.
 
 
-### Detail integration verification
+## Project-linked Indexmaterial (2026-10-10)
 
-The next detail-only integration passed 48 frontend tests, including live published
-Ethereal Tides, Frontpage and Info tests. The public project has four modules and
-Vimeo video `1226319421`; its description is empty. Direct Chrome routing and cached
-navigation rendered its actual metadata, images and video source while leaving
-Selected Work local. Actual Vimeo readiness timed out, so real playback still
-requires manual browser verification. `detailModules` provides defensive row-level
-recovery without changing the strict `modulesValid/modules` contract or CMS schema.
-See `SANITY_DATA.md` for full loading, fallback, metadata and validation behavior.
+Projects now contain an optional Indexmaterial object (`indexmaterial`). Upload
+up to three Image/MP4 items in `media`, drag them to set cycling order, and optionally
+set Index-only `textColor` (Auto/Black/White). Empty material is valid and omitted.
+The existing Project title, year and additionalInfo are reused; no duplicate
+metadata field or Selected Work preview is created.
 
+Content → Index keeps the same `entries` array, with both standalone `indexEntry`
+objects and `indexProjectReference` objects. References store only `project._ref`;
+media remains in the Project. Manually ordered entries retain their sequence;
+eligible unlisted Projects follow by stable document ID. An explicit reference
+controls placement over linked standalone duplicates; otherwise the first linked
+standalone position is used. Standalone entries without a reliable Project link
+are preserved, even when titles match. Set the optional Related Project link to
+resolve these identities manually. No stored legacy entry is deleted or rewritten.
 
-Selected Work integration uses the existing normalized ordered reference lists,
-with fixed category sequence Video → Commissioned → Graphic. No schema was changed.
-Navigation and Site Settings now drive global labels/order, branding, metadata and
-shared contact/footer links through the existing public read. Legal bodies now use their published Display title and restricted formatted text,
-with per-document local fallback only when unavailable.
-Index now consumes its independently ordered
-entries, required own titles, independent year/additional information and 1–3 own
-preview images. Entries only browse previews and never link to Project details. Missing
-Index documents retain local fallback, while valid empty lists stay empty.
-The detail renderer and Vimeo player
-implementation were not changed during the Selected Work connection.
-
-
-### Selected Work Preview compositions
-
-In Content → Projects → a project, **Selected Work Preview** appears above
-**Project Modules**. It is optional and independent of the detail page.
-
-1. Add one **Composition** and choose one of the same six Project Module layouts.
-2. Fill the fixed slots with **Image**, **Vimeo Video**, or **Empty**. Images retain
-   crop/hotspot and alt controls; Vimeo accepts the existing URL forms and poster.
-3. Choose the existing **Height** preset and **Arrangement** (including the middle
-   half in Half + Quarter + Quarter). Each slot moves with its width and media.
-
-The shared `createProjectModules()` factory creates both detail and preview schema
-objects. Preview slots reuse image/Vimeo fields from `mediaSlot`, but do not offer
-Text or uploaded-video controls. Only one composition is allowed per preview. The
-project still appears once in Selected Work, in that page's curated category order.
-
-Existing single Image/Vimeo previews normalize to Full Width / Auto without manual
-re-entry. The lossless migration moves that media into the composition editor while
-retaining old fields for compatibility. See [SANITY_DATA.md](../SANITY_DATA.md#backwards-compatibility-and-migration)
-for dry-run/apply commands and backup/revision protection.
-
-The overview uses the existing module renderer, CSS and video controller. All media
-slots keep the same desktop grid and mobile stacking/empty hiding. Vimeo previews
-autoplay muted and loop without native controls; detail videos and modules are
-unchanged. A missing/invalid preview retains the existing detail-media fallback;
-a valid all-empty composition stays empty. No paid Sanity features are used.
+The adapter reads only published Projects and feeds both sources through the
+existing Index media normalizer/renderer. Index images retain crop/hotspot and
+portrait positions; native MP4 retains autoplay, muted default, looping, playsinline
+and shared Sound/Mute. Detail settings, memberships and Selected Work order stay
+independent. No new renderer, CSS layout, mutation, migration or deployment is
+required in this local task. A later source/Studio deployment is needed before
+editors can use the new hosted fields. Publishing Project edits afterward makes
+them available to the public query on the next page load.

@@ -13,12 +13,13 @@ export const homePage = defineType({
   fields: [
     textColorField(),
     defineField({
-      name: 'backgroundVideoUrl',
-      title: 'Background video source',
-      type: 'url',
-      description:
-        'A Vimeo video URL (including an unlisted privacy hash when needed), or a direct MP4/WebM URL. Enter a URL, not iframe HTML.',
-      validation: (rule) => rule.required().uri({scheme: ['https']}),
+      name: 'video',
+      title: 'MP4 upload',
+      type: 'file',
+      options: {accept: 'video/mp4'},
+      description: 'Optional direct MP4 upload. The current Frontpage keeps its fixed local opacity sequence.',
+      validation: rule => rule.custom(value => !value || /^file-[a-zA-Z0-9]+-mp4$/.test(value.asset?._ref || '')
+        ? true : 'Upload an MP4 video.'),
     }),
     defineField({
       name: 'videoTitle',
@@ -88,8 +89,23 @@ export const indexPage = defineType({
       title: 'Index entries',
       type: 'array',
       options: {sortable: true},
-      description: 'An independent image browsing list. Drag entries to reorder.',
-      of: [defineArrayMember({type: 'indexEntry'})],
+      description: 'Drag standalone entries and Project references together to order Index. Project media stays in its Indexmaterial section. Eligible unlisted Projects follow in document-ID order. An explicit Project reference takes precedence over standalone entries linked to that Project.',
+      of: [
+        defineArrayMember({type: 'indexEntry'}),
+        defineArrayMember({
+          name: 'indexProjectReference', title: 'Project reference', type: 'object',
+          fields: [defineField({
+            name: 'project', title: 'Project', type: 'reference', to: [{type: 'project'}],
+            options: {disableNew: true},
+            description: 'Reads title, year, additional info and Indexmaterial directly from this Project. No media is copied. A Project without usable Indexmaterial is omitted.',
+            validation: rule => rule.required(),
+          })],
+          preview: {
+            select: {title: 'project.title', year: 'project.year'},
+            prepare: ({title, year}) => ({title: title || 'Choose a Project', subtitle: ['Project reference', year].filter(Boolean).join(' — ')}),
+          },
+        }),
+      ],
     }),
   ],
   preview: singletonPreview('Index'),

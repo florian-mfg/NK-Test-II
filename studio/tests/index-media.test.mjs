@@ -16,9 +16,9 @@ test('Index retains legacy image storage and adds a conditional mixed-media sele
   const array=field(indexEntry,'previewImages')
   assert.equal(array.of[0],legacyIndexImage)
   assert.equal(array.of[1],indexMedia)
-  assert.deepEqual(field(indexMedia,'mediaType').options.list.map(x=>x.value),['image','vimeo','mp4'])
-  for(const [name,type] of [['image','image'],['vimeoUrl','vimeo'],['video','mp4']]) {
-    for(const selected of ['image','vimeo','mp4']) assert.equal(field(indexMedia,name).hidden({parent:{mediaType:selected}}),selected!==type)
+  assert.deepEqual(field(indexMedia,'mediaType').options.list.map(x=>x.value),['image','mp4'])
+  for(const [name,type] of [['image','image'],['video','mp4']]) {
+    for(const selected of ['image','mp4']) assert.equal(field(indexMedia,name).hidden({parent:{mediaType:selected}}),selected!==type)
     assert.equal(validate(field(indexMedia,name),undefined,type),false)
     assert.equal(validate(field(indexMedia,name),undefined,'inactive'),true)
   }
@@ -27,8 +27,6 @@ test('Index retains legacy image storage and adds a conditional mixed-media sele
   assert.equal(field(indexMedia,'video').options.accept,'video/mp4')
   assert.equal(validate(field(indexMedia,'video'),{asset:{_ref:'file-abc-mp4'}},'mp4'),true)
   assert.equal(validate(field(indexMedia,'video'),{asset:{_ref:'file-abc-webm'}},'mp4'),false)
-  assert.equal(validate(field(indexMedia,'vimeoUrl'),'https://vimeo.com/123456/secret','vimeo'),true)
-  assert.equal(validate(field(indexMedia,'vimeoUrl'),'https://example.com/video','vimeo'),false)
   assert.equal(validate(field(indexMedia,'mediaType'),'unknown'),false)
 })
 
@@ -59,8 +57,8 @@ test('compiled Studio schema accepts each media type without inactive required f
   for (const item of [
     image,
     {_type: 'indexMedia', mediaType: 'image', image},
-    {_type: 'indexMedia', mediaType: 'vimeo', vimeoUrl: 'https://vimeo.com/123456'},
     {_type: 'indexMedia', mediaType: 'mp4', video},
+    {_type:'indexMedia',mediaType:'image',image},
   ]) {
     assert.deepEqual(await validateMedia([item]), [], JSON.stringify(item))
   }
@@ -69,7 +67,6 @@ test('compiled Studio schema accepts each media type without inactive required f
 test('compiled Studio schema requires only the selected media asset or URL', async () => {
   for (const [mediaType, message, path] of [
     ['image', 'Upload a preview image.', 'image'],
-    ['vimeo', 'Enter a valid Vimeo video URL.', 'vimeoUrl'],
     ['mp4', 'Upload an MP4 video.', 'video'],
   ]) {
     const markers = await validateMedia([{_type: 'indexMedia', mediaType}])
@@ -83,7 +80,7 @@ test('compiled Studio schema requires only the selected media asset or URL', asy
 test('compiled Studio schema preserves 1–3 mixed items and their ordering', async () => {
   const items = [image,
     {_type: 'indexMedia', mediaType: 'mp4', video},
-    {_type: 'indexMedia', mediaType: 'vimeo', vimeoUrl: 'https://vimeo.com/123456'},
+    {_type:'indexMedia',mediaType:'image',image},
   ]
   assert.deepEqual(await validateMedia(items), [])
   assert.deepEqual(await validateMedia([...items].reverse()), [])

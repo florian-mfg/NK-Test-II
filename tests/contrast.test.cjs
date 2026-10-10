@@ -25,7 +25,7 @@ test('binary contrast uses local image luminance, manual overrides and stable th
 test('CMS contrast modes are optional and preserve existing project and Index content',()=>{
  for(const value of [undefined,null,'','auto','black','white','invalid']) {
   const textColor=mode(value);
-  const raw={homePage:{_id:'homePage',_type:'homePage',textColor:value,backgroundVideoUrl:'https://vimeo.com/12345'},
+  const raw={homePage:{_id:'homePage',_type:'homePage',textColor:value,video:{asset:{_ref:'file-demo-mp4'}}},
    projects:[{_id:'p',_type:'project',title:'P',slug:{current:'p'},category:'Video',textColor:value,modules:[]}],
    indexPage:{_id:'indexPage',_type:'indexPage',entries:[{displayTitle:'I',textColor:value,previewImages:[{asset:{_ref:'image-p-800x1200-jpg'}}]}]}};
   const before=JSON.stringify(raw),data=adapter.normalize(raw);
@@ -34,8 +34,9 @@ test('CMS contrast modes are optional and preserve existing project and Index co
   assert.equal(data.indexPage.entries[0].textColor,textColor);
   assert.equal(JSON.stringify(raw),before);
  }
- assert.match(adapter.query, /backgroundVideoUrl/);
- assert.equal((adapter.query.match(/textColor/g)||[]).length,3);
+ assert.match(adapter.query, /video\{asset/);
+ assert.equal((adapter.query.match(/textColor/g)||[]).length,4);
+ assert.match(adapter.query, /indexmaterial\{textColor,media/);
 });
 
 test('CSS has no blend or inversion effects; iframe pixel inspection is not implemented',()=>{

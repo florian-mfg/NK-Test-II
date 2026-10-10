@@ -1,4 +1,4 @@
-/* Shared binary overlay contrast. No iframe/video pixels are ever read. */
+/* Shared binary overlay contrast. Native video pixels are never read. */
 (function (root) {
   'use strict';
   const BLACK = '#000000', WHITE = '#ffffff', SIZE = 64;
@@ -53,14 +53,14 @@
     return data;
   }
   function background(x, y, target) {
-    const light = root.matchMedia('(max-width: 700px)').matches || document.body.matches('.is-work, .is-detail, .is-info');
+    const light = root.matchMedia('(max-width: 700px)').matches || document.body.matches('.is-work, .is-detail, .is-info, .is-index');
     const stack = document.elementsFromPoint(x, y);
-    const media = stack.find(node => node.matches('img, iframe, video, .project-vimeo, .home, .project-slot.is-empty, .project-slot-text'));
+    const media = stack.find(node => node.matches('img, video, .project-video, .home, .project-slot.is-empty, .project-slot-text'));
     const scope = target.closest('[data-text-color]') || media?.closest('[data-text-color]') ||
       stack.find(node => node.matches('[data-text-color]')) || document.querySelector('#app > [data-text-color]');
     const setting = mode(scope?.dataset.textColor);
     if (setting !== 'auto') return {setting};
-    if (media?.matches('iframe, video') || media?.closest('.project-vimeo, .home')) return {setting, luminance: NaN};
+    if (media?.matches('video') || media?.closest('.project-video, .home')) return {setting, luminance: NaN};
     if (media?.matches('img') && !media.closest('.site-header')) {
       const data = imageData(media.currentSrc || media.src);
       if (!data.grid) return {setting, luminance: NaN};
@@ -75,7 +75,7 @@
       }
       const nx = Math.max(0, Math.min(1, (x - left) / width));
       const ny = Math.max(0, Math.min(1, (y - top) / height));
-      // Match the existing mobile Index scrim without touching its appearance.
+      // Match the mobile media filter; uncovered Index areas remain white.
       const shade = media.closest('.archive') && root.matchMedia('(max-width: 700px)').matches ? .72 : 1;
       return {setting, luminance: sample(data.grid, nx, ny, shade, light ? 1 : 0)};
     }

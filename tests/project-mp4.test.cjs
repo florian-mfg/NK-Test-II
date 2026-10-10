@@ -9,7 +9,7 @@ const slot = {type: 'mp4', video: {asset: {_ref: 'file-demo-mp4'}}};
 const layouts = {full: 1, 'half-half': 2, 'half-quarter-quarter': 3, 'quarter-quarter-quarter-quarter': 4, 'third-third-third': 3, 'two-thirds-one-third': 2};
 function environment() {
   const dom = new JSDOM('<main></main>', {url: 'https://preview.test/', runScripts: 'outside-only'});
-  for (const file of ['vimeo-media.js', 'project-modules.js', 'project-video.js']) vm.runInContext(fs.readFileSync(require('node:path').join(__dirname, '..', file), 'utf8'), dom.getInternalVMContext());
+  for (const file of ['project-modules.js', 'project-video.js']) vm.runInContext(fs.readFileSync(require('node:path').join(__dirname, '..', file), 'utf8'), dom.getInternalVMContext());
   return {dom, window: dom.window, root: dom.window.document.querySelector('main')};
 }
 test('MP4 normalization and rendering retain every layout, height, order and context default', () => {

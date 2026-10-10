@@ -16,17 +16,7 @@ function setup(hash = '#project/ethereal-tides', mobile = false) {
   window.matchMedia = () => ({matches: mobile, addEventListener() {}});
   window.ResizeObserver = class {observe() {} disconnect() {}};
   const players = [];
-  window.Vimeo = {Player: class {
-    constructor(frame) {this.frame = frame; this.events = {}; this.calls = []; players.push(this);}
-    on(event, handler) {this.events[event] = handler;}
-    off(event) {delete this.events[event];}
-    ready() {return Promise.resolve();}
-    getVideoWidth() {return Promise.resolve(1920);}
-    getVideoHeight() {return Promise.resolve(1080);}
-    play() {this.calls.push("play"); this.events.play(); return Promise.resolve();}
-    pause() {this.calls.push("pause"); this.events.pause(); return Promise.resolve();}
-    destroy() {this.calls.push("destroy"); return Promise.resolve();}
-  }};
+  require('./native-media-stubs.cjs').installNativeMediaStubs(window, players);
   window.HTMLCanvasElement.prototype.getContext = () => ({measureText: text => ({width: text.length * 50, actualBoundingBoxLeft: 0, actualBoundingBoxRight: text.length * 50})});
   Object.defineProperty(window.document, 'fonts', {value: {ready: Promise.resolve(), addEventListener() {}}});
   const dialog = window.document.querySelector('.mobile-menu');
@@ -35,7 +25,7 @@ function setup(hash = '#project/ethereal-tides', mobile = false) {
   let resolve, reject, requests = 0;
   const pending = new Promise((yes, no) => {resolve = yes; reject = no;});
   window.SanityData = {load: () => {requests++; return pending;}};
-  for (const file of ['projects.js', 'vimeo-media.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
+  for (const file of ['projects.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
   window.fitWorkMenu();
   const flush = () => new Promise(yes => setImmediate(yes));
   return {window, dom, scrollCalls, players, requests: () => requests, reject: async () => {reject(new Error('offline')); await flush();},

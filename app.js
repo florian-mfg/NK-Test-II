@@ -86,6 +86,17 @@ const workSubmenu = document.querySelector(".work-submenu");
 const mobileMenu = document.querySelector(".mobile-menu");
 const mobileMenuToggle = document.querySelector(".mobile-menu-toggle");
 const mobileMenuBreakpoint = window.matchMedia("(max-width: 700px)");
+const mobileWorkToggle = mobileMenu.querySelector(".mobile-menu-label");
+const mobileWorkSubmenu = mobileMenu.querySelector(".mobile-work-submenu");
+
+function setMobileWorkExpanded(expanded) {
+  mobileWorkToggle.setAttribute("aria-expanded", String(expanded));
+  mobileWorkSubmenu.hidden = !expanded;
+}
+
+mobileWorkToggle.addEventListener("click", () => {
+  setMobileWorkExpanded(mobileWorkToggle.getAttribute("aria-expanded") !== "true");
+});
 
 function closeMobileMenu() {
   if (mobileMenu.open) mobileMenu.close();
@@ -97,6 +108,7 @@ mobileMenuToggle.addEventListener("click", () => {
   if (!mobileMenuBreakpoint.matches) return;
   setWorkMenu(false);
   hideOpenCursor();
+  setMobileWorkExpanded(false);
   mobileMenu.showModal();
   mobileMenu.scrollTop = 0;
   mobileMenuToggle.setAttribute("aria-expanded", "true");
@@ -157,7 +169,7 @@ let currentPageRoute = "";
 function setCurrentPage(route) {
   currentPageRoute = route;
   document.querySelectorAll("[data-route]").forEach(link => {
-    const active = link.dataset.route === route || (link.dataset.route === "work" && route.startsWith("work/"));
+    const active = link !== mobileWorkToggle && (link.dataset.route === route || (link.dataset.route === "work" && route.startsWith("work/")));
     link.classList.toggle("active", active);
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
@@ -300,7 +312,7 @@ function applySanityGlobals() {
     for (const [destination, node] of nodes) {
       if (!seen.has(destination)) { node.hidden = true; node.style.display = "none"; }
     }
-    const categories = desktop ? workSubmenu : group;
+    const categories = desktop ? workSubmenu : mobileWorkSubmenu;
     for (const category of navigation.categories) {
       const link = categories.querySelector(`[data-route="${category.destination}"]`);
       link.textContent = category.label;
@@ -312,36 +324,12 @@ function applySanityGlobals() {
   fitWorkMenu();
 }
 
-function applySanityHome() {
-  const section = app.querySelector(".home");
-  const home = sanityContent?.homePage;
-  if (!section || home?.video?.type !== "vimeo") return;
-  section.dataset.textColor = home.textColor || "auto";
-  const frame = section.querySelector("iframe.home-media");
-  // The adapter validates the Vimeo host/id and retains an unlisted privacy hash.
-  // Playback policy belongs here; editorial URL parameters cannot enable UI/audio.
-  const url = new URL(home.video.embedUrl);
-  const background = {background: "1", autoplay: "1", autopause: "0", muted: "1",
-    loop: "1", controls: "0", badge: "0", player_id: "0", app_id: "58479"};
-  for (const [key, value] of Object.entries(background)) url.searchParams.set(key, value);
-  // Avoid restarting the existing player when Sanity supplies the same video.
-  if (frame.getAttribute("src") !== url.href) frame.setAttribute("src", url.href);
-  frame.title = home.videoTitle.trim() || "Selfscan_RZ";
-  if (home.poster) {
-    // An iframe has no poster attribute. Show the decorative poster behind it;
-    // the iframe title provides the accessible description, avoiding duplicate alt.
-    section.style.backgroundImage = `url("${home.poster.src}")`;
-    section.style.backgroundSize = "cover";
-    section.style.backgroundPosition = home.poster.hotspot
-      ? `${home.poster.hotspot.x * 100}% ${home.poster.hotspot.y * 100}%` : "center";
-  }
-}
-
 function renderHome() {
+  cleanupPage();
   document.body.className = "is-home";
   setCurrentPage("");
-  app.innerHTML = `<section class="home"><iframe class="home-media" src="https://player.vimeo.com/video/1223949127?background=1&autoplay=1&autopause=0&muted=1&loop=1&controls=0&badge=0&player_id=0&app_id=58479" title="Selfscan_RZ" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin" tabindex="-1"></iframe></section>`;
-  applySanityHome();
+  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="black"><div class="frontpage-fade" aria-hidden="true"></div></section>`;
+  cleanupPage = globalThis.FrontpageMediaFade?.init(app.querySelector(".frontpage-fade")) || (() => {});
 }
 
 function renderWorkModule(module, project) {
@@ -369,7 +357,7 @@ function renderWorkPreview(project) {
     return modules.map(module => renderWorkModule(module, project)).join("");
   }
   // One reference owns one preview, not the project's entire detail sequence.
-  const preview = project.modules.find(module => module.slots?.some(slot => slot?.type === "video" || slot?.type === "mp4"))
+  const preview = project.modules.find(module => module.slots?.some(slot => slot?.type === "mp4"))
     || project.modules.find(module => module.slots?.some(slot => slot?.type === "image"))
     || project.modules[0];
   return preview ? renderWorkModule(preview, project) : "";
@@ -441,6 +429,8 @@ function renderWork(category = "Video") {
     ? WORK_PROJECTS.filter(project => project.category === category)
     : sanityContent.selectedWork[category.toLowerCase()].map(id => sanityContent.projectsById[id])
       .filter(project => project && (project.selectedWorkPreview || project.modulesValid !== false)))
+      .filter(project => (!project.unsupportedMediaOnly || project.selectedWorkPreview) &&
+        (!project.selectedWorkPreview?.composition || project.selectedWorkPreview.composition.length > 0))
       .map(project => ({project, category})));
   const projects = selectedProjects.map(({project: p, category}, i) => {
     const rows = p.selectedWorkPreview ? p.selectedWorkPreview.composition || [p.selectedWorkPreview] : p.modules;
@@ -449,7 +439,7 @@ function renderWork(category = "Video") {
     <article class="project-preview" data-text-color="${p.textColor || "auto"}" data-category="${category}" data-project="${escapeModuleAttribute(p.id)}"${category === selectedCategory ? "" : " hidden"}>
       ${p.detailPageEnabled === false || spacerOnly ? "" : `<a class="project-link" href="#project/${encodeURIComponent(p.id)}" aria-label="Open ${escapeModuleAttribute(p.title)}"></a>`}
       <div class="project-modules">${renderWorkPreview(p)}</div>
-      ${i === selectedProjects.length - 1 && !spacerOnly ? `<span class="project-kind">${category}</span>` : ""}
+      ${i === selectedProjects.length - 1 && category !== "Graphic" && !spacerOnly ? `<span class="project-kind">${category}</span>` : ""}
     </article>`;
   }).join("");
   app.innerHTML = `<section class="work" data-category="${selectedCategory}" data-source="${useLocal(selectedCategory) ? "local" : "sanity"}"><div class="projects">${projects}</div></section>`;
@@ -486,6 +476,27 @@ function renderArchive() {
   if (!rows.length) return;
   const mobile = window.matchMedia("(max-width: 700px)");
   const events = new AbortController();
+  const audioState = {muted: true};
+  const hasVideos = entries.some(entry => entry.media?.some(media => media.type === "mp4"));
+  const soundButton = hasVideos ? document.createElement("button") : null;
+  if (soundButton) {
+    soundButton.className = "detail-sound-control";
+    soundButton.type = "button";
+    const label = () => {
+      soundButton.textContent = audioState.muted ? "(Sound)" : "(Mute)";
+      soundButton.setAttribute("aria-pressed", String(!audioState.muted));
+      soundButton.setAttribute("aria-label", audioState.muted ? "Enable Index video sound" : "Mute Index videos");
+    };
+    label();
+    app.querySelector(".archive").append(soundButton);
+    soundButton.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      audioState.muted = !audioState.muted;
+      label();
+      soundButton.dispatchEvent(new Event("audiochange"));
+    }, {signal: events.signal});
+  }
   let activeRow = -1;
   let frame = 0;
   let scrollFrame;
@@ -498,6 +509,7 @@ function renderArchive() {
   };
   const showEntryImage = (entry, imageIndex) => {
     const request = ++imageRequest;
+    stopVideo();
     const items = entry?.media || entry?.images?.map((src, i) => ({
       type: "image", src, ...entry.previewImages?.[i]
     })) || [];
@@ -508,7 +520,7 @@ function renderArchive() {
       bg.classList.remove("visible");
       return;
     }
-    if (media.type === "vimeo" || media.type === "mp4") {
+    if (media.type === "mp4") {
       bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
       if (activeVideo === media) return;
       stopVideo();
@@ -516,15 +528,7 @@ function renderArchive() {
       bg.classList.remove("half", "portrait-left", "portrait-center");
       bg.classList.add("full", "visible", "is-video");
       activeVideo = media;
-      if (media.type === "vimeo") {
-        // Reuse the existing autoplay embed, SDK dimensions and teardown.
-        const template = document.createElement("template");
-        template.innerHTML = renderProjectModule({type: "full", slots: [
-          {type: "video", vimeoUrl: media.src, playback: "autoplay"}
-        ]}, entry.title, "overview");
-        bg.append(template.content.querySelector(".project-vimeo"));
-        cleanupVideo = initProjectVideos(bg);
-      } else {
+      {
         const video = document.createElement("video");
         video.autoplay = true;
         video.muted = true;
@@ -537,16 +541,14 @@ function renderArchive() {
           video.videoWidth > 0 && video.videoHeight > video.videoWidth);
         video.addEventListener("loadedmetadata", sizeVideo);
         video.addEventListener("resize", sizeVideo);
-        video.src = media.src;
+        video.dataset.projectNativeSrc = media.src;
         bg.append(video);
         // Autoplay policy or an unavailable file must not interrupt Index navigation.
-        video.play()?.catch(() => {});
+        const disposePlayer = initProjectVideos(bg, {index: true, audioState, soundButton});
         cleanupVideo = () => {
+          disposePlayer();
           video.removeEventListener("loadedmetadata", sizeVideo);
           video.removeEventListener("resize", sizeVideo);
-          video.pause();
-          video.removeAttribute("src");
-          video.load();
           video.remove();
         };
       }
@@ -564,7 +566,13 @@ function renderArchive() {
       if (request !== imageRequest || events.signal.aborted) return;
       const width = media.cropRect?.width ?? media.width ?? nextImage.naturalWidth;
       const height = media.cropRect?.height ?? media.height ?? nextImage.naturalHeight;
-      const half = !mobile.matches && width > 0 && height > width;
+      const portrait = width > 0 && height > width;
+      const half = !mobile.matches && portrait;
+      if (portrait) {
+        nextImage.classList.add("is-portrait-image");
+        nextImage.style.setProperty("--native-width", `${nextImage.naturalWidth / (window.devicePixelRatio || 1)}px`);
+        nextImage.style.setProperty("--native-height", `${nextImage.naturalHeight / (window.devicePixelRatio || 1)}px`);
+      }
       const portraitPosition = media.portraitPosition ||
         ((entry.layout === "half") !== ((imageIndex % items.length) % 2 === 1) ? "right" : "center");
       // All layout state and the decoded bitmap commit in one task, before paint.
@@ -683,6 +691,7 @@ function renderArchive() {
     events.abort();
     cancelAnimationFrame(scrollFrame);
     stopVideo();
+    soundButton?.remove();
   };
   syncLayout();
 }
@@ -792,7 +801,6 @@ async function loadInfoContent() {
     // Update the existing Info text even after interaction. Rerunning route()
     // would reset scrolling and menus; applySanityInfo only touches active Info.
     applySanityInfo();
-    applySanityHome();
     applySanityLegal();
   } catch {
     // Existing local content remains the fallback, including offline use.

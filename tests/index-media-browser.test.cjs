@@ -3,7 +3,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const path=require('node:path');
 
-test('Index mixed media cover, playback cleanup, contrast and desktop/mobile interactions', {skip:!process.env.BROWSER_TEST},async()=>{
+test('standalone and Project-linked Index share cycling, native playback, contrast and desktop/mobile interactions', {skip:!process.env.BROWSER_TEST},async()=>{
   const {chromium}=require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
   const browser=await chromium.launch({headless:true,executablePath:process.env.BROWSER_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
   try {
@@ -28,26 +28,25 @@ test('Index mixed media cover, playback cleanup, contrast and desktop/mobile int
     mp4Bytes[name]=Buffer.from(encoded,'base64');
     }
     const img={asset:{_ref:'image-portrait-800x1200-jpg'},portraitPosition:'left'};
-    const vimeo={mediaType:'vimeo',vimeoUrl:'https://vimeo.com/123456/secret'};
+    const legacy={mediaType:'vimeo',vimeoUrl:'https://vimeo.com/123456/secret'};
     const mp4={mediaType:'mp4',video:{asset:{_ref:'file-demo-mp4'}}};
-    const raw={projects:[],indexPage:{_id:'indexPage',_type:'indexPage',entries:[
-      {displayTitle:'Mixed',previewImages:[img,vimeo,mp4]},
-      {displayTitle:'Vimeo',textColor:'black',previewImages:[vimeo]},
+    const linkedProject = (id,title,media,textColor) => ({_id:id,_type:'project',title,slug:{current:id},categories:['Graphic'],year:2026,additionalInfo:'Project client',textColor:'white',modules:[],indexmaterial:{media,textColor}});
+    const raw={projects:[
+      linkedProject('mixed','Mixed',[{mediaType:'image',image:img},mp4,{mediaType:'image',image:img}]),
+      linkedProject('black','Black MP4',[mp4],'black'),
+      linkedProject('square','Square MP4',[{mediaType:'mp4',video:{asset:{_ref:'file-square-mp4'}}}]),
+    ],indexPage:{_id:'indexPage',_type:'indexPage',entries:[
+      {_type:'indexProjectReference',project:{_ref:'mixed'}},
+      {_type:'indexProjectReference',project:{_ref:'black'}},
       {displayTitle:'MP4',textColor:'white',previewImages:[mp4]},
       {displayTitle:'Image',previewImages:[img]},
       {displayTitle:'Portrait MP4',previewImages:[{mediaType:'mp4',video:{asset:{_ref:'file-portrait-mp4'}}}]},
-      {displayTitle:'Square MP4',previewImages:[{mediaType:'mp4',video:{asset:{_ref:'file-square-mp4'}}}]},
-      ...[123457,123458,123459].map(id=>({displayTitle:`Vimeo ${id}`,previewImages:[{mediaType:'vimeo',vimeoUrl:`https://vimeo.com/${id}/secret`}]})),
+      {displayTitle:'Unsupported legacy',previewImages:[legacy]},
+      {displayTitle:'Linked duplicate',project:{_ref:'mixed'},previewImages:[img]},
     ]}};
+    const before = JSON.stringify(raw);
     await page.addInitScript(()=>{
       window.indexVideoEvents=[];
-      window.Vimeo={Player:class {
-        constructor(frame){this.frame=frame;window.indexVideoEvents.push('create');}
-        on(){} off(){} ready(){return Promise.resolve();}
-        getVideoWidth(){return Promise.resolve(this.dimensions()[0]);} getVideoHeight(){return Promise.resolve(this.dimensions()[1]);}
-        dimensions(){return ({123456:[800,1200],123457:[1600,900],123458:[900,900],123459:[0,0]})[new URL(this.frame.src).pathname.split('/').pop()];}
-        destroy(){window.indexVideoEvents.push('destroy');this.frame.remove();return Promise.resolve();}
-      }};
       const originalPause=HTMLMediaElement.prototype.pause;
       HTMLMediaElement.prototype.pause=function(){window.indexVideoEvents.push('pause');return originalPause.call(this);};
     });
@@ -65,31 +64,13 @@ test('Index mixed media cover, playback cleanup, contrast and desktop/mobile int
     const geometry=()=>page.locator('.archive-background').evaluate(bg=>{
       const b=bg.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height,overflow:getComputedStyle(bg).overflow};
     });
-    const checkVimeo=async(width,ratio=2/3)=>{
-      await page.waitForSelector('.archive-background iframe[src]');
-      const frame=page.locator('.archive-background iframe');
-      const url=new URL(await frame.getAttribute('src'));
-      for(const key of ['autoplay','muted','loop','background','playsinline'])assert.equal(url.searchParams.get(key),'1');
-      for(const key of ['controls','title','portrait','byline','badge','keyboard'])assert.equal(url.searchParams.get(key),'0');
-      assert.equal(url.searchParams.get('h'),'secret');
-      await page.waitForFunction(()=>document.querySelector('.archive-background iframe').style.width!=='');
-      assert.deepEqual(await geometry(),{x:0,y:0,width,height:900,overflow:'hidden'});
-      const box=await frame.boundingBox();
-      const portrait=width>700 && ratio<1;
-      const expectedWidth=portrait?900*ratio:Math.max(width,900*ratio);
-      const expectedHeight=portrait?900:Math.max(900,width/ratio);
-      assert.ok(Math.abs(box.width-expectedWidth)<1);
-      assert.ok(Math.abs(box.height-expectedHeight)<1);
-      assert.ok(Math.abs(box.width/box.height-ratio)<.002,'Vimeo frame retains its intrinsic ratio');
-      if(portrait) assert.ok(box.x>=0&&box.x+box.width<=width&&box.y===0,'complete portrait Vimeo frame is visible');
-      assert.ok(Math.abs(box.x+box.width/2-width/2)<1&&Math.abs(box.y+box.height/2-450)<1);
-    };
     const checkMP4=async(width,ratio=16/9)=>{
       await page.waitForFunction(()=>{const v=document.querySelector('.archive-background video');return v&&!v.paused&&v.currentTime>0;});
       const properties=await page.locator('.archive-background video').evaluate(v=>({autoplay:v.autoplay,muted:v.muted,loop:v.loop,playsInline:v.playsInline,controls:v.controls,fit:getComputedStyle(v).objectFit}));
       const portrait=width>700 && ratio<1;
       assert.deepEqual(properties,{autoplay:true,muted:true,loop:true,playsInline:true,controls:false,fit:portrait?'contain':'cover'});
       assert.deepEqual(await geometry(),{x:0,y:0,width,height:900,overflow:'hidden'});
+      assert.equal(await page.locator('body').evaluate(b=>getComputedStyle(b).backgroundColor),'rgb(255, 255, 255)');
       const video=page.locator('.archive-background video');
       const box=await video.boundingBox();
       if(portrait) {
@@ -106,37 +87,76 @@ test('Index mixed media cover, playback cleanup, contrast and desktop/mobile int
       await page.setViewportSize({width,height:900});await page.goto('https://preview.test/#archive');
       await page.waitForSelector('.archive[data-source="sanity"]');
       const rows=page.locator('.archive-row');
+      assert.equal(await rows.count(),6);
+      assert.deepEqual(await rows.locator('span:first-child').allTextContents(),['Mixed','Black MP4','MP4','Image','Portrait MP4','Square MP4']);
+      assert.equal(await rows.first().getAttribute('data-year'),'2026');
+      assert.equal(await rows.first().locator('.archive-additional-info').textContent(),'Project client');
+      assert.equal(await page.locator('iframe').count(),0);
+      assert.equal(await page.locator('.detail-sound-control').textContent(),'(Sound)');
       assert.equal(await page.locator('.archive-background video, .archive-background iframe').count(),0);
       if(width>700) {
-        await rows.first().click();await checkVimeo(width);
-        await page.waitForFunction(()=>document.querySelector('.archive-list').style.getPropertyValue('--contrast-color')==='#ffffff');
         await rows.first().click();await checkMP4(width);
-        assert.ok((await page.evaluate(()=>window.indexVideoEvents)).includes('destroy'));
         await rows.first().click();
         await page.waitForSelector('.archive-background.half.portrait-left img');
         assert.ok((await page.evaluate(()=>window.indexVideoEvents)).includes('pause'));
-        await rows.nth(1).hover();await checkVimeo(width);
+        await rows.nth(1).hover();await checkMP4(width);
       } else {
-        // Preserve existing mobile blank-area tap: advance entries, not media frames.
-        await page.touchscreen.tap(width/2,600);await checkVimeo(width);
+        await page.touchscreen.tap(width/2,600);await checkMP4(width);
       }
       await page.waitForFunction(()=>document.querySelector('.archive-list').style.getPropertyValue('--contrast-color')==='#000000');
       if(width>700)await rows.nth(2).hover();else await page.touchscreen.tap(width/2,600);
       await checkMP4(width);
       await page.waitForFunction(()=>document.querySelector('.archive-list').style.getPropertyValue('--contrast-color')==='#ffffff');
-      for(const [index,kind,ratio] of [[4,'mp4',9/16],[5,'mp4',1],[6,'vimeo',16/9],[7,'vimeo',1],[8,'vimeo',16/9]]) {
+      for(const [index,kind,ratio] of [[4,'mp4',9/16],[5,'mp4',1]]) {
         if(width>700) await rows.nth(index).hover();
         else {
           await rows.nth(index).evaluate(row=>row.closest('.archive-list').scrollTo({top:row.offsetTop,behavior:'instant'}));
           await page.waitForFunction(index=>document.querySelectorAll('.archive-row')[index].getAttribute('aria-current')==='true',index);
         }
-        if(kind==='mp4') await checkMP4(width,ratio);else await checkVimeo(width,ratio);
+        await checkMP4(width,ratio);
       }
+      const sound = page.locator('.detail-sound-control');
+      assert.equal(await sound.textContent(), '(Sound)');
+      const before = await page.locator('.archive-row[aria-current="true"]').getAttribute('data-index');
+      await sound.click();
+      assert.equal(await sound.textContent(), '(Mute)');
+      assert.equal(await page.locator('.archive-row[aria-current="true"]').getAttribute('data-index'), before);
+      await page.waitForFunction(() => !document.querySelector('.archive-background video')?.muted);
+      // Move to native media with sound enabled, then to an image and back.
+      const select = async index => {
+        if (width > 700) await rows.nth(index).hover();
+        else await rows.nth(index).evaluate(row => row.closest('.archive-list').scrollTo({top:row.offsetTop,behavior:'instant'}));
+        await page.waitForFunction(index => document.querySelectorAll('.archive-row')[index].getAttribute('aria-current')==='true',index);
+      };
+      await select(2);
+      await page.waitForFunction(() => {const v=document.querySelector('.archive-background video');return v&&!v.muted&&!v.paused;});
+      const oldVideo = await page.locator('.archive-background video').evaluateHandle(v=>v);
+      await select(3);
+      await page.waitForSelector('.archive-background img');
+      assert.equal(await oldVideo.evaluate(v=>v.paused && !v.getAttribute('src')),true);
+      assert.equal(await sound.textContent(), '(Mute)');
+      assert.equal(await page.locator('.archive-background video, .archive-background iframe').count(),0);
+      await select(2);
+      await page.waitForFunction(() => !document.querySelector('.archive-background video')?.muted);
+      await sound.click();
+      await page.waitForFunction(() => document.querySelector('.archive-background video')?.muted);
+      assert.equal(await sound.textContent(), '(Sound)');
+      const placement = await sound.evaluate(b=>{const r=b.getBoundingClientRect();const info=document.querySelector('.detail-info-label');return {right:innerWidth-r.right,bottom:innerHeight-r.bottom,infoBottom:info?innerHeight-info.getBoundingClientRect().bottom:null};});
+      assert.ok(placement.right>0 && placement.bottom>0);
+      if(placement.infoBottom!==null) assert.ok(Math.abs(placement.bottom-placement.infoBottom)<1);
+      assert.equal(await page.locator('body').evaluate(b=>getComputedStyle(b).backgroundColor),'rgb(255, 255, 255)');
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
       await page.evaluate(()=>location.hash='#info');
       await page.waitForSelector('.info');
-      assert.equal(await page.locator('video, .archive-background iframe').count(),0);
+      assert.equal(await page.locator('video, .archive-background iframe, .detail-sound-control').count(),0);
       assert.ok((await page.evaluate(()=>window.indexVideoEvents)).includes('pause'));
     }
+    assert.equal(JSON.stringify(raw),before);
+    raw.projects = [];
+    raw.indexPage.entries = [{displayTitle:'Only image', previewImages:[img]}];
+    await page.goto('https://preview.test/#archive');
+    await page.reload();
+    await page.waitForSelector('.archive-background img');
+    assert.equal(await page.locator('.detail-sound-control').count(),0);
   } finally {await browser.close();}
 });

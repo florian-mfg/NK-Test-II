@@ -1,6 +1,7 @@
 @font-face {
   font-family: "WF Raglan Neue";
-  src: url("material/WFRaglanNeueTrial-Light-Trial.otf") format("opentype");
+  src: url("material/WFRaglanNeue-Light.woff2") format("woff2"),
+    url("material/WFRaglanNeue-Light.woff") format("woff");
   font-style: normal;
   font-weight: 300;
   font-display: swap;
@@ -8,7 +9,8 @@
 
 @font-face {
   font-family: "WF Raglan Neue";
-  src: url("material/WFRaglanNeueTrial-Light-Italic-Trial.woff") format("woff");
+  src: url("material/WFRaglanNeue-LightItalic.woff2") format("woff2"),
+    url("material/WFRaglanNeue-LightItalic.woff") format("woff");
   font-style: italic;
   font-weight: 300;
   font-display: swap;
@@ -23,7 +25,7 @@
   --text-size: calc(1rem * var(--text-scale));
   --menu-text-size: calc(var(--menu-font-size) * var(--text-scale));
   --menu-font-size: clamp(13.2px, 1.056vw, 22.88px);
-  font-family: "WF Raglan Neue", Georgia, "Times New Roman", serif;
+  font-family: "WF Raglan Neue", serif;
   font-weight: 300;
   font-synthesis: none;
   color: var(--ink);
@@ -34,12 +36,14 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body { font-size: var(--text-size); margin: 0; background: var(--dark); }
+body.is-home { overflow: hidden; --dark: #fff; --ink: #000; color: var(--ink); }
 body.is-work,
 body.is-detail,
 body.is-info { --dark: #fff; --ink: #000; color: var(--ink); }
 body.is-detail .detail-info-popup { background: #fff; }
 a { color: inherit; text-decoration: none; }
-button { font: inherit; }
+button, input, select, textarea { font: inherit; }
+b, strong { font-weight: inherit; font-style: italic; }
 .mobile-menu-toggle { display: none; }
 .mobile-menu { display: none; }
 body.mobile-menu-open { overflow: hidden; }
@@ -94,20 +98,11 @@ body.mobile-menu-open { overflow: hidden; }
 .work-menu.is-open .work-submenu { visibility: visible; pointer-events: auto; }
 .work-submenu a { font: inherit; font-size: var(--menu-text-size); line-height: 1.4; }
 
-.home { position: relative; width: 100vw; height: 100vh; background: var(--dark); overflow: hidden; }
-.home-media {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200vh;
-  height: 100vh;
-  min-width: 100vw;
-  min-height: 50vw;
-  border: 0;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.home::after { content: ""; position: absolute; inset: 0; background: rgba(255,48,15,.23); pointer-events: none; }
+.home { touch-action: none; position: relative; width: 100%; height: 100dvh; background: var(--dark); }
+.frontpage-fade { position: fixed; inset: 0; pointer-events: none; isolation: isolate; contain: strict; }
+.frontpage-fade-media { position: absolute; inset: 0; display: block; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center center; pointer-events: none; transform: none; transition: none; animation: none; }
+/* Frontpage navigation overlays the composition without a backing surface. */
+.is-home .site-header, .is-home .site-header a, .is-home .mobile-menu-toggle { background: transparent; }
 
 .work { background: var(--dark); color: var(--ink); }
 
@@ -150,11 +145,10 @@ body.mobile-menu-open { overflow: hidden; }
 .project-slot { grid-column: span var(--slot-span); min-width: 0; min-height: 0; margin: 0; overflow: hidden; }
 .project-slot > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .height-auto > .project-slot > img { height: auto; }
-/* Vimeo uses the existing slot dimensions. Only the video is scaled to cover. */
-.project-vimeo { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--dark); }
-.height-auto > .project-slot > .project-vimeo { height: auto; aspect-ratio: var(--video-ratio, 16 / 9); }
-.project-vimeo iframe { position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; transform: translate(-50%, -50%); border: 0; pointer-events: none; }
-.project-vimeo video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+/* Native videos use the existing slot dimensions. */
+.project-video { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--dark); }
+.height-auto > .project-slot > .project-video { height: auto; aspect-ratio: var(--video-ratio, 16 / 9); }
+.project-video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .project-video-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .project-video-toggle { position: absolute; z-index: 1; bottom: var(--pad); right: var(--pad); border: 0; padding: 0; background: transparent; cursor: pointer; font: inherit; font-size: var(--menu-text-size); line-height: 1.1; --contrast-color: #ffffff; color: var(--contrast-color); }
 /* Manual overview controls sit above their project's link and sticky title. */
@@ -207,7 +201,7 @@ body.mobile-menu-open { overflow: hidden; }
 /* Index video backgrounds fill the viewport; image half-width positioning stays intact. */
 .archive-background.is-video { inset: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
 .archive-background.is-video > video,
-.archive-background.is-video > .project-vimeo { display: block; width: 100%; height: 100%; }
+.archive-background.is-video > .project-video { display: block; width: 100%; height: 100%; }
 .archive-background.is-video > video { object-fit: cover; object-position: center; }
 @media (min-width: 701px) {
   .archive-background.is-video > video.is-portrait-video {
@@ -251,7 +245,7 @@ body.mobile-menu-open { overflow: hidden; }
 .legal-copy { max-width: 38rem; min-width: 0; line-height: 1.3; overflow-wrap: anywhere; }
 .legal-copy h2 { margin: 0 0 .5rem; font: inherit; }
 .legal-copy p { margin: 0 0 2rem; }
-.legal-copy strong { font-synthesis: weight; }
+
 .legal-copy nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 4rem; }
 .legal-copy a:hover, .legal-copy a[aria-current="page"] { font-style: italic; }
 .legal-copy a:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
@@ -347,23 +341,30 @@ noscript {
     padding: max(4.25vw, env(safe-area-inset-top)) 2.6vw max(4vw, env(safe-area-inset-bottom));
     overflow-y: auto;
     overscroll-behavior: contain;
-    font-family: "Times New Roman", Times, serif;
-    font-weight: 400;
+    font-family: inherit;
+    font-weight: 300;
     color: #000;
     background: #fff;
   }
-  .mobile-menu::backdrop { background: rgba(0, 0, 0, .4); }
+  .mobile-menu::backdrop { background: #fff; }
   .mobile-menu-open .site-header { visibility: hidden; }
-  .mobile-menu-header { position: static; flex-shrink: 0; font-family: inherit; font-weight: 400; font-size: calc(4vw * var(--text-scale)); line-height: 1.1; color: #000; background: #fff; }
-  .mobile-menu nav { flex-shrink: 0; margin-top: 8.5vw; font-size: calc(12.8vw * var(--text-scale)); line-height: 1; }
+  .mobile-menu-header { display: flex; justify-content: flex-end; position: absolute; top: max(4.25vw, env(safe-area-inset-top)); right: 2.6vw; left: auto; font-family: inherit; font-weight: 300; font-size: calc(4vw * var(--text-scale)); line-height: 1.1; color: #000; background: #fff; }
+  .mobile-menu-header .brand,
+  .mobile-menu .mobile-menu-mail { display: none; }
+  .mobile-menu nav { flex-shrink: 0; margin-top: 0; font-size: calc(12.8vw * var(--text-scale)); line-height: 1; -webkit-tap-highlight-color: transparent; }
   .mobile-menu nav a { display: block; width: fit-content; max-width: 100%; white-space: nowrap; }
-  .mobile-menu-work { padding-bottom: 12.5vw; }
-  .mobile-menu nav .mobile-menu-label { font-family: inherit; font-weight: 400; font-size: calc(4vw * var(--text-scale)); line-height: 1.1; margin-bottom: .5vw; }
+  .mobile-menu-work { padding-bottom: 0; }
+  .mobile-menu nav .mobile-menu-label { display: block; border: 0; padding: 0; background: transparent; color: inherit; font: inherit; font-style: normal; text-align: left; cursor: pointer; }
+  .mobile-work-submenu { padding-left: 8vw; }
+  .mobile-work-submenu[hidden] { display: none; }
+  .mobile-menu nav a { font-style: normal; }
+  .mobile-menu nav a:active,
+  .mobile-menu nav .mobile-menu-label[aria-expanded="true"] { font-style: italic; }
   .mobile-menu nav .mobile-menu-section { width: 100%; }
   .mobile-menu-mail { flex-shrink: 0; align-self: flex-start; margin-top: auto; padding: 4vw 1.6vw 0; font-size: calc(4vw * var(--text-scale)); line-height: 1.1; }
-  .mobile-menu a:hover,
-  .mobile-menu a:focus-visible,
-  .mobile-menu button:hover,
+  .mobile-menu-mail:hover,
+  .mobile-menu-header a:hover,
+  .mobile-menu-close:hover,
   .mobile-menu-toggle:hover { font-style: italic; }
   .work-submenu { --preferred-menu-size: 10.5vw; padding-top: .5em; }
   .archive { padding-top: var(--archive-list-top); }
@@ -440,4 +441,34 @@ body.is-detail :is(.detail-info-popup, .detail-info-close, .detail-info-popup p,
 }
 @media (hover: none), (pointer: coarse) {
   .detail-sound-control::after { content: ""; position: absolute; right: 0; bottom: 0; width: 100%; height: 100%; min-width: 44px; min-height: 44px; }
+}
+
+/* Index backdrop and intrinsic portrait positioning. */
+body.is-index { --dark: #fff; --ink: #000; color: var(--ink); }
+body.is-index, .is-index .archive, .is-index .archive-background { background-color: #fff; }
+.is-index .archive-background { display: flex; align-items: center; justify-content: center; }
+.is-index .archive-background.half { left: 0; right: 0; justify-content: flex-end; }
+.is-index .archive-background.half.portrait-left { justify-content: flex-start; }
+.is-index .archive-background.half.portrait-center { justify-content: center; }
+.archive-background img.is-portrait-image {
+  width: auto; height: auto;
+  max-width: min(100vw, var(--native-width));
+  max-height: min(100dvh, var(--native-height));
+  object-fit: contain;
+}
+@media (min-width: 701px) {
+  .archive-background img.is-portrait-image { max-width: min(50vw, var(--native-width)); }
+}
+.is-index .archive-background.visible::after { background: transparent; }
+
+.is-index .detail-sound-control {
+  bottom: max(var(--pad), env(safe-area-inset-bottom));
+  right: max(var(--pad), env(safe-area-inset-right));
+}
+
+@media (max-width: 700px) {
+  /* Retain mobile media shading without darkening the empty white backdrop. */
+  .is-index .archive-background.visible > img,
+  .is-index .archive-background.visible > video,
+  .is-index .archive-background.visible > .project-video { filter: brightness(.72); }
 }

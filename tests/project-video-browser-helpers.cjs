@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-exports.checkDetailVideos = async (page, width, native) => {
+exports.checkDetailVideos = async (page, width) => {
   const sound = page.locator('.detail-sound-control');
   assert.equal(await sound.count(), 1);
   const fixed = await sound.boundingBox();
@@ -11,7 +11,7 @@ exports.checkDetailVideos = async (page, width, native) => {
   });
   for (const [actual, expected] of styles) assert.equal(actual, expected);
   assert.equal(await sound.evaluate(node=>getComputedStyle(node).position),'fixed');
-  for (const box of await page.locator('.detail .project-vimeo').all()) {
+  for (const box of await page.locator('.detail .project-video').all()) {
     await box.scrollIntoViewIfNeeded();
     const autoplay=await box.getAttribute('data-playback')==='autoplay';
     await page.waitForFunction(({node,playing})=>node.dataset.videoPlaying===String(playing),{node:await box.elementHandle(),playing:autoplay});
@@ -31,9 +31,9 @@ exports.checkDetailVideos = async (page, width, native) => {
     await toggle();
     await page.waitForFunction(node=>node.dataset.videoPlaying==='true',await box.elementHandle());
     if(await sound.textContent()==='(Sound)') await sound.click();
-    await page.waitForFunction(({node,native})=>native ? !node.muted : node.dataset.muted==='false',{node:await box.locator('video,iframe').elementHandle(),native});
+    await page.waitForFunction(({node})=>!node.muted,{node:await box.locator('video').elementHandle()});
     assert.equal(await sound.textContent(),'(Mute)');
-    assert.equal(await page.locator('.detail video, .detail iframe').evaluateAll((nodes,native)=>nodes.filter(node=>native?!node.muted:node.dataset.muted==='false').length,native),1);
+    assert.equal(await page.locator('.detail video').evaluateAll(nodes=>nodes.filter(node=>!node.muted).length),1);
     const after=await sound.boundingBox();
     assert.equal(after.y+after.height,fixed.y+fixed.height);
     assert.equal(after.x+after.width,fixed.x+fixed.width);
@@ -43,7 +43,7 @@ exports.checkDetailVideos = async (page, width, native) => {
       assert.ok(local.x+local.width<=left(global)||global.x+global.width<=left(local)||local.y+local.height<=top(global)||global.y+global.height<=top(local),'mobile hit areas do not overlap');
     }
     await sound.click();
-    await page.waitForFunction(({node,native})=>native ? node.muted : node.dataset.muted==='true',{node:await box.locator('video,iframe').elementHandle(),native});
+    await page.waitForFunction(({node})=>node.muted,{node:await box.locator('video').elementHandle()});
     assert.equal(await sound.textContent(),'(Sound)');
     await toggle();
     await page.waitForFunction(node=>node.dataset.videoPlaying==='false',await box.elementHandle());
@@ -54,7 +54,7 @@ exports.checkDetailVideos = async (page, width, native) => {
     }
   }
   {
-    const last=page.locator('.detail .project-vimeo').last();
+    const last=page.locator('.detail .project-video').last();
     const aligned=await last.evaluate(node=>{
       const bottom=node.getBoundingClientRect().bottom+scrollY;
       const y=bottom-innerHeight;

@@ -124,6 +124,11 @@ export const indexEntry = defineType({
   title: 'Index entry',
   type: 'object',
   fields: [
+    defineField({
+      name: 'project', title: 'Related Project (optional)', type: 'reference', to: [{type: 'project'}],
+      options: {disableNew: true},
+      description: 'Explicit identity for duplicate handling. When this Project has usable Indexmaterial, that material replaces this entry on the website. The stored standalone entry is retained. Unlinked entries are never matched by title.',
+    }),
     textColorField(),
     defineField({
       name: 'displayTitle',
@@ -149,7 +154,7 @@ export const indexEntry = defineType({
       name: 'previewImages',
       title: 'Preview media',
       type: 'array',
-      description: 'Choose 1–3 images or videos and drag them to set their browsing order. Use Media item for the Image / Vimeo / MP4 selector; existing images remain editable.',
+      description: 'Choose 1–3 images or videos and drag them to set their browsing order. Use Media item for the Image / MP4 selector; existing images remain editable.',
       options: {sortable: true},
       validation: (rule) => rule.required().min(1).max(3),
       of: [

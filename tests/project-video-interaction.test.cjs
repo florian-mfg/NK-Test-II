@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const {JSDOM} = require('../studio/node_modules/jsdom');
 const flush = () => new Promise(setImmediate);
-for (const type of ['video', 'mp4']) for (const touch of [false, true]) for (const playback of ['manual', 'autoplay']) {
+for (const type of ['mp4']) for (const touch of [false, true]) for (const playback of ['manual', 'autoplay']) {
   test(`Project ${type}, ${touch ? 'touch' : 'desktop'}, ${playback}: playback, audio, visibility and cleanup`, async () => {
     const dom = new JSDOM('<main></main>', {url:'https://preview.test', runScripts:'outside-only', pretendToBeVisual:true});
     const w = dom.window;
@@ -15,23 +15,10 @@ for (const type of ['video', 'mp4']) for (const touch of [false, true]) for (con
     w.ResizeObserver = class {observe() {} disconnect() {}};
     w.IntersectionObserver = class {constructor(fn) {intersection=fn;} observe() {} disconnect() {}};
     let player;
-    w.Vimeo = {Player: class {
-      constructor() {player=this;this.events={};this.muted=true;}
-      on(name, fn) {this.events[name]=fn;}
-      off(name) {delete this.events[name];}
-      ready() {return Promise.resolve();}
-      getVideoWidth() {return Promise.resolve(1920);}
-      getVideoHeight() {return Promise.resolve(1080);}
-      play() {calls.push('play');this.events.play();return Promise.resolve();}
-      pause() {calls.push('pause');this.events.pause();return Promise.resolve();}
-      setMuted(value) {this.muted=value;return Promise.resolve();}
-      setVolume() {return Promise.resolve();}
-      destroy() {destroyed=true;return Promise.resolve();}
-    }};
-    for (const file of ['vimeo-media.js','project-modules.js','project-video.js']) vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'..',file),'utf8'),dom.getInternalVMContext());
+    for (const file of ['project-modules.js','project-video.js']) vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'..',file),'utf8'),dom.getInternalVMContext());
     const root=w.document.querySelector('main');
-    root.innerHTML=w.renderProjectModule({type:'full',slots:[{type, playback, src:type==='mp4'?'https://preview.test/movie.mp4':'https://vimeo.com/12345/private'}]});
-    const box=root.querySelector('.project-vimeo'), frame=box.querySelector('video,iframe'), button=box.querySelector('button');
+    root.innerHTML=w.renderProjectModule({type:'full',slots:[{type, playback, src:'https://preview.test/movie.mp4'}]});
+    const box=root.querySelector('.project-video'), frame=box.querySelector('video'), button=box.querySelector('button');
     if(type==='mp4') {
       player=frame;
       frame.play=()=>{calls.push('play');frame.dispatchEvent(new w.Event('play'));return Promise.resolve();};
@@ -47,16 +34,8 @@ for (const type of ['video', 'mp4']) for (const touch of [false, true]) for (con
     assert.equal(box.dataset.videoPlaying,String(auto));
     assert.equal(sound.textContent,'(Sound)');
     assert.equal(player.muted,true);
-    if(type==='video') {
-      const url=new URL(frame.src);
-      assert.equal(url.searchParams.get('h'),'private');
-      assert.equal(url.searchParams.get('controls'),'0');
-      assert.equal(url.searchParams.get('playsinline'),'1');
-      assert.equal(url.searchParams.get('loop'),playback==='autoplay'?'1':'0');
-    } else {
-      assert.equal(frame.autoplay,auto);assert.equal(frame.playsInline,true);assert.equal(frame.controls,false);
-      assert.equal(frame.loop,playback==='autoplay');
-    }
+    assert.equal(frame.autoplay,auto);assert.equal(frame.playsInline,true);assert.equal(frame.controls,false);
+    assert.equal(frame.loop,playback==='autoplay');
     const before=calls.length;
     sound.click();await flush();
     assert.equal(sound.textContent,'(Mute)');assert.equal(player.muted,!auto);
@@ -90,45 +69,49 @@ test('page audio persists across mixed videos, serializes handoffs and cancels p
   w.IntersectionObserver=class {constructor(fn){this.fn=fn;} observe(box){intersections.set(box,this.fn);} disconnect(){}};
   let releaseMute, delayMute=false, overlap=false;
   const check=()=>{if(players.filter(p=>!p.muted).length>1) overlap=true;};
-  w.Vimeo={Player:class {
-    constructor(){this.events={};this.muted=true;players.push(this);}
-    on(n,fn){this.events[n]=fn;} off(n){delete this.events[n];}
-    ready(){return Promise.resolve();} getVideoWidth(){return Promise.resolve(160);} getVideoHeight(){return Promise.resolve(90);}
-    play(){this.events.play();return Promise.resolve();} pause(){this.events.pause();return Promise.resolve();}
-    setVolume(){return Promise.resolve();}
-    async setMuted(value){if(value&&delayMute) await new Promise(resolve=>{releaseMute=resolve;});this.muted=value;check();}
-    destroy(){this.muted=true;return Promise.resolve();}
-  }};
-  for(const file of ['vimeo-media.js','project-modules.js','project-video.js']) vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'..',file),'utf8'),dom.getInternalVMContext());
+  for(const file of ['project-modules.js','project-video.js']) vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'..',file),'utf8'),dom.getInternalVMContext());
   root.innerHTML=w.renderProjectModule({type:'half-half',slots:[
-    {type:'video',src:'https://vimeo.com/12345/secret',playback:'autoplay'},
-    {type:'mp4',src:'https://preview.test/movie.mp4',playback:'autoplay'}
+    {type:'mp4',src:'https://preview.test/first.mp4',playback:'autoplay'},
+    {type:'mp4',src:'https://preview.test/second.mp4',playback:'autoplay'}
   ]});
-  const boxes=[...root.querySelectorAll('.project-vimeo')], native=boxes[1].querySelector('video');
-  native.play=()=>{native.dispatchEvent(new w.Event('play'));return Promise.resolve();};
-  native.pause=()=>native.dispatchEvent(new w.Event('pause'));native.load=()=>{};
-  let nativeMuted=true;
-  Object.defineProperty(native,'muted',{get:()=>nativeMuted,set:value=>{nativeMuted=value;check();}});
-  players.push(native);
+  const boxes=[...root.querySelectorAll('.project-video')], native=boxes[1].querySelector('video');
+  for (const video of root.querySelectorAll('video')) {
+    video.play=()=>{video.dispatchEvent(new w.Event('play'));return Promise.resolve();};
+    video.pause=()=>video.dispatchEvent(new w.Event('pause'));video.load=()=>{};
+    let muted=true;
+    Object.defineProperty(video,'muted',{get:()=>muted,set:value=>{muted=value;check();}});
+    players.push(video);
+  }
+  const adapt=w.nativeProjectPlayer;
+  w.nativeProjectPlayer=video=>{
+    const player=adapt(video);
+    const mute=player.setMuted;
+    player.setMuted=async value=>{
+      if(video===players[0] && value && delayMute) await new Promise(resolve=>{releaseMute=resolve;});
+      return mute(value);
+    };
+    video.audioPlayer=player;
+    return player;
+  };
   const cleanup=w.initProjectVideos(root);await flush();
-  const vimeo=players[1], sound=root.querySelector('.detail-sound-control');
+  const first=players[0], sound=root.querySelector('.detail-sound-control');
   const show=(index,value)=>intersections.get(boxes[index])([{isIntersecting:value}]);
   show(0,true);show(1,false);await flush();
   sound.click();await flush();
-  assert.equal(vimeo.muted,false);assert.equal(native.muted,true);
+  assert.equal(first.muted,false);assert.equal(native.muted,true);
   delayMute=true;
   show(0,false);show(1,true);await flush();
   assert.equal(sound.textContent,'(Mute)','page preference survives scrolling');
   assert.equal(native.muted,true,'new video waits for old mute acknowledgement');
   delayMute=false;releaseMute();await flush();
-  assert.equal(vimeo.muted,true);assert.equal(native.muted,false);
+  assert.equal(first.muted,true);assert.equal(native.muted,false);
   show(0,true);await flush();
   boxes[0].querySelector('button').click();await flush(); // pause
-  boxes[0].querySelector('button').click();await flush(); // user selects Vimeo
-  assert.equal(vimeo.muted,false);assert.equal(native.muted,true);
-  const mute=vimeo.setMuted.bind(vimeo);
+  boxes[0].querySelector('button').click();await flush(); // user selects first video
+  assert.equal(first.muted,false);assert.equal(native.muted,true);
+  const mute=first.audioPlayer.setMuted.bind(first);
   let rejectMute=true;
-  vimeo.setMuted=value=>value&&rejectMute ? Promise.reject(Error('mute failed')) : mute(value);
+  first.audioPlayer.setMuted=value=>value&&rejectMute ? Promise.reject(Error('mute failed')) : mute(value);
   show(0,false);await flush();
   assert.equal(native.muted,true,'failed mute prevents a second audible video');
   assert.equal(sound.textContent,'(Sound)');
@@ -137,7 +120,7 @@ test('page audio persists across mixed videos, serializes handoffs and cancels p
   show(0,true);await flush();
   sound.click();await flush();
   sound.click();sound.click();sound.click();await flush();
-  assert.equal(sound.textContent,'(Sound)');assert.equal(vimeo.muted,true);assert.equal(native.muted,true);
+  assert.equal(sound.textContent,'(Sound)');assert.equal(first.muted,true);assert.equal(native.muted,true);
   sound.click();await flush();
   delayMute=true;show(0,false);await flush();
   assert.ok(releaseMute);

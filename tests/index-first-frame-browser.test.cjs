@@ -10,7 +10,7 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
   const delayed = new Set(['right', 'slow']);
   try {
     const page = await browser.newPage({viewport: {width: mobile ? 390 : 1440, height: 900}, hasTouch: mobile, isMobile: mobile});
-    const img = (id, portraitPosition) => ({asset: {_ref: `image-${id}-800x1200-jpg`}, portraitPosition});
+    const img = (id, portraitPosition) => ({asset: {_ref: `image-${id}-${{left:600,right:900,center:800,slow:600}[id]}x1200-jpg`}, portraitPosition});
     const raw = {projects: [], indexPage: {_id: 'indexPage', _type: 'indexPage', entries: [
       {displayTitle: 'Forward', previewImages: [img('center','center'), img('right','right'), img('left','left')]},
       {displayTitle: 'Reverse', previewImages: [img('left','left'), img('right','right'), img('center','center')]},
@@ -27,7 +27,7 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
         const bitmap = img && bitmaps.get(img);
         if (bitmap && getComputedStyle(img).opacity > 0) {
           const rect = img.getBoundingClientRect();
-          window.frameSamples.push({src: bitmap, x: rect.x, width: rect.width, height: rect.height});
+          window.frameSamples.push({src: bitmap, x: rect.x, width: rect.width, height: rect.height, backdrop: getComputedStyle(bg).backgroundColor, body: getComputedStyle(document.body).backgroundColor});
         }
       };
       // Observe DOM commits as well as paints, so an insertion later in an
@@ -45,7 +45,7 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
       if (url.hostname === 'cdn.sanity.io') {
         const id = url.pathname.match(/\/(center|right|left|slow)-/)?.[1];
         if (delayed.delete(id)) await new Promise(resolve => held.set(id, resolve));
-        return route.fulfill({contentType: 'image/svg+xml', body: `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200"><rect width="800" height="1200" fill="${id === 'center' ? 'red' : id === 'right' ? 'green' : 'blue'}"/></svg>`});
+        return route.fulfill({contentType: 'image/svg+xml', body: `<svg xmlns="http://www.w3.org/2000/svg" width="${{left:600,right:900,center:800,slow:600}[id]}" height="1200"><rect width="900" height="1200" fill="${id === 'center' ? 'red' : id === 'right' ? 'green' : 'blue'}"/></svg>`});
       }
       return route.fulfill({body: ''});
     });
@@ -70,15 +70,18 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
       const samples = await page.evaluate(() => window.frameSamples);
       assert.ok(samples.length > 0);
       for (const sample of samples) {
+        assert.equal(sample.backdrop,'rgb(255, 255, 255)');
+        assert.equal(sample.body,'rgb(255, 255, 255)');
         const id = sample.src.match(/\/(center|right|left|slow)-/)[1];
-        assert.equal(sample.x, mobile ? 0 : {center: 360, right: 720, left: 0, slow: 0}[id], `wrong visible position: ${JSON.stringify(sample)}`);
-        assert.equal(sample.width, mobile ? 390 : 720, `wrong visible width: ${JSON.stringify(sample)}`);
-        assert.equal(sample.height, 900);
+        assert.equal(sample.x, mobile ? 0 : {center: 420, right: 765, left: 0, slow: 0}[id], `wrong visible position: ${JSON.stringify(sample)}`);
+        assert.equal(sample.width, mobile ? 390 : {center:600,right:675,left:450,slow:450}[id], `wrong visible width: ${JSON.stringify(sample)}`);
+        assert.equal(sample.height, mobile ? {center:585,right:520,left:780,slow:780}[id] : 900);
       }
       return samples;
     };
     await page.goto('https://preview.test/#archive');
     await displayed('center');
+    await page.screenshot({path:`/tmp/nk-portrait-center-${mobile?'mobile':'desktop'}.png`});
     await click(); // Uncached Right is held: the visible Center must not move.
     await page.waitForFunction(() => document.querySelector('.archive-row[aria-current="true"]'));
     await frames();
@@ -86,6 +89,10 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
     assert.ok(held.has('right'), 'uncached replacement request started');
     held.get('right')(); held.delete('right');
     await displayed('right');
+    await page.screenshot({path:`/tmp/nk-portrait-right-${mobile?'mobile':'desktop'}.png`});
+    await click(); await displayed('left');
+    await page.screenshot({path:`/tmp/nk-portrait-left-${mobile?'mobile':'desktop'}.png`});
+    await click(); await displayed('center'); await click(); await displayed('right');
     // Hold decoded resources for the repeated, already-cached image case.
     await page.evaluate(async () => {
       window.cachedIndexImages = [...new Set(sanityContent.indexPage.entries.slice(0, 2).flatMap(entry => entry.images))].map(src => {
@@ -111,6 +118,17 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
     const samples = await checkFrames();
     assert.equal(samples.some(sample => sample.src.includes('/slow-')), false);
     for (const id of ['center','right','left']) assert.ok(samples.some(sample => sample.src.includes(`/${id}-`)), `sampled first visible ${id} frame`);
+    if (!mobile) {
+      const session = await page.context().newCDPSession(page);
+      await session.send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:2,mobile:false});
+      await click(); await displayed('right');
+      const box = await page.locator('.archive-background img').boundingBox();
+      assert.equal(box.width,450);
+      assert.equal(box.height,600);
+      assert.equal(box.x,990);
+      await session.detach();
+    }
+
   } finally {
     for (const release of held.values()) release();
     await browser.close();

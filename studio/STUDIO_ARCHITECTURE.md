@@ -1,16 +1,16 @@
 # Studio architecture
 
-This step changes only Studio schemas and organization. No public frontend queries,
-rendering, routes, styles, content imports, or hosted dataset mutations are included.
+Studio schemas and the public read-only adapter share this content model.
+Source changes never import, migrate or mutate hosted dataset content.
 Opening Studio allows editors to create drafts; no singleton documents are seeded
 by these source changes.
 
 ## Editor navigation
 
-- Content → Frontpage: background video URL, accessible title, optional poster.
+- Content → Frontpage: optional MP4 upload, accessible title, optional poster; the frontend keeps its fixed local sequence.
 - Content → Selected Work: three independently ordered project-reference arrays.
-- Content → Projects: normal repeatable project documents and the existing modules.
-- Content → Index: independent ordered entries with their own metadata and 1–3 preview images; no Project links.
+- Content → Projects: normal repeatable project documents, existing modules, and optional Indexmaterial.
+- Content → Index: a sortable mixed array of standalone entries and Project references.
 - Content → Info: biography, CV, Work, Skills, contact selectors, Selected Clients.
 - Settings → Navigation: labels and controlled destinations for both menus.
 - Settings → Site Settings: shared contact addresses, brand, metadata, footer links.
@@ -69,18 +69,35 @@ check remains in place.
 
 ## Index semantics
 
-Index entries are embedded objects in a separately ordered singleton array. Each
-entry requires its own Display title and 1–3 independently curated Preview images.
-Year is an optional integer; Additional information is optional text. Neither
-inherits from Projects. Initial preview layout is Full width or Right half.
-There is no Related project field or Project URL, and clicking an Index entry never
-opens a Project. Existing desktop image cycling, arrow cursor and mobile
-selection/scrolling remain frontend behavior; no styling has changed.
+The existing `indexPage.entries` array retains its standalone `indexEntry` objects
+and adds `indexProjectReference` objects containing only a `project` reference.
+Editors drag both types together. No media or project metadata is copied into a
+reference. Existing standalone entries keep their own metadata and preview media.
+An optional Related Project reference provides an explicit identity for duplicate
+handling; unlinked entries are never matched by title.
 
-Before adopting this schema for legacy data, run the backed-up, revision-guarded
-migration described in [SANITY_DATA.md](../SANITY_DATA.md#legacy-content-migration).
-It materializes currently displayed metadata and removes only obsolete Index
-relationship/override fields. Projects and other pages are never patched.
+Each Project exposes optional `indexmaterial.media` (0–3 items, Image/MP4) and
+`indexmaterial.textColor` (Auto by default). Existing Project title, year and
+additionalInfo supply Index metadata. Crop/hotspot and portrait positions reuse
+the existing Index media schema. Detail text color, category memberships and
+Selected Work previews/curation remain independent.
+
+The published-only query reads Project media directly. Usable Indexmaterial makes
+a Project eligible, even without a manually added reference. Ordered references
+and standalone entries come first; eligible unlisted Projects follow sorted by
+stable document ID. If an eligible Project is explicitly ordered, its reference
+position wins over linked standalone duplicates. Otherwise its first linked
+standalone position is reused. Duplicate references are shown once. An ineligible
+Project reference is omitted; linked standalone entries remain when that Project
+has no usable Indexmaterial. Published documents are never edited by this logic.
+Unlinked entries may need an editor to set Related Project when they represent the
+same Project; similar titles alone do not establish identity.
+
+Both sources normalize to the same renderer contract. Index buttons still cycle
+media rather than navigating to Project detail. Desktop selection/cycling, mobile
+scrolling/taps, portrait behavior, contrast and global MP4 Sound/Mute are retained.
+No migration or content rewrite is needed to adopt these source changes. Historic
+migration scripts are not part of this transition and must not be run for it.
 
 ## Text and homepage decisions
 
@@ -89,10 +106,10 @@ and description; Work, Skills, and Clients are ordered strings. No Info layout
 controls exist. Legal content uses restricted Portable Text (paragraphs, headings,
 lists, bold/italic, and HTTP(S)/email/telephone links).
 
-The temporary homepage stores an HTTPS video URL and accessible title, with optional
-poster. Vimeo URLs (including unlisted hashes) and direct video URLs can be stored.
-Playback, embed generation, aspect ratio, overlay, and future visual redesign remain
-frontend responsibilities. No arbitrary iframe markup is accepted.
+Frontpage stores an optional direct Sanity MP4 upload and accessible title, with
+an optional poster. Its fixed local opacity sequence remains unchanged and does
+not consume that upload. Images and MP4 files are the only active frontend media.
+See CONTENT_MODEL.md for unsupported legacy-media compatibility.
 
 ## Verification and manual review
 
@@ -117,12 +134,14 @@ Manually test after login:
 3. Fill a project description, toggle detail availability, and validate a slug.
 4. Select/reorder projects per category; change a selected project category and
    check the overview validation message.
-5. Create an Index entry with its own title, year, optional information and 1–3
-   images. Confirm blank titles and 0/4 images fail validation. Reorder entries/images
-   and switch the initial layout; confirm no Project selector or navigation exists.
+5. Test optional Project Indexmaterial, its three-item limit and independent text color.
+   Mix Project references and standalone entries under Index and drag to reorder.
+   Confirm unlisted eligible Projects follow in document-ID order and explicitly
+   linked duplicates appear once. Index clicks still cycle media rather than navigate.
 6. Edit/reorder Info content. Set shared contacts once; select them in Info/menu/footer.
 7. Rename navigation labels while retaining destinations; verify all three categories.
 8. Open both legal pages; confirm the correct locked page type and rich text editing.
 
 These editorial tests create content only when performed by the editor. The public
-website will not change until a separate, explicitly authorized integration step.
+website and hosted Studio will use source changes only after a separate deployment.
+No deployment or published-content edits are part of this local implementation.

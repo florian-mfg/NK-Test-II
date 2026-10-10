@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-// Opt-in real CSS/browser check. No CMS writes or real Vimeo playback required.
+// Opt-in real CSS/browser check. No CMS writes or external video playback required.
 // BROWSER_TEST=1 PLAYWRIGHT_MODULE_PATH=/path/to/playwright-core node --test tests/selected-work-responsive.test.cjs
 // Set BROWSER_EXECUTABLE to a Chrome/Chromium binary when not using macOS Chrome.
 test('Selected Work compositions retain module geometry and responsive stacking in Chrome', {skip: !process.env.BROWSER_TEST}, async () => {
@@ -16,7 +16,7 @@ test('Selected Work compositions retain module geometry and responsive stacking 
   const projects=[];
   for(const [type,widths] of Object.entries(spans)) for(const order of ['default','reverse',...(type==='half-quarter-quarter'?['middle']:[])]) {
     const id=`project-${projects.length}`;
-    const slots=widths.map((_,i)=>i%3===2?{type:'empty'}:i%3===1?{type:'video',vimeoUrl:'https://vimeo.com/12345/private'}:
+    const slots=widths.map((_,i)=>i%3===2?{type:'empty'}:i%3===1?{type:'mp4',video:{asset:{_ref:'file-demo-mp4'}}}:
       {type:'image',alt:`Image ${i}`,image:{asset:{_ref:'image-fixture-1200x800-jpg'}}});
     projects.push({_id:id,_type:'project',slug:{current:id},title:id,category:'Commissioned',modules:[],
       selectedWorkPreview:{composition:[{_type:`preview-${type}`,type,height:['auto','small','medium','large','viewport'][projects.length%5],order,slots}]}});
@@ -27,12 +27,7 @@ test('Selected Work compositions retain module geometry and responsive stacking 
   const raw={projects,selectedWork:{_id:'selectedWork',_type:'selectedWork',video:[],commissioned:projects.map(p=>({_ref:p._id})),graphic:[]}};
   try {
     const page=await browser.newPage({hasTouch:true});
-    await page.addInitScript(()=>{
-      globalThis.Vimeo={Player:class {
-        on() {} off() {} destroy(){return Promise.resolve()}
-        ready(){return Promise.resolve()} getVideoWidth(){return Promise.resolve(1920)} getVideoHeight(){return Promise.resolve(1080)}
-      }};
-    });
+    const mp4Bytes=await require('./native-media-fixture.cjs').recordMP4(page);
     await page.route('**/*',async route=>{
       const url=new URL(route.request().url());
       if(url.hostname==='preview.test') {
@@ -40,7 +35,8 @@ test('Selected Work compositions retain module geometry and responsive stacking 
         const ext=path.extname(file);
         return route.fulfill({path:file,contentType:({'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.otf':'font/otf','.woff':'font/woff'})[ext] || 'application/octet-stream'});
       }
-      if(url.hostname.endsWith('.sanity.io') && url.pathname.includes('/data/query/')) return route.fulfill({json:{result:raw}});
+      if(url.pathname.endsWith('.mp4'))return route.fulfill({body:mp4Bytes,contentType:'video/mp4'});
+   if(url.hostname.endsWith('.sanity.io') && url.pathname.includes('/data/query/')) return route.fulfill({json:{result:raw}});
       if(url.hostname==='cdn.sanity.io') return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="gray"/></svg>'});
       return route.fulfill({contentType:'text/html',body:''});
     });
@@ -57,8 +53,8 @@ test('Selected Work compositions retain module geometry and responsive stacking 
         return {type:row.dataset.moduleType,...rect(row),display:getComputedStyle(row).display,slots:[...row.children].map(slot=>({
           ...rect(slot),empty:slot.classList.contains('is-empty'),display:getComputedStyle(slot).display,
           span:Number(slot.style.getPropertyValue('--slot-span')),objectFit:slot.querySelector('img')?getComputedStyle(slot.querySelector('img')).objectFit:null,
-          frame:slot.querySelector('iframe')?rect(slot.querySelector('iframe')):null,
-          video:slot.querySelector('.project-vimeo')?rect(slot.querySelector('.project-vimeo')):null,
+          frame:slot.querySelector('video')?rect(slot.querySelector('video')):null,
+          video:slot.querySelector('.project-video')?rect(slot.querySelector('.project-video')):null,
         }))};
       }));
       for(const [i,row] of rows.entries()) {
@@ -72,21 +68,19 @@ test('Selected Work compositions retain module geometry and responsive stacking 
           else assert.ok(Math.abs(slot.y-row.y)<1);
           if(slot.objectFit) assert.equal(slot.objectFit,'cover');
           if(slot.frame) {
-            assert.ok(slot.frame.width>=slot.video.width-.1);
-            assert.ok(slot.frame.height>=slot.video.height-.1);
-            assert.ok(Math.abs(slot.frame.width/slot.frame.height-16/9)<.01);
+            assert.ok(Math.abs(slot.frame.width-slot.video.width)<.1);
+            assert.ok(Math.abs(slot.frame.height-slot.video.height)<.1);
+
           }
         }
       }
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     }
-    for(const src of await page.locator('iframe[data-project-video-src]').evaluateAll(frames=>frames.map(f=>f.src))) {
-      const url=new URL(src);
-      for(const key of ['autoplay','muted','loop','background']) assert.equal(url.searchParams.get(key),'1');
-      assert.equal(url.searchParams.get('controls'),'0');
+    for(const properties of await page.locator('video[data-project-native-src]').evaluateAll(videos=>videos.map(video=>({autoplay:video.autoplay,muted:video.muted,loop:video.loop,controls:video.controls})))) {
+      assert.deepEqual(properties,{autoplay:true,muted:true,loop:true,controls:false});
     }
     assert.equal(await page.locator('.project-video-toggle').count(),0);
-    // Hit-test the real composition slots, including iframe and empty-slot areas.
+    // Hit-test the real composition slots, including video and empty-slot areas.
     // Capture native anchor destinations without leaving between every sample.
     await page.evaluate(()=>{
       window.previewClicks=[];
@@ -124,7 +118,7 @@ test('Selected Work compositions retain module geometry and responsive stacking 
         }
       }
     }
-    assert.ok(await page.locator('iframe').evaluateAll(frames=>frames.every(frame=>getComputedStyle(frame).pointerEvents==='none')));
+    assert.ok(await page.locator('video').evaluateAll(frames=>frames.every(frame=>getComputedStyle(frame).pointerEvents==='none')));
 
   } finally {await browser.close()}
 });
