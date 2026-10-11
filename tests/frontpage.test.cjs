@@ -23,7 +23,7 @@ function setup(hash = '#home') {
   let resolve, reject, requests = 0;
   const pending = new Promise((yes, no) => {resolve = yes; reject = no;});
   window.SanityData = {load: () => {requests++; return pending;}};
-  for (const file of ['projects.js', 'project-modules.js', 'project-video.js', 'frontpage-media-fade.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
+  for (const file of ['projects.js', 'project-modules.js', 'project-video.js', 'frontpage-media.js', 'frontpage-media-fade.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
   window.fitWorkMenu();
   const flush = () => new Promise(yes => setImmediate(yes));
   return {window, dom, scrollCalls, requests: () => requests, reject: async () => {reject(new Error('offline')); await flush();},
@@ -35,16 +35,15 @@ const title = 'Nicolas Kawohl — Background Video';
 const content = (fields = {}) => adapter.normalize({projects: [], homePage: doc('homePage', {
   video: {asset:{_ref:"file-demo-mp4"}}, videoTitle: title, ...fields
 })});
-test('Frontpage initially shows two fade layers and ignores late Sanity hero/video/poster settings', async () => {
+test('Frontpage initially prepares the first collage image and ignores late Sanity hero/video/poster settings', async () => {
   const app = setup();
   try {
     const section = app.window.document.querySelector('.home');
     const header = app.window.document.querySelector('.site-header').outerHTML;
     const initial = section.outerHTML;
     assert.equal(section.querySelector('iframe, video'), null);
-    assert.equal(section.querySelector('[data-role="current"]').style.opacity,'1');
-    assert.equal(section.querySelector('[data-role="incoming"]').style.opacity,'0');
-    assert.equal(section.querySelector('.frontpage-fade').children.length, 2);
+        assert.equal(section.querySelector('[data-role="incoming"]').style.opacity,'0');
+    assert.equal(section.querySelector('.frontpage-fade').children.length, 1);
     await app.settle(success(content({video:{asset:{_ref:'file-second-mp4'}},
       poster: {asset: {_ref: 'image-poster123-1200x800-jpg'}}})));
     assert.equal(section.outerHTML, initial);
@@ -53,7 +52,7 @@ test('Frontpage initially shows two fade layers and ignores late Sanity hero/vid
   } finally {app.dom.window.close();}
 });
 
-test('failed content requests retain the fullscreen fade Frontpage', async () => {
+test('failed content requests retain the collage Frontpage', async () => {
   const app = setup();
   try {
     const initial = app.window.document.querySelector('.home').outerHTML;
@@ -71,8 +70,15 @@ test('late Frontpage response leaves other routes intact; returning Home stays c
       assert.equal(app.window.document.querySelector('#app').innerHTML, initial, hash);
       app.window.renderHome();
       assert.equal(app.window.document.querySelector('.home iframe'), null);
-      assert.equal(app.window.document.querySelector('.frontpage-fade').children.length, 2);
+      assert.equal(app.window.document.querySelector('.frontpage-fade').children.length, 1);
       assert.equal(app.requests(), 1);
     } finally {app.dom.window.close();}
   }
+});
+
+test('published Frontpage media replace fallback once; explicit empty stays empty; route changes remain safe',async()=>{
+ for(const media of [[],[{_key:'one',type:'image',size:'large',image:{asset:{_ref:'image-demo-1200x800-jpg'}}}]]){
+ const app=setup();try{await app.settle(success(content({media})));const layer=app.window.document.querySelector('.frontpage-fade');assert.equal(layer.dataset.source,'sanity');assert.equal(layer.children.length,media.length?1:0);if(media.length)assert.match(layer.firstChild.src,/cdn.sanity.io/);app.window.renderHome();assert.equal(app.window.document.querySelector('.frontpage-fade').children.length,media.length?1:0);assert.equal(app.requests(),1)}finally{app.dom.window.close()}
+ }
+ const app=setup('#info');try{const before=app.window.document.querySelector('#app').innerHTML;await app.settle(success(content({media:[]})));assert.equal(app.window.document.querySelector('#app').innerHTML,before);app.window.renderHome();assert.equal(app.window.document.querySelector('.frontpage-fade').children.length,0)}finally{app.dom.window.close()}
 });

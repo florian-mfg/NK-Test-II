@@ -53,7 +53,22 @@
     return data;
   }
   function background(x, y, target) {
-    const light = root.matchMedia('(max-width: 700px)').matches || document.body.matches('.is-work, .is-detail, .is-info, .is-index');
+    // Home composites its bounded collage over white using the existing binary colors.
+    if (document.body.matches('.is-home') && target.closest('.site-header')) {
+      let luminance = 1;
+      for (const node of document.querySelectorAll('.frontpage-fade-media')) {
+        const box = node.getBoundingClientRect(), opacity = Number(node.style.opacity);
+        if (!opacity || x < box.left || x > box.right || y < box.top || y > box.bottom || !node.matches('img, video')) continue;
+        const src = node.matches('video') ? node.poster : node.currentSrc || node.src;
+        if (!src) {luminance = .1 * opacity + luminance * (1-opacity); continue;}
+        const data = imageData(src);
+        if (!data.grid) continue;
+        const value = sample(data.grid, (x-box.left)/box.width, (y-box.top)/box.height);
+        luminance = value * opacity + luminance * (1-opacity);
+      }
+      return {setting:'auto', luminance};
+    }
+    const light = !document.body.matches('.is-index') && (root.matchMedia('(max-width: 700px)').matches || document.body.matches('.is-work, .is-detail, .is-info'));
     const stack = document.elementsFromPoint(x, y);
     const media = stack.find(node => node.matches('img, video, .project-video, .home, .project-slot.is-empty, .project-slot-text'));
     const scope = target.closest('[data-text-color]') || media?.closest('[data-text-color]') ||
@@ -75,7 +90,7 @@
       }
       const nx = Math.max(0, Math.min(1, (x - left) / width));
       const ny = Math.max(0, Math.min(1, (y - top) / height));
-      // Match the mobile media filter; uncovered Index areas remain white.
+      // Match the mobile media filter; uncovered Index areas remain black.
       const shade = media.closest('.archive') && root.matchMedia('(max-width: 700px)').matches ? .72 : 1;
       return {setting, luminance: sample(data.grid, nx, ny, shade, light ? 1 : 0)};
     }

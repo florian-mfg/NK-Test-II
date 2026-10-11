@@ -8,6 +8,13 @@ test('standalone and Project-linked Index share cycling, native playback, contra
   const browser=await chromium.launch({headless:true,executablePath:process.env.BROWSER_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
   try {
     const page=await browser.newPage({hasTouch:true});
+    const advanceTo = async index => {
+      for(let step=0;step<60;step++) {
+        if(Number(await page.locator('.archive-row[aria-current="true"]').getAttribute('data-index'))===index)return;
+        await page.locator('.archive-row.is-active').tap();
+      }
+      throw Error('Entry not reached by taps');
+    };
     // Generate a real, silent MP4 locally: no external fixture or CMS write.
     const mp4Bytes={};
     for(const [name,w,h] of [['demo',160,90],['portrait',90,160],['square',120,120]]) {
@@ -70,7 +77,7 @@ test('standalone and Project-linked Index share cycling, native playback, contra
       const portrait=width>700 && ratio<1;
       assert.deepEqual(properties,{autoplay:true,muted:true,loop:true,playsInline:true,controls:false,fit:portrait?'contain':'cover'});
       assert.deepEqual(await geometry(),{x:0,y:0,width,height:900,overflow:'hidden'});
-      assert.equal(await page.locator('body').evaluate(b=>getComputedStyle(b).backgroundColor),'rgb(255, 255, 255)');
+      assert.equal(await page.locator('body').evaluate(b=>getComputedStyle(b).backgroundColor),'rgb(0, 0, 0)');
       const video=page.locator('.archive-background video');
       const box=await video.boundingBox();
       if(portrait) {
@@ -102,15 +109,16 @@ test('standalone and Project-linked Index share cycling, native playback, contra
         await rows.nth(1).hover();await checkMP4(width);
       } else {
         await page.touchscreen.tap(width/2,600);await checkMP4(width);
+        await advanceTo(1);await checkMP4(width);
       }
       await page.waitForFunction(()=>document.querySelector('.archive-list').style.getPropertyValue('--contrast-color')==='#000000');
-      if(width>700)await rows.nth(2).hover();else await page.touchscreen.tap(width/2,600);
+      if(width>700)await rows.nth(2).hover();else await advanceTo(2);
       await checkMP4(width);
       await page.waitForFunction(()=>document.querySelector('.archive-list').style.getPropertyValue('--contrast-color')==='#ffffff');
       for(const [index,kind,ratio] of [[4,'mp4',9/16],[5,'mp4',1]]) {
         if(width>700) await rows.nth(index).hover();
         else {
-          await rows.nth(index).evaluate(row=>row.closest('.archive-list').scrollTo({top:row.offsetTop,behavior:'instant'}));
+          await advanceTo(index);
           await page.waitForFunction(index=>document.querySelectorAll('.archive-row')[index].getAttribute('aria-current')==='true',index);
         }
         await checkMP4(width,ratio);
@@ -125,7 +133,7 @@ test('standalone and Project-linked Index share cycling, native playback, contra
       // Move to native media with sound enabled, then to an image and back.
       const select = async index => {
         if (width > 700) await rows.nth(index).hover();
-        else await rows.nth(index).evaluate(row => row.closest('.archive-list').scrollTo({top:row.offsetTop,behavior:'instant'}));
+        else await advanceTo(index);
         await page.waitForFunction(index => document.querySelectorAll('.archive-row')[index].getAttribute('aria-current')==='true',index);
       };
       await select(2);
@@ -144,7 +152,7 @@ test('standalone and Project-linked Index share cycling, native playback, contra
       const placement = await sound.evaluate(b=>{const r=b.getBoundingClientRect();const info=document.querySelector('.detail-info-label');return {right:innerWidth-r.right,bottom:innerHeight-r.bottom,infoBottom:info?innerHeight-info.getBoundingClientRect().bottom:null};});
       assert.ok(placement.right>0 && placement.bottom>0);
       if(placement.infoBottom!==null) assert.ok(Math.abs(placement.bottom-placement.infoBottom)<1);
-      assert.equal(await page.locator('body').evaluate(b=>getComputedStyle(b).backgroundColor),'rgb(255, 255, 255)');
+      assert.equal(await page.locator('body').evaluate(b=>getComputedStyle(b).backgroundColor),'rgb(0, 0, 0)');
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),width);
       await page.evaluate(()=>location.hash='#info');
       await page.waitForSelector('.info');

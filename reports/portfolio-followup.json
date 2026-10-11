@@ -1,0 +1,3773 @@
+{
+  "date": "2026-10-11",
+  "localURL": "http://127.0.0.1:5500/",
+  "publishedURL": "https://florian-mfg.github.io/NK-Test-II/",
+  "projectPlaybackCases": [
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "revoshock",
+      "index": 0,
+      "autoplay": false,
+      "start": 3.157264,
+      "firstSamples": [
+        3.974664,
+        4.783622,
+        5.597308,
+        6.405006
+      ],
+      "running": {
+        "time": 6.409922,
+        "ended": false,
+        "paused": false,
+        "duration": 25.333333,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 6.618532,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 6.625973,
+      "resumeSamples": [
+        7.43481,
+        8.241788,
+        9.052557,
+        9.861127
+      ],
+      "resumed": {
+        "time": 9.871327,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "revoshock",
+      "index": 1,
+      "autoplay": false,
+      "start": 0.006211,
+      "firstSamples": [
+        0.820756,
+        1.636776,
+        2.450656,
+        3.288349
+      ],
+      "running": {
+        "time": 3.31433,
+        "ended": false,
+        "paused": false,
+        "duration": 18.933333,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.484082,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.498988,
+      "resumeSamples": [
+        4.306375,
+        5.112853,
+        5.927726,
+        6.74056
+      ],
+      "resumed": {
+        "time": 6.748808,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "revoshock",
+      "index": 2,
+      "autoplay": false,
+      "start": 0.006895,
+      "firstSamples": [
+        0.816209,
+        1.629241,
+        2.442623,
+        3.256926
+      ],
+      "running": {
+        "time": 3.264599,
+        "ended": false,
+        "paused": false,
+        "duration": 20.4,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.439623,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.446483,
+      "resumeSamples": [
+        4.256697,
+        5.062182,
+        5.873746,
+        6.682568
+      ],
+      "resumed": {
+        "time": 6.689434,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "maerzmusik-2022",
+      "index": 0,
+      "autoplay": false,
+      "start": 0.011012,
+      "firstSamples": [
+        0.776456,
+        1.586956,
+        2.393398,
+        3.202376
+      ],
+      "running": {
+        "time": 3.212729,
+        "ended": false,
+        "paused": false,
+        "duration": 30.016,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.301333,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.349535,
+      "resumeSamples": [
+        4.117324,
+        4.935863,
+        5.746703,
+        6.564766
+      ],
+      "resumed": {
+        "time": 6.572182,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "livevisuals",
+      "index": 0,
+      "autoplay": false,
+      "start": 0.007897,
+      "firstSamples": [
+        0.821572,
+        1.635488,
+        2.449627,
+        3.261424
+      ],
+      "running": {
+        "time": 3.26916,
+        "ended": false,
+        "paused": false,
+        "duration": 5.625,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/592c74f547561120c13093a1ae632725939a1ac6.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.350074,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.360908,
+      "resumeSamples": [
+        4.169339,
+        4.983827,
+        5.625,
+        5.625
+      ],
+      "resumed": {
+        "time": 5.625,
+        "paused": true,
+        "ended": true
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "livevisuals",
+      "index": 1,
+      "autoplay": false,
+      "start": 0.005165,
+      "firstSamples": [
+        0.81148,
+        1.617854,
+        2.424036,
+        3.230759
+      ],
+      "running": {
+        "time": 3.234781,
+        "ended": false,
+        "paused": false,
+        "duration": 14.208333,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/c8f571c050b75e5c25fea7a5dc67ee1339d50144.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.31584,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.324266,
+      "resumeSamples": [
+        4.128659,
+        4.938083,
+        5.750074,
+        6.561161
+      ],
+      "resumed": {
+        "time": 6.567017,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "livevisuals",
+      "index": 2,
+      "autoplay": false,
+      "start": 0.007482,
+      "firstSamples": [
+        0.782489,
+        1.592644,
+        2.405879,
+        3.224402
+      ],
+      "running": {
+        "time": 3.229231,
+        "ended": false,
+        "paused": false,
+        "duration": 11.702993,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/b782418156935a2aa1e2ef61c6751e3da5f6c096.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.32322,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.370726,
+      "resumeSamples": [
+        4.142384,
+        4.95595,
+        5.772259,
+        6.583268
+      ],
+      "resumed": {
+        "time": 6.592326,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "livevisuals",
+      "index": 3,
+      "autoplay": false,
+      "start": 0.011466,
+      "firstSamples": [
+        0.788742,
+        1.598294,
+        2.41543,
+        3.227084
+      ],
+      "running": {
+        "time": 3.234878,
+        "ended": false,
+        "paused": false,
+        "duration": 9.429,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.313366,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.369443,
+      "resumeSamples": [
+        4.139493,
+        4.949809,
+        5.762271,
+        6.56847
+      ],
+      "resumed": {
+        "time": 6.571526,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "advection",
+      "index": 0,
+      "autoplay": true,
+      "start": 0.074809,
+      "firstSamples": [
+        0.882487,
+        1.702833,
+        2.518108,
+        3.327506
+      ],
+      "running": {
+        "time": 3.331657,
+        "ended": false,
+        "paused": false,
+        "duration": 13.76,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/5d93bec5e4b6fa6f2f326e296eab7a923e0365ca.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.423664,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.47812,
+      "resumeSamples": [
+        4.249969,
+        5.05506,
+        5.86033,
+        6.662656
+      ],
+      "resumed": {
+        "time": 6.674639,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "advection",
+      "index": 1,
+      "autoplay": true,
+      "start": 0.02,
+      "firstSamples": [
+        0.784708,
+        1.596069,
+        2.406523,
+        3.214929
+      ],
+      "running": {
+        "time": 3.232213,
+        "ended": false,
+        "paused": false,
+        "duration": 7.552,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/52b88a1ed27fbd593f6ae0d26111c3c57a853255.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.356085,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.411747,
+      "resumeSamples": [
+        4.193292,
+        5.015425,
+        5.819366,
+        6.62042
+      ],
+      "resumed": {
+        "time": 6.624592,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "advection",
+      "index": 2,
+      "autoplay": true,
+      "start": 1.291485,
+      "firstSamples": [
+        2.093586,
+        0.011737,
+        0.816349,
+        1.620139
+      ],
+      "running": {
+        "time": 1.622608,
+        "ended": false,
+        "paused": false,
+        "duration": 2.837,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/5bba715c64d0444a8155b51b803db747ff05df4b.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 1.713318,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 1.769207,
+      "resumeSamples": [
+        2.532121,
+        0.447801,
+        1.251844,
+        2.054692
+      ],
+      "resumed": {
+        "time": 2.056372,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "advection",
+      "index": 3,
+      "autoplay": false,
+      "start": 0.010257,
+      "firstSamples": [
+        0.770564,
+        1.587277,
+        2.39177,
+        3.210613
+      ],
+      "running": {
+        "time": 3.217198,
+        "ended": false,
+        "paused": false,
+        "duration": 13.376,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.315453,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.370635,
+      "resumeSamples": [
+        4.137769,
+        4.94864,
+        5.769515,
+        6.572362
+      ],
+      "resumed": {
+        "time": 6.57578,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "advection",
+      "index": 4,
+      "autoplay": false,
+      "start": 0.019014,
+      "firstSamples": [
+        0.795814,
+        1.601188,
+        2.420464,
+        3.230927
+      ],
+      "running": {
+        "time": 3.234653,
+        "ended": false,
+        "paused": false,
+        "duration": 12.266667,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/dbeee514f0212b65dc55d914c9ea9eec186f3147.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.313182,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.36919,
+      "resumeSamples": [
+        4.142475,
+        4.946181,
+        5.763729,
+        6.57481
+      ],
+      "resumed": {
+        "time": 6.582572,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "gaussian-splats",
+      "index": 0,
+      "autoplay": true,
+      "start": 0.024635,
+      "firstSamples": [
+        0.548084,
+        1.051511,
+        1.858395,
+        2.627695
+      ],
+      "running": {
+        "time": 2.627695,
+        "ended": false,
+        "paused": false,
+        "duration": 3.5,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/c54d41ac1ac8a9a79d86ebeb2216db33a60c6173.mp4",
+        "ready": 2,
+        "network": 2,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 2.627695,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 2.633391,
+      "resumeSamples": [
+        3.446257,
+        0.739829,
+        1.546486,
+        2.357682
+      ],
+      "resumed": {
+        "time": 2.364815,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "gaussian-splats",
+      "index": 1,
+      "autoplay": false,
+      "start": 0.004621,
+      "firstSamples": [
+        0.76998,
+        1.573998,
+        2.378744,
+        3.184643
+      ],
+      "running": {
+        "time": 3.188547,
+        "ended": false,
+        "paused": false,
+        "duration": 7.509,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/1d35d6d4570ba056018ccec35754112e425cde79.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.281333,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.325722,
+      "resumeSamples": [
+        4.09561,
+        4.910496,
+        5.717378,
+        6.531938
+      ],
+      "resumed": {
+        "time": 6.536137,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "gaussian-splats",
+      "index": 2,
+      "autoplay": true,
+      "start": 0.019049,
+      "firstSamples": [
+        0.790519,
+        1.605422,
+        2.418246,
+        3.23307
+      ],
+      "running": {
+        "time": 3.239861,
+        "ended": false,
+        "paused": false,
+        "duration": 16.725,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/583ab9bf0259e0870a55996f41c6b2b9f6effa8c.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.352736,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.409622,
+      "resumeSamples": [
+        4.178704,
+        4.989643,
+        5.799536,
+        6.613565
+      ],
+      "resumed": {
+        "time": 6.61934,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "gaussian-splats",
+      "index": 3,
+      "autoplay": false,
+      "start": 0.006239,
+      "firstSamples": [
+        0.814723,
+        1.63829,
+        2.450684,
+        3.262607
+      ],
+      "running": {
+        "time": 3.26806,
+        "ended": false,
+        "paused": false,
+        "duration": 5,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/830f24ea7de3f4ce9e472b27885c2fedba519838.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.355194,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.3623,
+      "resumeSamples": [
+        4.173091,
+        4.988168,
+        5,
+        5
+      ],
+      "resumed": {
+        "time": 5,
+        "paused": true,
+        "ended": true
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 1440,
+      "slug": "gaussian-splats",
+      "index": 4,
+      "autoplay": true,
+      "start": 0.015508,
+      "firstSamples": [
+        0.827682,
+        1.63894,
+        2.447811,
+        3.257529
+      ],
+      "running": {
+        "time": 3.264117,
+        "ended": false,
+        "paused": false,
+        "duration": 7.966667,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/6494c99af6d2e5e0c7bee91f9b25cd98089adbba.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.349155,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.355814,
+      "resumeSamples": [
+        4.166324,
+        4.977841,
+        5.788155,
+        6.601414
+      ],
+      "resumed": {
+        "time": 6.609819,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "revoshock",
+      "index": 0,
+      "autoplay": false,
+      "start": 3.163245,
+      "firstSamples": [
+        3.973878,
+        4.780921,
+        5.592172,
+        6.404292
+      ],
+      "running": {
+        "time": 6.412007,
+        "ended": false,
+        "paused": false,
+        "duration": 25.333333,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 6.576599,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 6.581898,
+      "resumeSamples": [
+        7.391627,
+        8.199729,
+        9.008763,
+        9.81688
+      ],
+      "resumed": {
+        "time": 9.82182,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "revoshock",
+      "index": 1,
+      "autoplay": false,
+      "start": 0.006513,
+      "firstSamples": [
+        0.828697,
+        1.636517,
+        2.445992,
+        3.256365
+      ],
+      "running": {
+        "time": 3.261811,
+        "ended": false,
+        "paused": false,
+        "duration": 18.933333,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.415356,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.425167,
+      "resumeSamples": [
+        4.233669,
+        5.042544,
+        5.852616,
+        6.67358
+      ],
+      "resumed": {
+        "time": 6.678812,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "revoshock",
+      "index": 2,
+      "autoplay": false,
+      "start": 0.008717,
+      "firstSamples": [
+        0.817081,
+        1.624793,
+        2.437745,
+        3.248121
+      ],
+      "running": {
+        "time": 3.251837,
+        "ended": false,
+        "paused": false,
+        "duration": 20.4,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.406677,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.412313,
+      "resumeSamples": [
+        4.218584,
+        5.027593,
+        5.838483,
+        6.646612
+      ],
+      "resumed": {
+        "time": 6.652482,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "maerzmusik-2022",
+      "index": 0,
+      "autoplay": false,
+      "start": 0.004342,
+      "firstSamples": [
+        0.768245,
+        1.58549,
+        2.398315,
+        3.208741
+      ],
+      "running": {
+        "time": 3.218176,
+        "ended": false,
+        "paused": false,
+        "duration": 30.016,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.321333,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.37431,
+      "resumeSamples": [
+        4.139637,
+        4.947352,
+        5.758565,
+        6.563996
+      ],
+      "resumed": {
+        "time": 6.565786,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "livevisuals",
+      "index": 0,
+      "autoplay": false,
+      "start": 0.005135,
+      "firstSamples": [
+        0.813298,
+        1.628022,
+        2.440826,
+        3.256759
+      ],
+      "running": {
+        "time": 3.262621,
+        "ended": false,
+        "paused": false,
+        "duration": 5.625,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/592c74f547561120c13093a1ae632725939a1ac6.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.351184,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.364909,
+      "resumeSamples": [
+        4.171804,
+        4.979576,
+        5.625,
+        5.625
+      ],
+      "resumed": {
+        "time": 5.625,
+        "paused": true,
+        "ended": true
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "livevisuals",
+      "index": 1,
+      "autoplay": false,
+      "start": 0.005853,
+      "firstSamples": [
+        0.812851,
+        1.622721,
+        2.432629,
+        3.244636
+      ],
+      "running": {
+        "time": 3.254655,
+        "ended": false,
+        "paused": false,
+        "duration": 14.208333,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/c8f571c050b75e5c25fea7a5dc67ee1339d50144.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.332037,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.336241,
+      "resumeSamples": [
+        4.14986,
+        4.954048,
+        5.765714,
+        6.57652
+      ],
+      "resumed": {
+        "time": 6.582293,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "livevisuals",
+      "index": 2,
+      "autoplay": false,
+      "start": 0.006312,
+      "firstSamples": [
+        0.77429,
+        1.587705,
+        2.397399,
+        3.212146
+      ],
+      "running": {
+        "time": 3.21718,
+        "ended": false,
+        "paused": false,
+        "duration": 11.702993,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/b782418156935a2aa1e2ef61c6751e3da5f6c096.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.30322,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.36322,
+      "resumeSamples": [
+        4.136182,
+        4.947122,
+        5.757234,
+        6.570303
+      ],
+      "resumed": {
+        "time": 6.575396,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "livevisuals",
+      "index": 3,
+      "autoplay": false,
+      "start": 0.02,
+      "firstSamples": [
+        0.791582,
+        1.602913,
+        2.411549,
+        3.221042
+      ],
+      "running": {
+        "time": 3.227659,
+        "ended": false,
+        "paused": false,
+        "duration": 9.429,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.312294,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.370805,
+      "resumeSamples": [
+        4.136314,
+        4.94355,
+        5.75592,
+        6.564626
+      ],
+      "resumed": {
+        "time": 6.572032,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "advection",
+      "index": 0,
+      "autoplay": true,
+      "start": 0.141174,
+      "firstSamples": [
+        0.9506,
+        1.766802,
+        2.575695,
+        3.394127
+      ],
+      "running": {
+        "time": 3.40102,
+        "ended": false,
+        "paused": false,
+        "duration": 13.76,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/5d93bec5e4b6fa6f2f326e296eab7a923e0365ca.mp4",
+        "ready": 4,
+        "network": 2,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.541333,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.590136,
+      "resumeSamples": [
+        4.081379,
+        4.081379,
+        4.326973,
+        5.133897
+      ],
+      "resumed": {
+        "time": 5.137373,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "advection",
+      "index": 1,
+      "autoplay": true,
+      "start": 1.451312,
+      "firstSamples": [
+        2.259709,
+        3.066977,
+        3.878554,
+        4.696538
+      ],
+      "running": {
+        "time": 4.703387,
+        "ended": false,
+        "paused": false,
+        "duration": 7.552,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/52b88a1ed27fbd593f6ae0d26111c3c57a853255.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 4.849731,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 4.906935,
+      "resumeSamples": [
+        5.678679,
+        6.490057,
+        7.301449,
+        0.517661
+      ],
+      "resumed": {
+        "time": 0.522244,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "advection",
+      "index": 2,
+      "autoplay": true,
+      "start": 2.133377,
+      "firstSamples": [
+        0.055045,
+        0.85942,
+        1.66235,
+        2.466618
+      ],
+      "running": {
+        "time": 2.468681,
+        "ended": false,
+        "paused": false,
+        "duration": 2.837,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/5bba715c64d0444a8155b51b803db747ff05df4b.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 2.614423,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 2.674502,
+      "resumeSamples": [
+        0.542979,
+        1.352788,
+        2.186749,
+        0.10768
+      ],
+      "resumed": {
+        "time": 0.113911,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "advection",
+      "index": 3,
+      "autoplay": false,
+      "start": 0.010303,
+      "firstSamples": [
+        0.774696,
+        1.583945,
+        2.393448,
+        3.202056
+      ],
+      "running": {
+        "time": 3.207744,
+        "ended": false,
+        "paused": false,
+        "duration": 13.376,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.293278,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.355353,
+      "resumeSamples": [
+        4.120873,
+        4.93061,
+        5.741149,
+        6.560777
+      ],
+      "resumed": {
+        "time": 6.577824,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "advection",
+      "index": 4,
+      "autoplay": false,
+      "start": 0.005998,
+      "firstSamples": [
+        0.18006,
+        0.648954,
+        1.456535,
+        2.262938
+      ],
+      "running": {
+        "time": 2.269768,
+        "ended": false,
+        "paused": false,
+        "duration": 12.266667,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/dbeee514f0212b65dc55d914c9ea9eec186f3147.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 2.369621,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 2.425625,
+      "resumeSamples": [
+        3.191939,
+        4.008028,
+        4.860391,
+        5.669945
+      ],
+      "resumed": {
+        "time": 5.675139,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "gaussian-splats",
+      "index": 0,
+      "autoplay": true,
+      "start": 0.024502,
+      "firstSamples": [
+        0.586997,
+        1.2622,
+        1.625063,
+        2.150448
+      ],
+      "running": {
+        "time": 2.150448,
+        "ended": false,
+        "paused": false,
+        "duration": 3.5,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/c54d41ac1ac8a9a79d86ebeb2216db33a60c6173.mp4",
+        "ready": 2,
+        "network": 2,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 2.199923,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 2.205826,
+      "resumeSamples": [
+        3.016259,
+        0.318749,
+        1.125538,
+        1.937268
+      ],
+      "resumed": {
+        "time": 1.944926,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "gaussian-splats",
+      "index": 1,
+      "autoplay": false,
+      "start": 0.010526,
+      "firstSamples": [
+        0.778238,
+        1.594901,
+        2.406128,
+        3.214277
+      ],
+      "running": {
+        "time": 3.219925,
+        "ended": false,
+        "paused": false,
+        "duration": 7.509,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/1d35d6d4570ba056018ccec35754112e425cde79.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.377877,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.433915,
+      "resumeSamples": [
+        4.21341,
+        5.019445,
+        5.830557,
+        6.634077
+      ],
+      "resumed": {
+        "time": 6.636157,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "gaussian-splats",
+      "index": 2,
+      "autoplay": true,
+      "start": 14.945607,
+      "firstSamples": [
+        15.755654,
+        16.563449,
+        0.581702,
+        1.385271
+      ],
+      "running": {
+        "time": 1.387595,
+        "ended": false,
+        "paused": false,
+        "duration": 16.725,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/583ab9bf0259e0870a55996f41c6b2b9f6effa8c.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 1.514583,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 1.572909,
+      "resumeSamples": [
+        2.3413,
+        3.157591,
+        3.966382,
+        4.77201
+      ],
+      "resumed": {
+        "time": 4.774071,
+        "paused": false,
+        "ended": false
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "gaussian-splats",
+      "index": 3,
+      "autoplay": false,
+      "start": 0.00939,
+      "firstSamples": [
+        0.81466,
+        1.620322,
+        2.429647,
+        3.236736
+      ],
+      "running": {
+        "time": 3.241968,
+        "ended": false,
+        "paused": false,
+        "duration": 5,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/830f24ea7de3f4ce9e472b27885c2fedba519838.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.324412,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.331151,
+      "resumeSamples": [
+        4.139916,
+        4.947137,
+        5,
+        5
+      ],
+      "resumed": {
+        "time": 5,
+        "paused": true,
+        "ended": true
+      }
+    },
+    {
+      "base": "http://127.0.0.1:5500/",
+      "width": 390,
+      "slug": "gaussian-splats",
+      "index": 4,
+      "autoplay": true,
+      "start": 0.011785,
+      "firstSamples": [
+        0.816127,
+        1.62883,
+        2.440879,
+        3.25202
+      ],
+      "running": {
+        "time": 3.259273,
+        "ended": false,
+        "paused": false,
+        "duration": 7.966667,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/6494c99af6d2e5e0c7bee91f9b25cd98089adbba.mp4",
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "visible": "visible"
+      },
+      "paused": {
+        "time": 3.393561,
+        "paused": true,
+        "ended": false
+      },
+      "restart": 3.398368,
+      "resumeSamples": [
+        4.201972,
+        5.005932,
+        5.814109,
+        6.676802
+      ],
+      "resumed": {
+        "time": 6.679864,
+        "paused": false,
+        "ended": false
+      }
+    }
+  ],
+  "publishedRevoshockBeforeLocalFix": [
+    {
+      "width": 1440,
+      "before": {
+        "time": 0,
+        "paused": false,
+        "ready": 0,
+        "network": 2,
+        "rate": 1,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+      },
+      "after": {
+        "time": 2.611347,
+        "paused": false,
+        "ready": 4
+      },
+      "paused": {
+        "time": 2.622619,
+        "paused": true
+      },
+      "resumed": {
+        "time": 5.831387,
+        "paused": false
+      },
+      "errors": [],
+      "trace": [
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 9.2e-05,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.000112,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.622619,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.637469,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.63759,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "before": {
+        "time": 0.004399,
+        "paused": false,
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+      },
+      "after": {
+        "time": 3.224765,
+        "paused": false,
+        "ready": 4
+      },
+      "paused": {
+        "time": 3.231779,
+        "paused": true
+      },
+      "resumed": {
+        "time": 6.439373,
+        "paused": false
+      },
+      "errors": [],
+      "trace": [
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 9.2e-05,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.000112,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.622619,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.637469,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.63759,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 5.856396,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.013903,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.014109,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.063846,
+          "paused": false
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.231779,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.247022,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.247178,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "before": {
+        "time": 0.006137,
+        "paused": false,
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4"
+      },
+      "after": {
+        "time": 3.212495,
+        "paused": false,
+        "ready": 4
+      },
+      "paused": {
+        "time": 3.228794,
+        "paused": true
+      },
+      "resumed": {
+        "time": 6.434032,
+        "paused": false
+      },
+      "errors": [],
+      "trace": [
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 9.2e-05,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.000112,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.622619,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.637469,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.63759,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 5.856396,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.013903,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.014109,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.063846,
+          "paused": false
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.231779,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.247022,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.247178,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 6.448334,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0.011148,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0.01134,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4"
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0.061045,
+          "paused": false
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 3.228794,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 3.24425,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 3.244404,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "before": {
+        "time": 0,
+        "paused": false,
+        "ready": 0,
+        "network": 2,
+        "rate": 1,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+      },
+      "after": {
+        "time": 2.204139,
+        "paused": false,
+        "ready": 4
+      },
+      "paused": {
+        "time": 2.216982,
+        "paused": true
+      },
+      "resumed": {
+        "time": 5.428218,
+        "paused": false
+      },
+      "errors": [],
+      "trace": [
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.024856,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.024874,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.216982,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.232254,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.232457,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "before": {
+        "time": 0.007787,
+        "paused": false,
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+      },
+      "after": {
+        "time": 3.218295,
+        "paused": false,
+        "ready": 4
+      },
+      "paused": {
+        "time": 3.231547,
+        "paused": true
+      },
+      "resumed": {
+        "time": 6.445185,
+        "paused": false
+      },
+      "errors": [],
+      "trace": [
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.024856,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.024874,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.216982,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.232254,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.232457,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 5.450863,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.012049,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.012273,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.062072,
+          "paused": false
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.231547,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.244719,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.245066,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "before": {
+        "time": 0.007679,
+        "paused": false,
+        "ready": 4,
+        "network": 1,
+        "rate": 1,
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4"
+      },
+      "after": {
+        "time": 3.218077,
+        "paused": false,
+        "ready": 4
+      },
+      "paused": {
+        "time": 3.229347,
+        "paused": true
+      },
+      "resumed": {
+        "time": 6.444372,
+        "paused": false
+      },
+      "errors": [],
+      "trace": [
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0,
+          "paused": false
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.024856,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 0.024874,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadedmetadata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "loadeddata",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0,
+          "paused": true
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.216982,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.232254,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 2.232457,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "time": 5.450863,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.012049,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.012273,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 0.062072,
+          "paused": false
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.231547,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.244719,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 3.245066,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "time": 6.462214,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0.010629,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0.010833,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4"
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 0.062184,
+          "paused": false
+        },
+        {
+          "event": "pause",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 3.229347,
+          "paused": true
+        },
+        {
+          "event": "play",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 3.241925,
+          "paused": false
+        },
+        {
+          "event": "playing",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "time": 3.242194,
+          "paused": false
+        },
+        {
+          "promise": "resolved",
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4"
+        }
+      ]
+    }
+  ],
+  "previewAndIndexPlayback": [
+    {
+      "width": 1440,
+      "category": "video",
+      "times": [
+        0.784023,
+        1.621437,
+        2.43054,
+        3.263539
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/2ebef645668fa35bfe132e39a00a662c8dcdcb70.mp4",
+        "box": {
+          "width": 1440,
+          "height": 613.234375
+        },
+        "video": {
+          "width": 1440,
+          "height": 613.234375
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 1440,
+      "category": "video",
+      "times": [
+        4.131328,
+        4.945872,
+        5.758363,
+        6.5671
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/bad5b68e89532d3d4a26fb7f84a18009f46b1ae9.mp4",
+        "box": {
+          "width": 1440,
+          "height": 645
+        },
+        "video": {
+          "width": 1440,
+          "height": 645
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "times": [
+        0.437371,
+        0.6485,
+        1.300969,
+        1.472766
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+        "box": {
+          "width": 1440,
+          "height": 810
+        },
+        "video": {
+          "width": 1440,
+          "height": 810
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "times": [
+        2.578845,
+        3.38705,
+        4.197356,
+        5.002371
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4",
+        "box": {
+          "width": 1440,
+          "height": 900
+        },
+        "video": {
+          "width": 1440,
+          "height": 900
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "times": [
+        0.80188,
+        1.607407,
+        2.41615,
+        3.230251
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/7e437bdb39849d571c52ae77a6bbb5f669a9a022.mp4",
+        "box": {
+          "width": 1440,
+          "height": 648
+        },
+        "video": {
+          "width": 1440,
+          "height": 648
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "times": [
+        4.074666,
+        4.883804,
+        5.704355,
+        0.16605
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/671178cea98504f3c880c2eb585e2b83b2c66d40.mp4",
+        "box": {
+          "width": 1440,
+          "height": 810
+        },
+        "video": {
+          "width": 1440,
+          "height": 810
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "times": [
+        0.794241,
+        1.606083,
+        2.412618,
+        3.220325
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4",
+        "box": {
+          "width": 1440,
+          "height": 900
+        },
+        "video": {
+          "width": 1440,
+          "height": 900
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "times": [
+        0.792498,
+        1.621554,
+        2.428602,
+        3.234283
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4",
+        "box": {
+          "width": 1440,
+          "height": 810.84375
+        },
+        "video": {
+          "width": 1440,
+          "height": 810.84375
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 1440,
+      "index": {
+        "row": 2,
+        "frame": 0,
+        "taps": 6
+      },
+      "times": [
+        0.816999,
+        1.623684,
+        2.430057,
+        3.237887
+      ],
+      "background": "rgb(0, 0, 0)"
+    },
+    {
+      "width": 390,
+      "category": "video",
+      "times": [
+        0.860137,
+        1.669799,
+        2.478709,
+        3.291715
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/2ebef645668fa35bfe132e39a00a662c8dcdcb70.mp4",
+        "box": {
+          "width": 390,
+          "height": 166.078125
+        },
+        "video": {
+          "width": 390,
+          "height": 166.078125
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 390,
+      "category": "video",
+      "times": [
+        2.57232,
+        3.385251,
+        4.193654,
+        5.020343
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/bad5b68e89532d3d4a26fb7f84a18009f46b1ae9.mp4",
+        "box": {
+          "width": 390,
+          "height": 174.6875
+        },
+        "video": {
+          "width": 390,
+          "height": 174.6875
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "times": [
+        0.794181,
+        1.60703,
+        2.197518,
+        2.787706
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+        "box": {
+          "width": 390,
+          "height": 219.375
+        },
+        "video": {
+          "width": 390,
+          "height": 219.375
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "times": [
+        3.876348,
+        4.684079,
+        5.495727,
+        6.307801
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4",
+        "box": {
+          "width": 390,
+          "height": 292.5
+        },
+        "video": {
+          "width": 390,
+          "height": 292.5
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "times": [
+        6.994898,
+        0.233898,
+        1.037189,
+        1.843704
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/7e437bdb39849d571c52ae77a6bbb5f669a9a022.mp4",
+        "box": {
+          "width": 390,
+          "height": 300
+        },
+        "video": {
+          "width": 390,
+          "height": 300
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "times": [
+        4.08378,
+        4.89406,
+        5.702494,
+        0.164664
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/671178cea98504f3c880c2eb585e2b83b2c66d40.mp4",
+        "box": {
+          "width": 390,
+          "height": 219.375
+        },
+        "video": {
+          "width": 390,
+          "height": 219.375
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "times": [
+        0.802872,
+        1.622719,
+        2.439095,
+        3.246371
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4",
+        "box": {
+          "width": 390,
+          "height": 292.5
+        },
+        "video": {
+          "width": 390,
+          "height": 292.5
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "times": [
+        4.106107,
+        4.914484,
+        5.72027,
+        6.527514
+      ],
+      "geometry": {
+        "src": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4",
+        "box": {
+          "width": 390,
+          "height": 219.59375
+        },
+        "video": {
+          "width": 390,
+          "height": 219.59375
+        },
+        "background": "rgb(0, 0, 0)",
+        "padding": "0px",
+        "border": "0px"
+      }
+    },
+    {
+      "width": 390,
+      "index": {
+        "row": 2,
+        "frame": 0,
+        "taps": 6
+      },
+      "times": [
+        0.825155,
+        1.633423,
+        2.439875,
+        3.246685
+      ],
+      "background": "rgb(0, 0, 0)"
+    }
+  ],
+  "previewGeometryBefore": [
+    {
+      "width": 1440,
+      "category": "video",
+      "project": "geothermic-studies",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/2ebef645668fa35bfe132e39a00a662c8dcdcb70.mp4",
+      "native": [
+        2536,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 613.234375
+      },
+      "video": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 613.234375
+      },
+      "slot": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 613.234375
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 1440,
+      "category": "video",
+      "project": "taipei",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/bad5b68e89532d3d4a26fb7f84a18009f46b1ae9.mp4",
+      "native": [
+        1920,
+        860
+      ],
+      "container": {
+        "x": 0,
+        "y": 255.234375,
+        "width": 1440,
+        "height": 645
+      },
+      "video": {
+        "x": 0,
+        "y": 255.234375,
+        "width": 1440,
+        "height": 645
+      },
+      "slot": {
+        "x": 0,
+        "y": 255.234375,
+        "width": 1440,
+        "height": 645
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "project": "revoshock",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+      "native": [
+        1920,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 810
+      },
+      "video": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 810
+      },
+      "slot": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 810
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "project": "maerzmusik-2022",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4",
+      "native": [
+        1920,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      },
+      "video": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      },
+      "slot": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "project": "gaussian-splats",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/7e437bdb39849d571c52ae77a6bbb5f669a9a022.mp4",
+      "native": [
+        2316,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 126,
+        "width": 1440,
+        "height": 648
+      },
+      "video": {
+        "x": 0,
+        "y": 126,
+        "width": 1440,
+        "height": 648
+      },
+      "slot": {
+        "x": 0,
+        "y": 126,
+        "width": 1440,
+        "height": 648
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "project": "geology",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/671178cea98504f3c880c2eb585e2b83b2c66d40.mp4",
+      "native": [
+        1920,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 90,
+        "width": 1440,
+        "height": 810
+      },
+      "video": {
+        "x": 0,
+        "y": 90,
+        "width": 1440,
+        "height": 810
+      },
+      "slot": {
+        "x": 0,
+        "y": 90,
+        "width": 1440,
+        "height": 810
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "project": "advection",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4",
+      "native": [
+        1920,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      },
+      "video": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      },
+      "slot": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 900
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 1440,
+      "category": "graphic",
+      "project": "livevisuals",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4",
+      "native": [
+        1918,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 45,
+        "width": 1440,
+        "height": 810.84375
+      },
+      "video": {
+        "x": 0,
+        "y": 45,
+        "width": 1440,
+        "height": 810.84375
+      },
+      "slot": {
+        "x": 0,
+        "y": 45,
+        "width": 1440,
+        "height": 810.84375
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 390,
+      "category": "video",
+      "project": "geothermic-studies",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/2ebef645668fa35bfe132e39a00a662c8dcdcb70.mp4",
+      "native": [
+        2536,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 166.078125
+      },
+      "video": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 166.078125
+      },
+      "slot": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 166.078125
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 390,
+      "category": "video",
+      "project": "taipei",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/bad5b68e89532d3d4a26fb7f84a18009f46b1ae9.mp4",
+      "native": [
+        1920,
+        860
+      ],
+      "container": {
+        "x": 0,
+        "y": 166.078125,
+        "width": 390,
+        "height": 174.6875
+      },
+      "video": {
+        "x": 0,
+        "y": 166.078125,
+        "width": 390,
+        "height": 174.6875
+      },
+      "slot": {
+        "x": 0,
+        "y": 166.078125,
+        "width": 390,
+        "height": 174.6875
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "project": "revoshock",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+      "native": [
+        1920,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 219.375
+      },
+      "video": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 219.375
+      },
+      "slot": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 219.375
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "project": "maerzmusik-2022",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4",
+      "native": [
+        1920,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 219.375,
+        "width": 390,
+        "height": 292.5
+      },
+      "video": {
+        "x": 0,
+        "y": 219.375,
+        "width": 390,
+        "height": 292.5
+      },
+      "slot": {
+        "x": 0,
+        "y": 219.375,
+        "width": 390,
+        "height": 292.5
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "project": "gaussian-splats",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/7e437bdb39849d571c52ae77a6bbb5f669a9a022.mp4",
+      "native": [
+        2316,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 511.875,
+        "width": 390,
+        "height": 300
+      },
+      "video": {
+        "x": 0,
+        "y": 511.875,
+        "width": 390,
+        "height": 300
+      },
+      "slot": {
+        "x": 0,
+        "y": 511.875,
+        "width": 390,
+        "height": 300
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "project": "geology",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/671178cea98504f3c880c2eb585e2b83b2c66d40.mp4",
+      "native": [
+        1920,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 680.875,
+        "width": 390,
+        "height": 219.375
+      },
+      "video": {
+        "x": 0,
+        "y": 680.875,
+        "width": 390,
+        "height": 219.375
+      },
+      "slot": {
+        "x": 0,
+        "y": 680.875,
+        "width": 390,
+        "height": 219.375
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "project": "advection",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4",
+      "native": [
+        1920,
+        1080
+      ],
+      "container": {
+        "x": 0,
+        "y": 303.25,
+        "width": 390,
+        "height": 292.5
+      },
+      "video": {
+        "x": 0,
+        "y": 303.25,
+        "width": 390,
+        "height": 292.5
+      },
+      "slot": {
+        "x": 0,
+        "y": 303.25,
+        "width": 390,
+        "height": 292.5
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": false,
+      "ready": 4
+    },
+    {
+      "width": 390,
+      "category": "graphic",
+      "project": "livevisuals",
+      "src": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4",
+      "native": [
+        0,
+        0
+      ],
+      "container": {
+        "x": 0,
+        "y": 595.75,
+        "width": 390,
+        "height": 219.375
+      },
+      "video": {
+        "x": 0,
+        "y": 595.75,
+        "width": 390,
+        "height": 219.375
+      },
+      "slot": {
+        "x": 0,
+        "y": 595.75,
+        "width": 390,
+        "height": 219.375
+      },
+      "style": {
+        "fit": "cover",
+        "position": "50% 50%",
+        "border": "0px none rgb(0, 0, 0)",
+        "padding": "0px",
+        "margin": "0px",
+        "background": "rgb(255, 255, 255)"
+      },
+      "paused": true,
+      "ready": 0
+    }
+  ],
+  "encodedPreviewEdgeSamples": [
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2ebef645668fa35bfe132e39a00a662c8dcdcb70.mp4",
+      "samples": [
+        {
+          "time": 0,
+          "width": 2536,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 1,
+          "width": 2536,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 3,
+          "width": 2536,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/bad5b68e89532d3d4a26fb7f84a18009f46b1ae9.mp4",
+      "samples": [
+        {
+          "time": 0,
+          "width": 1920,
+          "height": 860,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 1,
+          "width": 1920,
+          "height": 860,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 3,
+          "width": 1920,
+          "height": 860,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+      "samples": [
+        {
+          "time": 0,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 1,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 3,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4",
+      "samples": [
+        {
+          "time": 0,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 1,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 3,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7e437bdb39849d571c52ae77a6bbb5f669a9a022.mp4",
+      "samples": [
+        {
+          "time": 0,
+          "width": 2316,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 1,
+          "width": 2316,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 3,
+          "width": 2316,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/671178cea98504f3c880c2eb585e2b83b2c66d40.mp4",
+      "samples": [
+        {
+          "time": 0,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 1,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 3,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4",
+      "samples": [
+        {
+          "time": 0,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 1,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 3,
+          "width": 1920,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4",
+      "samples": [
+        {
+          "time": 0,
+          "width": 1918,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 1,
+          "width": 1918,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        },
+        {
+          "time": 3,
+          "width": 1918,
+          "height": 1080,
+          "bands": {
+            "top": 0,
+            "bottom": 0,
+            "left": 0,
+            "right": 0
+          }
+        }
+      ]
+    }
+  ],
+  "visiblePlayRace": {
+    "before": {
+      "paused": true,
+      "time": 0,
+      "label": "(Play)"
+    },
+    "after": {
+      "paused": false,
+      "time": 0.151834,
+      "label": "(Pause)"
+    },
+    "description": "Scroll an offscreen manual video back into view and click its existing control before the observer callback updates."
+  },
+  "safari": "WebDriver rejected session creation: Allow remote automation is disabled."
+}

@@ -28,7 +28,7 @@ export const structure: StructureResolver = (S) =>
           S.list()
             .title('Content')
             .items([
-              page(S, 'homePage', 'Frontpage'),
+              page(S, 'homePage', 'Startseite'),
               page(S, 'selectedWork', 'Selected Work'),
               S.documentTypeListItem('project').title('Projects'),
               page(S, 'indexPage', 'Index'),

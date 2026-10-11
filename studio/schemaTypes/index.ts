@@ -1,3 +1,4 @@
+import {frontpageMedia} from './objects/frontpageMedia'
 import {project} from './documents/project'
 import {mediaSlot} from './objects/mediaSlot'
 import {
@@ -11,6 +12,7 @@ import {richText, cvEntry, editorialLinks, indexEntry} from './objects/editorial
 
 export const schemaTypes = [
   project,
+  frontpageMedia,
   mediaSlot,
   selectedWorkPreview,
   previewMediaSlot,

@@ -79,6 +79,32 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
       await page.waitForFunction(index => document.querySelectorAll('.archive-row')[index].getAttribute('aria-current') === 'true', index);
       return row;
     };
+    if (mobile) {
+      await page.goto('https://preview.test/#archive');
+      await page.waitForSelector('.archive[data-source="sanity"]');
+      const seq=['one','two','three','one','mp4','three','one','mp4','three'];
+      for(let i=0;i<27;i++) {
+        await expectActive(seq[i%9]);
+        assert.equal(await page.locator('.archive-row[aria-current="true"]').getAttribute('data-index'),String(Math.floor((i%9)/3)));
+        if(i%9===4){const before=await active();await page.locator('.detail-sound-control').tap();assert.equal(await active(),before);}
+        await page.locator('.archive-row.is-active span').first().tap();
+      }
+      await expectActive('one');
+      await page.mouse.wheel(0,700);
+      await page.locator('.archive-list').evaluate(el=>{el.scrollTop=500;el.dispatchEvent(new Event('scroll'));});
+      await expectActive('one');assert.equal(await page.evaluate(()=>scrollY),0);
+      const session=await page.context().newCDPSession(page);
+      const rect=await page.locator('.archive-row.is-active').boundingBox();
+      await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:rect.x+20,y:rect.y+10}]});
+      await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:rect.x+20,y:rect.y+110}]});
+      await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+      await expectActive('one');await session.detach();
+
+      await page.touchscreen.tap(195,650);await expectActive('two');
+      await page.evaluate(()=>location.hash='#info');await page.waitForSelector('.info');assert.equal(await page.locator('video').count(),0);
+      assert.deepEqual(await page.evaluate(()=>window.indexLayoutErrors),[]);
+      return;
+    }
     for (let visit = 0; visit < 2; visit++) {
       if (visit === 0) await page.goto('https://preview.test/#archive');
       else await page.evaluate(() => location.hash = '#archive');

@@ -66,7 +66,8 @@ test('Index preview positions use intrinsic desktop widths and proportional mobi
    for(const [rowIndex,offsets] of [[0,[0,.25,.5]],[1,[.5,0,.25]]]) {
     const row=page.locator('.archive-row').nth(rowIndex);
     if(mobile) {
-     await row.click();
+     for(let step=0;step<10&&await active()!==String(rowIndex);step++) await page.locator('.archive-row.is-active').tap();
+     await readyImage(rowIndex);
      assert.deepEqual(await geometry(),{x:(width-Math.min(width,600))/2,width:Math.min(width,600),height:Math.min(width,600)*1.5,fit:'contain'});
     } else {
      await row.hover();
@@ -94,30 +95,22 @@ test('Index preview positions use intrinsic desktop widths and proportional mobi
     },index,{timeout:5000});
    };
    for(const next of [1,2,0]) {
-    await page.touchscreen.tap(width/2,600);
-    await settled(next);
+    const current=Number(await active());
+    const count=raw.indexPage.entries[current].previewImages.length;
+    for(let i=0;i<count;i++) await page.touchscreen.tap(width/2,600);
+    await settled(next);await readyImage(next);
     const g = await geometry(), w = Math.min(width,844*2/3);
     assert.ok(Math.abs(g.width-w)<.1 && Math.abs(g.height-w*1.5)<.1 && Math.abs(g.x-(width-w)/2)<.1);
    }
-   // Real native touch scrolling must work and releasing must not advance again.
    const session=await page.context().newCDPSession(page);
    await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:width/2,y:600}]});
-   for(const y of [590,575,555,530,500]) {
-    await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:width/2,y}]});
-    await page.waitForTimeout(35);
-   }
-   // Let the drag come to rest so release does not add inertia.
-   await page.waitForTimeout(150);
-   const during=await page.locator('.archive-list').evaluate(list=>list.scrollTop);
-   assert.ok(during>0,'native touch drag scrolls the Index');
+   for(const y of [590,575,555,530,500]) await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:width/2,y}]});
    await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-   await page.waitForTimeout(500);
-   assert.equal(await active(),'2'); // The drag reached the last row, never wrapped.
-   await page.touchscreen.tap(width/2,600);
-   await settled(0);
-   // Entry buttons remain controls: tapping one selects it, rather than advancing.
-   await page.locator('.archive-row').nth(2).tap();
-   await settled(2);
+   assert.equal(await page.locator('.archive-list').evaluate(list=>list.scrollTop),0);
+   assert.equal(await active(),'0');
+   assert.equal(await page.evaluate(()=>scrollY),0);
+   await page.locator('.archive-row.is-active').tap();
+   await readyImage(0,1);await settled(0);
    await session.detach();
   }
  } finally {await browser.close();}

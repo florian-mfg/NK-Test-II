@@ -86,17 +86,7 @@ const workSubmenu = document.querySelector(".work-submenu");
 const mobileMenu = document.querySelector(".mobile-menu");
 const mobileMenuToggle = document.querySelector(".mobile-menu-toggle");
 const mobileMenuBreakpoint = window.matchMedia("(max-width: 700px)");
-const mobileWorkToggle = mobileMenu.querySelector(".mobile-menu-label");
 const mobileWorkSubmenu = mobileMenu.querySelector(".mobile-work-submenu");
-
-function setMobileWorkExpanded(expanded) {
-  mobileWorkToggle.setAttribute("aria-expanded", String(expanded));
-  mobileWorkSubmenu.hidden = !expanded;
-}
-
-mobileWorkToggle.addEventListener("click", () => {
-  setMobileWorkExpanded(mobileWorkToggle.getAttribute("aria-expanded") !== "true");
-});
 
 function closeMobileMenu() {
   if (mobileMenu.open) mobileMenu.close();
@@ -108,7 +98,6 @@ mobileMenuToggle.addEventListener("click", () => {
   if (!mobileMenuBreakpoint.matches) return;
   setWorkMenu(false);
   hideOpenCursor();
-  setMobileWorkExpanded(false);
   mobileMenu.showModal();
   mobileMenu.scrollTop = 0;
   mobileMenuToggle.setAttribute("aria-expanded", "true");
@@ -169,7 +158,7 @@ let currentPageRoute = "";
 function setCurrentPage(route) {
   currentPageRoute = route;
   document.querySelectorAll("[data-route]").forEach(link => {
-    const active = link !== mobileWorkToggle && (link.dataset.route === route || (link.dataset.route === "work" && route.startsWith("work/")));
+    const active = !link.classList.contains("mobile-menu-label") && (link.dataset.route === route || (link.dataset.route === "work" && route.startsWith("work/")));
     link.classList.toggle("active", active);
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
@@ -324,12 +313,25 @@ function applySanityGlobals() {
   fitWorkMenu();
 }
 
+function frontpageSequence() {
+  return sanityContent?.homePage?.media ?? globalThis.FrontpageMedia;
+}
+
+function hydrateFrontpage() {
+  const layer = app.querySelector('.home .frontpage-fade');
+  if (!layer || sanityContent?.homePage?.media == null || layer.dataset.source === 'sanity') return;
+  const progress = Number(layer.dataset.progress || 0);
+  cleanupPage();
+  layer.dataset.source = 'sanity';
+  cleanupPage = globalThis.FrontpageMediaFade?.init(layer, frontpageSequence(), {progress}) || (() => {});
+}
+
 function renderHome() {
   cleanupPage();
   document.body.className = "is-home";
   setCurrentPage("");
-  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="black"><div class="frontpage-fade" aria-hidden="true"></div></section>`;
-  cleanupPage = globalThis.FrontpageMediaFade?.init(app.querySelector(".frontpage-fade")) || (() => {});
+  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="auto"><div class="frontpage-fade" aria-hidden="true"></div></section>`;
+  cleanupPage = globalThis.FrontpageMediaFade?.init(app.querySelector(".frontpage-fade"), frontpageSequence()) || (() => {});
 }
 
 function renderWorkModule(module, project) {
@@ -499,7 +501,6 @@ function renderArchive() {
   }
   let activeRow = -1;
   let frame = 0;
-  let scrollFrame;
   let activeVideo = null;
   let cleanupVideo = () => {};
   const stopVideo = () => {
@@ -584,29 +585,24 @@ function renderArchive() {
       bg.replaceChildren(nextImage);
     }, () => {}); // Keep the current preview if the requested image cannot decode.
   };
-  const updateMobileEntry = () => {
-    if (!mobile.matches) return;
-    const top = list.getBoundingClientRect().top;
-    const index = rows.findIndex(row => row.getBoundingClientRect().bottom > top + 1);
-    const next = index < 0 ? rows.length - 1 : index;
-    if (next === activeRow) return;
+  const activateMobileEntry = next => {
+    activeRow = next;
     rows.forEach((row, i) => {
       row.classList.toggle("is-active", i === next);
       if (i === next) row.setAttribute("aria-current", "true");
       else row.removeAttribute("aria-current");
     });
-    activeRow = next;
-    frame = 0;
     showEntryImage(entries[next], frame);
   };
-  list.addEventListener("scroll", () => {
-    if (!mobile.matches || scrollFrame) return;
-    scrollFrame = requestAnimationFrame(() => {
-      scrollFrame = null;
-      updateMobileEntry();
-    });
-  }, { passive: true, signal: events.signal });
-  // Passive pointer tracking leaves native touch scrolling and controls intact.
+  const advanceMobile = () => {
+    const entry = entries[activeRow];
+    const count = (entry.media || entry.images || []).length;
+    frame += 1;
+    if (frame >= Math.max(1, count)) {
+      frame = 0;
+      activateMobileEntry((activeRow + 1) % rows.length);
+    } else showEntryImage(entry, frame);
+  };
   const archive = list.closest(".archive");
   const controls = 'a, button, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
   let tap = null;
@@ -621,7 +617,6 @@ function renderArchive() {
     if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 10) tap.moved = true;
   }, { passive: true, signal: events.signal });
   archive.addEventListener("pointercancel", () => { tap = null; }, { passive: true, signal: events.signal });
-  list.addEventListener("scroll", () => { if (tap) tap.moved = true; }, { passive: true, signal: events.signal });
   archive.addEventListener("pointerup", event => {
     const gesture = tap;
     tap = null;
@@ -629,10 +624,7 @@ function renderArchive() {
         event.target.closest(controls) || event.timeStamp - gesture.time > 500 ||
         Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 10 ||
         list.scrollTop !== gesture.scrollTop || window.scrollY !== gesture.pageY) return;
-    updateMobileEntry();
-    const next = (activeRow + 1) % rows.length;
-    // The existing scroll listener activates previews as the list reaches each row.
-    list.scrollTo({top: rows[next].offsetTop, behavior: "smooth"});
+    advanceMobile();
   }, { passive: true, signal: events.signal });
   const activateDesktopEntry = next => {
     if (next < 0 || next === activeRow) return;
@@ -655,11 +647,24 @@ function renderArchive() {
     activateDesktopEntry(next);
   }, { passive: true, signal: events.signal });
   rows.forEach(row => {
-    row.addEventListener("click", () => {
+    let rowGesture = null;
+    row.addEventListener("pointerdown", event => {
+      if (!mobile.matches) return;
+      rowGesture = {x: event.clientX, y: event.clientY, moved: !event.isPrimary, time: event.timeStamp};
+    }, {passive: true, signal: events.signal});
+    row.addEventListener("pointermove", event => {
+      if (rowGesture && Math.hypot(event.clientX - rowGesture.x, event.clientY - rowGesture.y) > 10) rowGesture.moved = true;
+    }, {passive: true, signal: events.signal});
+    row.addEventListener("pointercancel", () => {
+      if (rowGesture) rowGesture.moved = true;
+    }, {passive: true, signal: events.signal});
+    row.addEventListener("click", event => {
       const rowIndex = Number(row.dataset.index);
-      if (mobile.matches && activeRow !== rowIndex) {
-        list.scrollTo({ top: row.offsetTop, behavior: "auto" });
-        updateMobileEntry();
+      if (mobile.matches) {
+        const gesture = rowGesture;
+        rowGesture = null;
+        if (event.detail && gesture && (gesture.moved || event.timeStamp - gesture.time > 500)) return;
+        advanceMobile();
         return;
       }
       const entry = entries[rowIndex];
@@ -679,17 +684,15 @@ function renderArchive() {
       row.removeAttribute("aria-current");
     });
     bg.classList.remove("visible");
-    if (mobile.matches) updateMobileEntry();
+    if (mobile.matches) activateMobileEntry(0);
     else {
       list.scrollTop = 0;
       activateDesktopEntry(0);
     }
   };
   mobile.addEventListener("change", syncLayout, { signal: events.signal });
-  window.addEventListener("resize", updateMobileEntry, { signal: events.signal });
   cleanupPage = () => {
     events.abort();
-    cancelAnimationFrame(scrollFrame);
     stopVideo();
     soundButton?.remove();
   };
@@ -797,7 +800,12 @@ async function loadInfoContent() {
     const result = await SanityData.load();
     if (!result.ok) return;
     sanityContent = result.data;
+    if (['localhost','127.0.0.1'].includes(location.hostname)) {
+      const issues = sanityContent.issues.filter(issue => issue.path.startsWith('homePage.media'));
+      if (issues.length) console.warn('Startseite media diagnostics', issues);
+    }
     applySanityGlobals();
+    hydrateFrontpage();
     // Update the existing Info text even after interaction. Rerunning route()
     // would reset scrolling and menus; applySanityInfo only touches active Info.
     applySanityInfo();

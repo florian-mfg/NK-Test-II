@@ -8,7 +8,7 @@ const adapter = require('../sanity-data.js');
 const slot = {type: 'mp4', video: {asset: {_ref: 'file-demo-mp4'}}};
 const layouts = {full: 1, 'half-half': 2, 'half-quarter-quarter': 3, 'quarter-quarter-quarter-quarter': 4, 'third-third-third': 3, 'two-thirds-one-third': 2};
 function environment() {
-  const dom = new JSDOM('<main></main>', {url: 'https://preview.test/', runScripts: 'outside-only'});
+  const dom = new JSDOM('<main></main>', {url: 'https://preview.test/', runScripts: 'outside-only', pretendToBeVisual:true});
   for (const file of ['project-modules.js', 'project-video.js']) vm.runInContext(fs.readFileSync(require('node:path').join(__dirname, '..', file), 'utf8'), dom.getInternalVMContext());
   return {dom, window: dom.window, root: dom.window.document.querySelector('main')};
 }
@@ -51,6 +51,7 @@ test('native manual events, denied playback, hidden slots and cleanup use shared
     video.pause=()=>{pauses++;video.dispatchEvent(new window.Event('pause'));};
     video.load=()=>{loads++;};
     const cleanup=window.initProjectVideos(root);
+    Object.defineProperty(video,"videoWidth",{value:160});Object.defineProperty(video,"videoHeight",{value:90});video.dispatchEvent(new window.Event("loadedmetadata"));
     await new Promise(setImmediate);
     assert.equal(root.querySelector('article video').hasAttribute('src'),false);
     assert.equal(window.document.querySelector('script'),null);

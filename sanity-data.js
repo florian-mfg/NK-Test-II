@@ -43,7 +43,7 @@
   const published = '!(_id in path("drafts.**")) && !(_id in path("versions.**"))';
   // Fixed singleton IDs, explicit projections, no per-slot network calls.
   const query = `{
-    "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,textColor,video{asset->{_id,url,mimeType}},videoTitle,poster${imageFields}},
+    "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,textColor,video{asset->{_id,url,mimeType}},videoTitle,poster${imageFields},media[]{_key,type,size,image${imageFields},video{asset->{_id,url,mimeType,metadata{dimensions{width,height,aspectRatio}}}},poster${imageFields}}},
     "siteSettings": *[_type == "siteSettings" && _id == "siteSettings"][0]{_id,_type,brandName,email,instagram,phone,defaultPageTitle,defaultDescription,socialImage${imageFields},footerLinks[]{label,destination}},
     "navigation": *[_type == "navigation" && _id == "navigation"][0]{_id,_type,homeLabel,items[]{label,destination},categories[]{label,destination},mobileContact{label,destination}},
     "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,additionalIntroduction,sectionOrder[]{section},cvLabel,workLabel,skillsLabel,newsLabel,publicationsLabel,contactLabel,selectedClientsLabel,cv[]{period,text},work,skills,news[]{title,additionalInfo,url},publications[]{title,additionalInfo,url},contactLinks[]{label,destination},selectedClients},
@@ -133,6 +133,38 @@
       alt: typeof value.alt === 'string' ? value.alt : undefined,
       width: resolved.width, height: resolved.height, crop, cropRect, hotspot
     };
+  }
+
+  // Frontpage records reuse the Project upload normalizer and CDN policy.
+  function frontpageMedia(value, issues) {
+    if (value == null) return null; // Unconfigured legacy singleton: local fallback.
+    if (!Array.isArray(value)) {issue(issues, 'homePage.media', 'invalid_array', 'Expected an ordered media array.'); return null;}
+    const ids = new Set();
+    return value.flatMap((item, index) => {
+      const path = `homePage.media[${index}]`;
+      if (!record(item) || !['image','mp4'].includes(item.type)) {
+        issue(issues,path,'invalid_media','Choose an uploaded Image or MP4.'); return [];
+      }
+      const result = moduleValue({type:'full', slots:[item]},issues,path);
+      const slot = result?.slots?.[0];
+      if (!slot?.src) {issue(issues,path,'invalid_media','Missing or invalid media asset omitted.'); return [];}
+      const id = text(item._key) || `frontpage-${index}`;
+      if (ids.has(id)) {issue(issues,path,'duplicate_media','Duplicate item ID omitted.');return [];}
+      ids.add(id);
+      const size = ['small','medium','large'].includes(item.size) ? item.size : 'medium';
+      if (item.size != null && item.size !== size) issue(issues,`${path}.size`,'invalid_size','Invalid size defaults to Medium.');
+      const img = slot.image, poster = slot.posterImage;
+      const dimensions = item.video?.asset?.metadata?.dimensions;
+      const positive = value => Number.isFinite(Number(value)) && Number(value)>0 ? Number(value) : null;
+      const width = img ? img.cropRect?.width || img.width : positive(dimensions?.width);
+      const height = img ? img.cropRect?.height || img.height : positive(dimensions?.height);
+      const aspectRatio = width > 0 && height > 0 ? width/height :
+        positive(dimensions?.aspectRatio) ? positive(dimensions.aspectRatio) :
+        poster?.width && poster?.height ? (poster.cropRect?.width || poster.width)/(poster.cropRect?.height || poster.height) : undefined;
+      return [{id,type:slot.type,src:slot.src,size,width,height,aspectRatio,
+        ...(img ? {crop:img.crop,hotspot:img.hotspot,image:img} : {}),
+        ...(poster ? {poster:poster.src,posterImage:poster} : {})}];
+    });
   }
 
   const omittedModule = Object.freeze({type: 'unsupported'});
@@ -390,7 +422,7 @@
         url.pathname.startsWith(`/files/${config.projectId}/${config.dataset}/`) &&
         url.pathname.endsWith('.mp4') && (!file?.mimeType || file.mimeType === 'video/mp4') ? {type: 'mp4', src} : null;
       if (homeDoc.video && !video) issue(issues, 'homePage.video', 'invalid_video', 'Expected a directly uploaded MP4 asset.');
-      homePage = {textColor: textColor(homeDoc.textColor), video, videoTitle: string(homeDoc.videoTitle), poster: homeDoc.poster ? image(homeDoc.poster, issues, 'homePage.poster') : null};
+      homePage = {media: frontpageMedia(homeDoc.media, issues), textColor: textColor(homeDoc.textColor), video, videoTitle: string(homeDoc.videoTitle), poster: homeDoc.poster ? image(homeDoc.poster, issues, 'homePage.poster') : null};
     }
 
     const navigationDoc = singleton(raw, 'navigation', issues, availability);

@@ -26,6 +26,7 @@ for (const type of ['mp4']) for (const touch of [false, true]) for (const playba
       frame.load=()=>{destroyed=true;};
     }
     const cleanup=w.initProjectVideos(root);
+    for (const video of root.querySelectorAll("video")) {Object.defineProperty(video,"videoWidth",{value:160});Object.defineProperty(video,"videoHeight",{value:90});video.dispatchEvent(new w.Event("loadedmetadata"));}
     await flush();
     assert.ok(!calls.includes('play'),'offscreen startup cannot play');
     intersection([{isIntersecting:true}]);await flush();
@@ -93,7 +94,8 @@ test('page audio persists across mixed videos, serializes handoffs and cancels p
     video.audioPlayer=player;
     return player;
   };
-  const cleanup=w.initProjectVideos(root);await flush();
+  const cleanup=w.initProjectVideos(root);
+    for (const video of root.querySelectorAll("video")) {Object.defineProperty(video,"videoWidth",{value:160});Object.defineProperty(video,"videoHeight",{value:90});video.dispatchEvent(new w.Event("loadedmetadata"));}await flush();
   const first=players[0], sound=root.querySelector('.detail-sound-control');
   const show=(index,value)=>intersections.get(boxes[index])([{isIntersecting:value}]);
   show(0,true);show(1,false);await flush();
@@ -138,4 +140,32 @@ test('image/text projects do not create page audio controls',()=>{
   w.initProjectVideos(root)();
   assert.equal(root.querySelector('.detail-sound-control'),null);
   dom.window.close();
+});
+
+test('a visible manual Play survives stale offscreen notifications and late media readiness events', async () => {
+  const dom = new JSDOM('<main></main>', {url:'https://preview.test',runScripts:'outside-only',pretendToBeVisual:true});
+  const w=dom.window,root=w.document.querySelector('main');
+  let intersection,visible=false,plays=0,pauses=0;
+  w.ResizeObserver=class {observe(){} disconnect(){}};
+  w.IntersectionObserver=class {constructor(fn){intersection=fn}observe(){}disconnect(){}};
+  for(const file of ['project-modules.js','project-video.js'])vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'..',file),'utf8'),dom.getInternalVMContext());
+  root.innerHTML=w.renderProjectModule({type:'full',slots:[{type:'mp4',src:'https://preview.test/video.mp4',playback:'manual'}]});
+  const box=root.querySelector('.project-video'),v=box.querySelector('video'),button=box.querySelector('button');
+  box.getBoundingClientRect=()=>({width:640,height:360,left:0,right:640,top:visible?0:2000,bottom:visible?360:2360});
+  v.play=()=>{plays++;v.dispatchEvent(new w.Event('play'));return Promise.resolve()};
+  v.pause=()=>{pauses++;v.dispatchEvent(new w.Event('pause'))};v.load=()=>{};
+  Object.defineProperty(v,'videoWidth',{value:1920});Object.defineProperty(v,'videoHeight',{value:1080});
+  const cleanup=w.initProjectVideos(root);
+  try {
+    v.dispatchEvent(new w.Event('loadedmetadata'));intersection([{isIntersecting:false}]);
+    visible=true; // Current geometry changed before the observer catches up.
+    button.click();await flush();
+    assert.equal(plays,1);assert.equal(button.textContent,'(Pause)');
+    const before=pauses;
+    intersection([{isIntersecting:false}]);v.dispatchEvent(new w.Event('loadeddata'));
+    assert.equal(pauses,before,'stale visibility and late data cannot immediately stop the visible video');
+    button.click();await flush();assert.equal(button.textContent,'(Play)');
+    button.click();await flush();assert.equal(plays,2);
+    visible=false;intersection([{isIntersecting:true}]);assert.equal(button.textContent,'(Play)','current offscreen geometry wins over a stale visible notification');
+  } finally {cleanup();dom.window.close()}
 });

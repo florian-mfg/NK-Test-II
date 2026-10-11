@@ -112,26 +112,22 @@ test('desktop hover/click cycles only Index images and uses cropped orientation 
  }finally{app.dom.window.close();}
 });
 
-test('mobile scroll/selection still drives previews and full-width layout',async()=>{
+test('mobile taps cycle media before entries and scrolling never selects an entry',async()=>{
  const app=setup('#archive',true);
  try {
-  await app.settle(success(content([entry('One',{initialLayout:'half',previewImages:[img('one')]}),entry('Two',{previewImages:[img('two')]})])));
+  await app.settle(success(content([entry('One',{previewImages:[img('one'),img('other')]}),entry('Two',{previewImages:[img('two')]})])));
   const list=app.window.document.querySelector('.archive-list');
-  list.getBoundingClientRect=()=>({top:0});
-  for(const [index,row] of rows(app).entries()) {
-   Object.defineProperty(row,'offsetTop',{value:index*30});
-   row.getBoundingClientRect=()=>({bottom:(index+1)*30-list.scrollTop});
-  }
-  rows(app)[0].click();
+  rows(app)[0].click(); await new Promise(setImmediate);
   assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
-  assert.ok(app.window.document.querySelector('.archive-background').classList.contains('full'));
-  rows(app)[1].click();
-  assert.equal(list.scrollTop,30);
+  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/other-'));
+  list.scrollTop=30;list.dispatchEvent(new app.window.Event('scroll'));
+  await new Promise(setImmediate);
+  assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
+  rows(app)[0].click(); await new Promise(setImmediate);
   assert.equal(rows(app)[1].getAttribute('aria-current'),'true');
-  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/two-1200x800.jpg'));
-  list.scrollTop=0;list.dispatchEvent(new app.window.Event('scroll'));
-  await new Promise(resolve=>app.window.requestAnimationFrame(resolve));
+  rows(app)[1].click(); await new Promise(setImmediate);
   assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
+  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
  }finally{app.dom.window.close();}
 });
 
@@ -327,7 +323,7 @@ function mobileGestureFixture(app) {
  return {list,scrolls,pointer,tick,active};
 }
 
-test('mobile background taps advance, scroll to actual row offsets and wrap; previews remain full width',async()=>{
+test('mobile background taps advance, never scroll and wrap; previews remain full width',async()=>{
  const app=setup('#archive',true);
  try {
   await app.settle(success(content([entry('One',{previewImages:[portrait('one','left')]}),entry('Two'),entry('Three')])));
@@ -337,7 +333,7 @@ test('mobile background taps advance, scroll to actual row offsets and wrap; pre
   for(const next of [1,2,0]) {
    pointer('pointerdown');pointer('pointerup');await tick();
    assert.equal(active(),next);
-   assert.deepEqual(scrolls.at(-1),{top:next*37,behavior:'smooth'});
+   assert.equal(scrolls.length,0);
    assert.ok(app.window.document.querySelector('.archive-background.visible.full'));
   }
  }finally{app.dom.window.close();}
@@ -362,9 +358,9 @@ test('mobile drags, cancelled gestures, multitouch, controls and manual scrollin
   list.scrollTop=37;list.dispatchEvent(new app.window.Event('scroll'));await tick();
   pointer('pointerup');await tick();
   assert.equal(scrolls.length,0);
-  assert.equal(active(),1);
+  assert.equal(active(),0);
   pointer('pointerdown');pointer('pointerup');await tick();
-  assert.equal(active(),2); // A tap continues from the manually scrolled entry.
+  assert.equal(active(),1);
  }finally{app.dom.window.close();}
 });
 

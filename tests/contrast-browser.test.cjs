@@ -64,7 +64,7 @@ test('shared contrast adapts real images, Index changes, cursor, MP4 overrides a
    await color('.site-header .brand',expected);
    assert.equal(await page.evaluate(()=>window.pixelReads),0);
    assert.equal(await page.locator('.home iframe').count(),0);
-   assert.equal(await page.locator('.frontpage-fade-media').count(),2);
+   assert.equal(await page.locator('.frontpage-fade-media').count(),1);
   }
   await page.setViewportSize({width:390,height:844});
   await page.goto('https://preview.test/#archive');

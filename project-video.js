@@ -4,7 +4,6 @@ function nativeProjectPlayer(video) {
   return {
     on: (name, handler) => video.addEventListener(name, handler),
     off: (name, handler) => video.removeEventListener(name, handler),
-    ready: () => Promise.resolve(),
     setMuted: value => { video.muted = value; return Promise.resolve(); },
     setVolume: value => { video.volume = value; return Promise.resolve(); },
     play: () => video.play(),
@@ -131,7 +130,7 @@ function initProjectVideos(root, options = {}) {
 
   const unavailable = (frame, button) => {
     if (disposed || !globalThis.document?.body) return;
-    frame.style.visibility = 'hidden';
+    frame.parentElement.dataset.videoError = String(frame.error?.code || 'unavailable');
     frame.parentElement.removeAttribute('data-video-ready');
     if (button) {
       button.disabled = true;
@@ -144,14 +143,14 @@ function initProjectVideos(root, options = {}) {
     if (disposed) return;
     for (const frame of frames) {
       const box = frame.parentElement;
-      const button = box.querySelector('.project-video-toggle');
+      let button = box.querySelector('.project-video-toggle');
       const detail = options.index || box.hasAttribute('data-project-detail-video');
       const detailAutoplay = detail && (options.index || box.dataset.playback === 'autoplay');
 
       {
         frame.muted = detail || box.dataset.playback === 'autoplay';
         if (detail) frame.autoplay = detailAutoplay;
-        frame.style.visibility = 'hidden';
+        frame.style.visibility = box.querySelector('.project-video-poster') ? 'hidden' : '';
       }
       frame.src = frame.dataset.projectNativeSrc;
       const player = nativeProjectPlayer(frame);
@@ -173,11 +172,23 @@ function initProjectVideos(root, options = {}) {
           button.setAttribute('aria-label', `${value ? 'Pause' : 'Play'} video`);
         }
       };
+      const onPlaying = () => {
+        if (disposed) return;
+        frame.style.visibility = '';
+        const poster = box.querySelector('.project-video-poster');
+        if (poster) poster.hidden = true;
+      };
       const onPlay = () => {
         if (disposed) return;
-        if (detail && (document.hidden || !inView || frame.closest('[hidden]'))) {
+        refreshInView();
+        if (document.hidden || !inView || frame.closest('[hidden]')) {
           Promise.resolve(player.pause()).catch(() => {});
           return;
+        }
+        if (!detail && !autoplay) {
+          for (const other of frames) {
+            if (other !== frame && !other.muted) other.pause();
+          }
         }
         frame.style.visibility = '';
         update(true);
@@ -188,12 +199,14 @@ function initProjectVideos(root, options = {}) {
         unavailable(frame, button);
       };
       player.on('play', onPlay);
+      player.on('playing', onPlaying);
       player.on('pause', onPause);
       player.on('ended', onPause);
       player.on('error', onError);
       const toggle = async event => {
         event.preventDefault();
         event.stopPropagation();
+        refreshInView();
         if (busy || disposed || (detail && (!ready || !inView || document.hidden))) return;
         if (detail && !playing) preferred = audioEntry;
         busy = true;
@@ -206,18 +219,50 @@ function initProjectVideos(root, options = {}) {
       };
       button?.addEventListener('click', toggle);
       let inView = !detail || !globalThis.IntersectionObserver;
+      // Intersection callbacks can arrive after a scroll has already moved the
+      // control into view. Use current geometry for playback decisions.
+      const refreshInView = () => {
+        const rect = box.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          inView = rect.bottom > 0 && rect.top < window.innerHeight &&
+            rect.right > 0 && rect.left < window.innerWidth;
+        }
+        return inView;
+      };
       const autoplay = detail ? detailAutoplay : box.dataset.playback === 'autoplay';
-      let ready = !detail;
+      let ready = false;
+      update(false);
       const audioEntry = {player, box, relevant: () => ready && playing && inView && !frame.closest('[hidden]')};
       if (detail) audioEntries.push(audioEntry);
+      const playbackRejected = error => {
+        if (disposed || error?.name === "AbortError") return;
+        if (error?.name !== "NotAllowedError") { onError(); return; }
+        if (!button) {
+          button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'project-video-toggle';
+          button.textContent = '(Play)';
+          button.setAttribute('aria-label', 'Play video');
+          button.addEventListener('click', toggle);
+          box.append(button);
+        }
+        button.title = 'Autoplay was blocked. Press Play to start.';
+        positionAudioControls();
+      };
       const syncPlayback = () => {
         if (disposed || !ready) return;
+        refreshInView();
         if (document.hidden || !inView || frame.closest('[hidden]')) Promise.resolve(player.pause()).catch(() => {});
-        else if (autoplay) Promise.resolve(player.play()).catch(() => {});
+        else if (autoplay) Promise.resolve(player.play()).catch(playbackRejected);
       };
       const metadata = () => {
         if (disposed || !frame.videoWidth || !frame.videoHeight) return;
         box.style.setProperty('--video-ratio', String(frame.videoWidth / frame.videoHeight));
+        ready = true;
+        box.setAttribute('data-video-ready', '');
+        if (button) button.disabled = false;
+        positionAudioControls();
+        syncPlayback();
 
       };
       let intersection;
@@ -227,25 +272,22 @@ function initProjectVideos(root, options = {}) {
         if (globalThis.IntersectionObserver) {
           intersection = new IntersectionObserver(entries => {
             inView = entries[0].isIntersecting;
+            refreshInView();
             syncPlayback();
             if (detail) syncAudio();
-          });
+          }, {threshold: [0, 0.001]});
           intersection.observe(box);
         }
         syncPlayback();
       }
-      const readyTimer = setTimeout(onError, 10000);
-      player.ready().then(async () => {
-        clearTimeout(readyTimer);
-        if (disposed) return;
-
-        ready = true;
-        if (detail) { box.setAttribute('data-video-ready', ''); syncPlayback(); positionAudioControls(); }
-        update(playing);
-        if (button) button.disabled = false;
-      }).catch(() => { clearTimeout(readyTimer); onError(); });
+      const loaded = () => {
+        metadata();
+        if (!box.querySelector('.project-video-poster')) frame.style.visibility = '';
+      };
+      frame.addEventListener('loadeddata', loaded);
+      if (frame.readyState >= 1) metadata();
       cleanups.push(() => {
-        clearTimeout(readyTimer);
+        frame.removeEventListener('loadeddata', loaded);
         observer.disconnect();
         intersection?.disconnect();
         {
@@ -253,8 +295,10 @@ function initProjectVideos(root, options = {}) {
           document.removeEventListener('visibilitychange', syncPlayback);
         }
         button?.removeEventListener('click', toggle);
+        if (button && options.index) button.remove();
         box.removeAttribute('data-video-ready');
         player.off('play', onPlay);
+        player.off('playing', onPlaying);
         player.off('pause', onPause);
         player.off('ended', onPause);
         player.off('error', onError);

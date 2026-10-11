@@ -1,0 +1,2084 @@
+{
+  "references": [
+    {
+      "slot": "result.indexPage.entries.2.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2b4325d7e822745bd4e6e7d7823985fc70f766a2.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.2.previewImages.1.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/951df8da443029ea836592e2ec9bb09e94b6c843.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.2.previewImages.2.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/60a72201cd02bbe997da7c1568a6f2c597cfb4ba.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.3.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/6b401f5445526e38e227343a397fb998db39f7f1.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.4.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/425989c1acb96261de8fea9f946d5aae500f7494.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.6.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7dba1a82c5d3d49c547f65daf0db9ba8a5325802.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.6.previewImages.1.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/08dd01b9ba0d1bb5cd1078075cad57a7493b4b53.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.7.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/80cdf2de5f7207ae709a77d2b57683caff77023c.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.11.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/4cd1fa260557b18ab9d67578c56f65817aa65a79.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.13.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/5d982a7d2aa2a8b816548b3727421500188cbf41.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.14.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/523b136f60b0e86cc009e73080bee4b865a9a002.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.18.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/d48d77940f0ebd59c59f3a0fb2970dda12d626d3.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.22.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/9e10b70e1b127a7a5eceea4ee2b0a91130e9eabf.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.23.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/56346ee6632c119c3f44f4f9ab961616cd719fbb.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.24.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/929ff6de0d86cf873668ea4f7fe47d4d0d968d2f.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.24.previewImages.1.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/278f895e1891b817291625a73fc8047905e1664f.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.24.previewImages.2.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/f8d4ed8cc0ca8ccdc69b69fb9f4152f299eb8e4e.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.25.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7e9407d443b7bf0316552cb99250d6c179c01d34.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.26.previewImages.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/a466180673b50cf5b1ac5b42a3d7578c4c7cf9f5.mp4"
+    },
+    {
+      "slot": "result.indexPage.entries.26.previewImages.1.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7b4dea1c6535d2f81721f798d2147b48de003c7b.mp4"
+    },
+    {
+      "slot": "result.projects.2.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4"
+    },
+    {
+      "slot": "result.projects.2.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4"
+    },
+    {
+      "slot": "result.projects.3.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/592c74f547561120c13093a1ae632725939a1ac6.mp4"
+    },
+    {
+      "slot": "result.projects.3.modules.1.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c8f571c050b75e5c25fea7a5dc67ee1339d50144.mp4"
+    },
+    {
+      "slot": "result.projects.3.modules.2.slots.1.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/b782418156935a2aa1e2ef61c6751e3da5f6c096.mp4"
+    },
+    {
+      "slot": "result.projects.3.modules.3.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4"
+    },
+    {
+      "slot": "result.projects.3.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4"
+    },
+    {
+      "slot": "result.projects.4.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/5d93bec5e4b6fa6f2f326e296eab7a923e0365ca.mp4"
+    },
+    {
+      "slot": "result.projects.4.modules.2.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/52b88a1ed27fbd593f6ae0d26111c3c57a853255.mp4"
+    },
+    {
+      "slot": "result.projects.4.modules.3.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/5bba715c64d0444a8155b51b803db747ff05df4b.mp4"
+    },
+    {
+      "slot": "result.projects.4.modules.4.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4"
+    },
+    {
+      "slot": "result.projects.4.modules.5.slots.2.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/dbeee514f0212b65dc55d914c9ea9eec186f3147.mp4"
+    },
+    {
+      "slot": "result.projects.4.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4"
+    },
+    {
+      "slot": "result.projects.8.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/bad5b68e89532d3d4a26fb7f84a18009f46b1ae9.mp4"
+    },
+    {
+      "slot": "result.projects.8.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/bad5b68e89532d3d4a26fb7f84a18009f46b1ae9.mp4"
+    },
+    {
+      "slot": "result.projects.9.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2803e2e7c8f867b4dc9ce4e7c5a285d3b704ddb0.mp4"
+    },
+    {
+      "slot": "result.projects.10.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7c8497177e3e7f7ca0f42bf53f0d2f0aec52d87b.mp4"
+    },
+    {
+      "slot": "result.projects.10.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/671178cea98504f3c880c2eb585e2b83b2c66d40.mp4"
+    },
+    {
+      "slot": "result.projects.11.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c54d41ac1ac8a9a79d86ebeb2216db33a60c6173.mp4"
+    },
+    {
+      "slot": "result.projects.11.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/484e0c58830ad881a10af009957efe9bd616e654.mp4"
+    },
+    {
+      "slot": "result.projects.12.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c54d41ac1ac8a9a79d86ebeb2216db33a60c6173.mp4"
+    },
+    {
+      "slot": "result.projects.12.modules.1.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/1d35d6d4570ba056018ccec35754112e425cde79.mp4"
+    },
+    {
+      "slot": "result.projects.12.modules.3.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/583ab9bf0259e0870a55996f41c6b2b9f6effa8c.mp4"
+    },
+    {
+      "slot": "result.projects.12.modules.4.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/830f24ea7de3f4ce9e472b27885c2fedba519838.mp4"
+    },
+    {
+      "slot": "result.projects.12.modules.5.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/6494c99af6d2e5e0c7bee91f9b25cd98089adbba.mp4"
+    },
+    {
+      "slot": "result.projects.12.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7e437bdb39849d571c52ae77a6bbb5f669a9a022.mp4"
+    },
+    {
+      "slot": "result.projects.14.modules.1.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2ebef645668fa35bfe132e39a00a662c8dcdcb70.mp4"
+    },
+    {
+      "slot": "result.projects.14.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2ebef645668fa35bfe132e39a00a662c8dcdcb70.mp4"
+    },
+    {
+      "slot": "result.projects.15.modules.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+    },
+    {
+      "slot": "result.projects.15.modules.1.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4"
+    },
+    {
+      "slot": "result.projects.15.modules.2.slots.1.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4"
+    },
+    {
+      "slot": "result.projects.15.selectedWorkPreview.composition.0.slots.0.video",
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4"
+    }
+  ],
+  "assets": [
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2b4325d7e822745bd4e6e7d7823985fc70f766a2.mp4",
+      "width": 1015,
+      "height": 576,
+      "time": 0.841252,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kBitrate": "339364",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"720x576\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1015x576\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 720x576\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1015x576",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x5c58a",
+        "kMaxDuration": "8.916667",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/951df8da443029ea836592e2ec9bb09e94b6c843.mp4",
+      "width": 3260,
+      "height": 4074,
+      "time": 0.586628,
+      "ready": 3,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kBitrate": "13291785",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"3260x4074\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"3260x4074\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 3260x4074\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x470e89",
+        "kMaxDuration": "2.8028",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/60a72201cd02bbe997da7c1568a6f2c597cfb4ba.mp4",
+      "width": 1024,
+      "height": 576,
+      "time": 0.840623,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {},
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/6b401f5445526e38e227343a397fb998db39f7f1.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.781055,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x442559",
+        "kMaxDuration": "5.75",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "6213577",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/425989c1acb96261de8fea9f946d5aae500f7494.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.794032,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x601b8f",
+        "kMaxDuration": "16.725",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "3012740",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7dba1a82c5d3d49c547f65daf0db9ba8a5325802.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.43159,
+      "ready": 2,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kBitrate": "17122205",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x59cf3e",
+        "kMaxDuration": "2.75",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/08dd01b9ba0d1bb5cd1078075cad57a7493b4b53.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.841677,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kBitrate": "15513294",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x529a76",
+        "kMaxDuration": "2.791667",
+        "kIsSingleOrigin": "true",
+        "kResolution": "1920x1080"
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/80cdf2de5f7207ae709a77d2b57683caff77023c.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.800802,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x398349",
+        "kMaxDuration": "22.25",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "1355203",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/4cd1fa260557b18ab9d67578c56f65817aa65a79.mp4",
+      "width": 1021,
+      "height": 576,
+      "time": 0.801098,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206,
+        206,
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x45e4be",
+        "kMaxDuration": "16.682",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"720x576\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1021x576\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 720x576\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "2196639",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false",
+        "kResolution": "1021x576"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/5d982a7d2aa2a8b816548b3727421500188cbf41.mp4",
+      "width": 1680,
+      "height": 3000,
+      "time": 0.782411,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kIsRangeHeaderSupported": "true",
+        "kIsStreaming": "false",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x5947e6",
+        "kFrameUrl": "about:blank",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/523b136f60b0e86cc009e73080bee4b865a9a002.mp4",
+      "width": 1500,
+      "height": 2000,
+      "time": 0.790744,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1500x2000",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0xb77a4e",
+        "kMaxDuration": "19.712",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1500x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1500x2000\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1500x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "4880031",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/d48d77940f0ebd59c59f3a0fb2970dda12d626d3.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.300172,
+      "ready": 2,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kIsRangeHeaderSupported": "true",
+        "kIsStreaming": "false",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0xb4bc57",
+        "kIsSingleOrigin": "true",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kMaxDuration": "5.939271",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kBitrate": "15954409",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/9e10b70e1b127a7a5eceea4ee2b0a91130e9eabf.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.796017,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x22c149",
+        "kMaxDuration": "32.042",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "568679",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/56346ee6632c119c3f44f4f9ab961616cd719fbb.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.795953,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x5df5b9",
+        "kMaxDuration": "7.552",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "6523043",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/929ff6de0d86cf873668ea4f7fe47d4d0d968d2f.mp4",
+      "width": 1080,
+      "height": 1920,
+      "time": 0.782792,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1080x1920",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x235a44",
+        "kMaxDuration": "19.008",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1080x1920\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1080x1920\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1080x1920\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "975112",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/278f895e1891b817291625a73fc8047905e1664f.mp4",
+      "width": 1080,
+      "height": 1920,
+      "time": 0.84142,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kBitrate": "952930",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1080x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1080x1920\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1080x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1080x1920",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x2459f7",
+        "kMaxDuration": "20.0",
+        "kIsSingleOrigin": "true"
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/f8d4ed8cc0ca8ccdc69b69fb9f4152f299eb8e4e.mp4",
+      "width": 1400,
+      "height": 1874,
+      "time": 0.836211,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kBitrate": "976322",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1400x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1400x1874\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1400x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1400x1874",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x2351c9",
+        "kMaxDuration": "18.966667",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7e9407d443b7bf0316552cb99250d6c179c01d34.mp4",
+      "width": 1916,
+      "height": 1080,
+      "time": 0.789229,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1916x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x2bf250",
+        "kMaxDuration": "22.72",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1916x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1916x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1916x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "1014112",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/a466180673b50cf5b1ac5b42a3d7578c4c7cf9f5.mp4",
+      "width": 1600,
+      "height": 2000,
+      "time": 0.79057,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1600x2000",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0xeba24",
+        "kMaxDuration": "14.144",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1600x2000\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1600x2000\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1600x2000\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "545902",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7b4dea1c6535d2f81721f798d2147b48de003c7b.mp4",
+      "width": 480,
+      "height": 608,
+      "time": 0.802157,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":44100,\"seek preroll\":\"0us\"}]",
+        "kResolution": "480x608",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0xaaa36",
+        "kMaxDuration": "20.039002",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"480x608\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"480x608\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 480x608\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.02322",
+        "kBitrate": "279029",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/caef018b3d806c41f46bee3005405cec42a84a64.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.79528,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x38866e",
+        "kMaxDuration": "30.016",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "987321",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/592c74f547561120c13093a1ae632725939a1ac6.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.831589,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kBitrate": "211785",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x245b0",
+        "kMaxDuration": "5.625",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c8f571c050b75e5c25fea7a5dc67ee1339d50144.mp4",
+      "width": 1500,
+      "height": 2100,
+      "time": 0.831782,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kBitrate": "1775831",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1500x2100\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1500x2100\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1500x2100\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1500x2100",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x30201e",
+        "kMaxDuration": "14.208333",
+        "kIsSingleOrigin": "true"
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/b782418156935a2aa1e2ef61c6751e3da5f6c096.mp4",
+      "width": 480,
+      "height": 848,
+      "time": 0.788712,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":44100,\"seek preroll\":\"0us\"}]",
+        "kResolution": "480x848",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x571ab",
+        "kMaxDuration": "11.702993",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"480x848\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"480x848\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 480x848\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.02322",
+        "kBitrate": "243889",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c0ca3a9699cd79014780680106f2a269572ebd80.mp4",
+      "width": 1918,
+      "height": 1080,
+      "time": 0.803289,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1918x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x269c4d",
+        "kMaxDuration": "9.429",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1918x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1918x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1918x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "2146892",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/5d93bec5e4b6fa6f2f326e296eab7a923e0365ca.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.790445,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x417705",
+        "kMaxDuration": "13.76",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "2494365",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/52b88a1ed27fbd593f6ae0d26111c3c57a853255.mp4",
+      "width": 1200,
+      "height": 1600,
+      "time": 0.789015,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1200x1600",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x14ec41",
+        "kMaxDuration": "7.552",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1200x1600\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1200x1600\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1200x1600\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "1452543",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/5bba715c64d0444a8155b51b803db747ff05df4b.mp4",
+      "width": 1920,
+      "height": 1050,
+      "time": 0.788216,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1050",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0xfaa9d",
+        "kMaxDuration": "2.837",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1050\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1050\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1050\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "2895218",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2e0eef88d53642dcc5ddf6c68cf246cc210efd28.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.874583,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x30296e",
+        "kMaxDuration": "13.376",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "1887759",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/dbeee514f0212b65dc55d914c9ea9eec186f3147.mp4",
+      "width": 1200,
+      "height": 1600,
+      "time": 0.771942,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1200x1600",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x32f4a1",
+        "kMaxDuration": "12.266667",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1200x1600\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1200x1600\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1200x1600\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "2177885",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/bad5b68e89532d3d4a26fb7f84a18009f46b1ae9.mp4",
+      "width": 1920,
+      "height": 860,
+      "time": 0.800794,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x860",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x4e887f",
+        "kMaxDuration": "52.842",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x860\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x860\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x860\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "779190",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2803e2e7c8f867b4dc9ce4e7c5a285d3b704ddb0.mp4",
+      "width": 1920,
+      "height": 818,
+      "time": 0.786315,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x818",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x41f2b1",
+        "kMaxDuration": "10.01",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x818\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x818\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x818\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kBitrate": "3454121",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7c8497177e3e7f7ca0f42bf53f0d2f0aec52d87b.mp4",
+      "width": 1500,
+      "height": 1746,
+      "time": 0.836235,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kBitrate": "1737206",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1500x1746\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1500x1746\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1500x1746\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1500x1746",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x10913a",
+        "kMaxDuration": "5.0",
+        "kIsSingleOrigin": "true"
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/671178cea98504f3c880c2eb585e2b83b2c66d40.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.784045,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x6af3a",
+        "kMaxDuration": "6.293",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "556903",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/c54d41ac1ac8a9a79d86ebeb2216db33a60c6173.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.833423,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206,
+        206,
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kTotalBytes": "0x2f31cf",
+        "kBitrate": "7069584",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 high\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kMaxDuration": "3.5",
+        "kIsSingleOrigin": "true"
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/484e0c58830ad881a10af009957efe9bd616e654.mp4",
+      "width": 1900,
+      "height": 1080,
+      "time": 0.791406,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1900x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x106edb",
+        "kMaxDuration": "8.341",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1900x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1900x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1900x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "1032926",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/1d35d6d4570ba056018ccec35754112e425cde79.mp4",
+      "width": 2350,
+      "height": 1000,
+      "time": 0.784795,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "2350x1000",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x1062d6",
+        "kMaxDuration": "7.509",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"2350x1000\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"2350x1000\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 2350x1000\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "1144096",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/583ab9bf0259e0870a55996f41c6b2b9f6effa8c.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.788778,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x2b1015",
+        "kMaxDuration": "16.725",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "1349914",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/830f24ea7de3f4ce9e472b27885c2fedba519838.mp4",
+      "width": 1386,
+      "height": 1080,
+      "time": 0.823052,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kFrameUrl": "about:blank",
+        "kFrameTitle": "",
+        "kBitrate": "2112150",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1386x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1386x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1386x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1386x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x14249e",
+        "kMaxDuration": "5.0",
+        "kIsSingleOrigin": "true"
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/6494c99af6d2e5e0c7bee91f9b25cd98089adbba.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.818887,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206,
+        206,
+        206
+      ],
+      "properties": {
+        "kBitrate": "7467242",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 baseline\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x717761",
+        "kMaxDuration": "7.966667",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/7e437bdb39849d571c52ae77a6bbb5f669a9a022.mp4",
+      "width": 2316,
+      "height": 1080,
+      "time": 0.784176,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "2316x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x10cbf6",
+        "kMaxDuration": "7.509",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"2316x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"2316x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 2316x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "1172768",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/2ebef645668fa35bfe132e39a00a662c8dcdcb70.mp4",
+      "width": 2536,
+      "height": 1080,
+      "time": 0.773549,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kFrameUrl": "about:blank",
+        "kAudioTracks": "[{\"bytes per channel\":4,\"bytes per frame\":8,\"channel layout\":\"STEREO\",\"channels\":2,\"codec\":\"aac\",\"codec delay\":0,\"discard decoder delay\":true,\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"profile\":\"unknown\",\"sample format\":\"Float 32-bit planar\",\"samples per second\":48000,\"seek preroll\":\"0us\"}]",
+        "kResolution": "2536x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x5d53e4",
+        "kMaxDuration": "58.09",
+        "kFrameTitle": "",
+        "kIsPlatformAudioDecoder": "false",
+        "kAudioDecoderName": "FFmpegAudioDecoder",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"2536x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "-0.021333",
+        "kBitrate": "842323",
+        "kIsPlatformVideoDecoder": "true",
+        "kIsSingleOrigin": "true",
+        "kIsAudioDecryptingDemuxerStream": "false"
+      },
+      "mp4SampleEntries": [
+        "avc1",
+        "mp4a"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.821273,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kBitrate": "868774",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x29fa90",
+        "kMaxDuration": "25.333333",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+      "width": 1920,
+      "height": 1068,
+      "time": 0.83689,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kBitrate": "332520",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1068\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1068\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1068\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1920x1068",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0xc0215",
+        "kMaxDuration": "18.933333",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    },
+    {
+      "url": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+      "width": 1920,
+      "height": 1080,
+      "time": 0.821371,
+      "ready": 4,
+      "error": null,
+      "statuses": [
+        206
+      ],
+      "properties": {
+        "kBitrate": "238583",
+        "kVideoDecoderName": "VideoToolboxVideoDecoder",
+        "kIsStreaming": "false",
+        "kVideoTracks": "[{\"alpha mode\":\"is_opaque\",\"codec\":\"h264\",\"coded size\":\"1920x1080\",\"color space\":{\"matrix\":\"BT709\",\"primaries\":\"BT709\",\"range\":\"LIMITED\",\"transfer\":\"BT709\"},\"encryption scheme\":\"Unencrypted\",\"has extra data\":true,\"hdr metadata\":{},\"natural size\":\"1920x1080\",\"orientation\":\"0\u00b0\",\"profile\":\"h264 main\",\"visible rect\":\"0,0 1920x1080\"}]",
+        "kIsPlatformVideoDecoder": "true",
+        "kFrameUrl": "about:blank",
+        "kIsRangeHeaderSupported": "true",
+        "kIsVideoDecryptingDemuxerStream": "false",
+        "kStartTime": "0.0",
+        "kResolution": "1920x1080",
+        "kRendererName": "RendererImpl",
+        "kTotalBytes": "0x94883",
+        "kMaxDuration": "20.4",
+        "kIsSingleOrigin": "true",
+        "kFrameTitle": ""
+      },
+      "mp4SampleEntries": [
+        "avc1"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "width": 1440,
+      "project": "revoshock",
+      "manualPlayback": true,
+      "soundMute": true,
+      "cleanup": true,
+      "errors": []
+    },
+    {
+      "width": 390,
+      "project": "revoshock",
+      "manualPlayback": true,
+      "soundMute": true,
+      "cleanup": true,
+      "errors": []
+    }
+  ],
+  "revoshockBeforeAfter": [
+    {
+      "baseline": true,
+      "width": 1440,
+      "state": [
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "width": 1920,
+          "height": 1080,
+          "ready": 4,
+          "paused": true,
+          "visibility": "hidden",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 810,
+            "top": 0,
+            "right": 1440,
+            "bottom": 810,
+            "left": 0
+          },
+          "poster": false
+        },
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "width": 1920,
+          "height": 1068,
+          "ready": 4,
+          "paused": true,
+          "visibility": "hidden",
+          "box": {
+            "x": 0,
+            "y": 810,
+            "width": 960,
+            "height": 534,
+            "top": 810,
+            "right": 960,
+            "bottom": 1344,
+            "left": 0
+          },
+          "poster": false
+        },
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "width": 1920,
+          "height": 1080,
+          "ready": 4,
+          "paused": true,
+          "visibility": "hidden",
+          "box": {
+            "x": 0,
+            "y": 1344,
+            "width": 480,
+            "height": 270,
+            "top": 1344,
+            "right": 480,
+            "bottom": 1614,
+            "left": 0
+          },
+          "poster": false
+        }
+      ],
+      "errors": [],
+      "network": [
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        }
+      ]
+    },
+    {
+      "baseline": true,
+      "width": 390,
+      "state": [
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "width": 1920,
+          "height": 1080,
+          "ready": 4,
+          "paused": true,
+          "visibility": "hidden",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 219.375,
+            "top": 0,
+            "right": 390,
+            "bottom": 219.375,
+            "left": 0
+          },
+          "poster": false
+        },
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "width": 1920,
+          "height": 1068,
+          "ready": 4,
+          "paused": true,
+          "visibility": "hidden",
+          "box": {
+            "x": 0,
+            "y": 219.375,
+            "width": 390,
+            "height": 216.9375,
+            "top": 219.375,
+            "right": 390,
+            "bottom": 436.3125,
+            "left": 0
+          },
+          "poster": false
+        },
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "width": 1920,
+          "height": 1080,
+          "ready": 4,
+          "paused": true,
+          "visibility": "hidden",
+          "box": {
+            "x": 0,
+            "y": 466.6875,
+            "width": 390,
+            "height": 219.375,
+            "top": 466.6875,
+            "right": 390,
+            "bottom": 686.0625,
+            "left": 0
+          },
+          "poster": false
+        }
+      ],
+      "errors": [],
+      "network": [
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        }
+      ]
+    },
+    {
+      "baseline": false,
+      "width": 1440,
+      "state": [
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "width": 1920,
+          "height": 1080,
+          "ready": 4,
+          "paused": true,
+          "visibility": "visible",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 810,
+            "top": 0,
+            "right": 1440,
+            "bottom": 810,
+            "left": 0
+          },
+          "poster": false
+        },
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "width": 1920,
+          "height": 1068,
+          "ready": 4,
+          "paused": true,
+          "visibility": "visible",
+          "box": {
+            "x": 0,
+            "y": 810,
+            "width": 960,
+            "height": 534,
+            "top": 810,
+            "right": 960,
+            "bottom": 1344,
+            "left": 0
+          },
+          "poster": false
+        },
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "width": 1920,
+          "height": 1080,
+          "ready": 4,
+          "paused": true,
+          "visibility": "visible",
+          "box": {
+            "x": 0,
+            "y": 1344,
+            "width": 480,
+            "height": 270,
+            "top": 1344,
+            "right": 480,
+            "bottom": 1614,
+            "left": 0
+          },
+          "poster": false
+        }
+      ],
+      "errors": [],
+      "network": [
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        }
+      ]
+    },
+    {
+      "baseline": false,
+      "width": 390,
+      "state": [
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "width": 1920,
+          "height": 1080,
+          "ready": 4,
+          "paused": true,
+          "visibility": "visible",
+          "box": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 219.375,
+            "top": 0,
+            "right": 390,
+            "bottom": 219.375,
+            "left": 0
+          },
+          "poster": false
+        },
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "width": 1920,
+          "height": 1068,
+          "ready": 4,
+          "paused": true,
+          "visibility": "visible",
+          "box": {
+            "x": 0,
+            "y": 219.375,
+            "width": 390,
+            "height": 216.9375,
+            "top": 219.375,
+            "right": 390,
+            "bottom": 436.3125,
+            "left": 0
+          },
+          "poster": false
+        },
+        {
+          "src": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "width": 1920,
+          "height": 1080,
+          "ready": 4,
+          "paused": true,
+          "visibility": "visible",
+          "box": {
+            "x": 0,
+            "y": 466.6875,
+            "width": 390,
+            "height": 219.375,
+            "top": 466.6875,
+            "right": 390,
+            "bottom": 686.0625,
+            "left": 0
+          },
+          "poster": false
+        }
+      ],
+      "errors": [],
+      "network": [
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/cf318ce6ba07a11c648a3e342682cb4ee5813d50.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/d8590ee31127d6c721d70348d4a566dff4407a7d.mp4",
+          "status": 206
+        },
+        {
+          "url": "https://cdn.sanity.io/files/ck6xe2er/production/ac1ca394cb3816289ca6736fc865a5f74696c54d.mp4",
+          "status": 206
+        }
+      ]
+    }
+  ],
+  "date": "2026-10-11"
+}

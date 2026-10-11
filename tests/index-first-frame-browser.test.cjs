@@ -10,6 +10,13 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
   const delayed = new Set(['right', 'slow']);
   try {
     const page = await browser.newPage({viewport: {width: mobile ? 390 : 1440, height: 900}, hasTouch: mobile, isMobile: mobile});
+    const advanceTo = async index => {
+      for(let step=0;step<60;step++) {
+        if(Number(await page.locator('.archive-row[aria-current="true"]').getAttribute('data-index'))===index)return;
+        await page.locator('.archive-row.is-active').tap();
+      }
+      throw Error('Entry not reached by taps');
+    };
     const img = (id, portraitPosition) => ({asset: {_ref: `image-${id}-${{left:600,right:900,center:800,slow:600}[id]}x1200-jpg`}, portraitPosition});
     const raw = {projects: [], indexPage: {_id: 'indexPage', _type: 'indexPage', entries: [
       {displayTitle: 'Forward', previewImages: [img('center','center'), img('right','right'), img('left','left')]},
@@ -62,7 +69,7 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
     };
     const select = async index => {
       const row = page.locator('.archive-row').nth(index);
-      if (mobile) await row.evaluate(row => row.closest('.archive-list').scrollTo({top: row.offsetTop, behavior: 'instant'}));
+      if (mobile) await advanceTo(index);
       else await row.hover();
       await page.waitForFunction(index => document.querySelectorAll('.archive-row')[index].getAttribute('aria-current') === 'true', index);
     };
@@ -70,8 +77,8 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
       const samples = await page.evaluate(() => window.frameSamples);
       assert.ok(samples.length > 0);
       for (const sample of samples) {
-        assert.equal(sample.backdrop,'rgb(255, 255, 255)');
-        assert.equal(sample.body,'rgb(255, 255, 255)');
+        assert.equal(sample.backdrop,'rgb(0, 0, 0)');
+        assert.equal(sample.body,'rgb(0, 0, 0)');
         const id = sample.src.match(/\/(center|right|left|slow)-/)[1];
         assert.equal(sample.x, mobile ? 0 : {center: 420, right: 765, left: 0, slow: 0}[id], `wrong visible position: ${JSON.stringify(sample)}`);
         assert.equal(sample.width, mobile ? 390 : {center:600,right:675,left:450,slow:450}[id], `wrong visible width: ${JSON.stringify(sample)}`);
@@ -92,14 +99,20 @@ for (const mobile of [false, true]) test(`Index image layout on every visible fr
     await page.screenshot({path:`/tmp/nk-portrait-right-${mobile?'mobile':'desktop'}.png`});
     await click(); await displayed('left');
     await page.screenshot({path:`/tmp/nk-portrait-left-${mobile?'mobile':'desktop'}.png`});
+    if (mobile) {
+      // Finish Forward, traverse Reverse, then loop through Slow using taps.
+      await click();await displayed('left'); // next entry's first media
+      await click();await displayed('right');await click();await displayed('center');
+      await click();await frames();assert.ok(held.has('slow'));
+      // Leave the held media and ensure a late completion cannot replace Center.
+      await click();await displayed('center');
+      held.get('slow')();held.delete('slow');await frames();await displayed('center');
+      const samples=await checkFrames();
+      assert.equal(samples.some(sample=>sample.src.includes('/slow-')),false);
+      for(const id of ['center','right','left'])assert.ok(samples.some(sample=>sample.src.includes(`/${id}-`)));
+      return;
+    }
     await click(); await displayed('center'); await click(); await displayed('right');
-    // Hold decoded resources for the repeated, already-cached image case.
-    await page.evaluate(async () => {
-      window.cachedIndexImages = [...new Set(sanityContent.indexPage.entries.slice(0, 2).flatMap(entry => entry.images))].map(src => {
-        const img = new Image(); img.src = src; return img;
-      });
-      await Promise.all(window.cachedIndexImages.map(img => img.decode()));
-    });
     for (let cycle = 0; cycle < 3; cycle++) {
       for (const id of ['left','center','right']) {await click(); await displayed(id);}
     }

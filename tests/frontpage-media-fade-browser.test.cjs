@@ -16,19 +16,19 @@ test('real Chrome touch hold, exact release freeze, multitouch, cancellation and
  const signals=()=>page.evaluate(()=>touchSignals.filter(s=>s&&!s.aborted).length);
  const freeze=async()=>{const p=await progress(),s=await snapshot();await page.waitForTimeout(650);assert.equal(await progress(),p);assert.deepEqual(await snapshot(),s);return p;};
  assert.equal(await progress(),0);await page.waitForTimeout(200);assert.equal(await progress(),0);const listeners=await signals();
- await touch('touchStart',[point(1,20,300)]);await page.waitForTimeout(500);const first=await progress();assert.ok(first>.08&&first<.22);
+ await touch('touchStart',[point(1,20,300)]);await page.waitForTimeout(500);const first=await progress();assert.ok(first>2.5&&first<3.8);
  await touch('touchMove',[point(1,320,650)]);await page.waitForTimeout(300);assert.ok(await progress()>first);
  await touch('touchEnd');const stopped=await freeze();
  await touch('touchStart',[point(2,360,780)]);assert.ok(await progress()>=stopped);await page.waitForTimeout(350);assert.ok(await progress()>stopped);await touch('touchCancel');await freeze();
  // Measure elapsed time against the configured speed with two fingers.
  await touch('touchStart',[point(3,100,350),point(4,280,450)]);
- const start=await page.evaluate(()=>({time:performance.now(),progress:Number(document.querySelector('.frontpage-fade').dataset.progress)}));
+ const start=await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(time=>resolve({time,progress:Number(document.querySelector('.frontpage-fade').dataset.progress)}))));
  await page.waitForTimeout(500);
- const end=await page.evaluate(()=>({time:performance.now(),progress:Number(document.querySelector('.frontpage-fade').dataset.progress),speed:FrontpageMediaFade.MOBILE_TRANSITIONS_PER_SECOND}));
+ const end=await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(time=>resolve({time,progress:Number(document.querySelector('.frontpage-fade').dataset.progress),speed:FrontpageMediaFade.MOBILE_TRANSITIONS_PER_SECOND}))));
  assert.ok(Math.abs((end.progress-start.progress)-(end.time-start.time)/1000*end.speed)<.025,'two fingers advance at one configured speed');
  await touch('touchEnd',[point(4,280,450)]);const oneLeft=await progress();await page.waitForTimeout(300);assert.ok(await progress()>oneLeft);
  await touch('touchEnd');await freeze();
- await touch('touchStart',[point(5)]);await page.waitForTimeout(4000);assert.ok(await page.locator('.frontpage-fade-media').count()===2);
+ await touch('touchStart',[point(5)]);await page.waitForTimeout(4000);assert.ok(await page.locator('.frontpage-fade-media').count()<=7);
  const beforeResize=await progress();await page.setViewportSize({width:844,height:390});await page.waitForTimeout(200);assert.ok(await progress()>=beforeResize);await touch('touchEnd');await freeze();
  assert.ok(await page.evaluate(()=>scrollY===0&&document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight));
  await page.setViewportSize({width:390,height:844});
@@ -54,39 +54,43 @@ test('real Chrome touch hold, exact release freeze, multitouch, cancellation and
 
 
 
-test('Chrome fullscreen two-layer reveal, promotion, carry, loop, static geometry and cleanup',{skip:!process.env.BROWSER_TEST},async()=>{
+test('Chrome editorial collage: centered navigation, input fades, six-image rolling window, aspect ratios, loop and cleanup',{skip:!process.env.BROWSER_TEST},async()=>{
  const {chromium}=require(process.env.PLAYWRIGHT_MODULE_PATH||'playwright-core');
  const browser=await chromium.launch({headless:true,executablePath:process.env.BROWSER_EXECUTABLE||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
- try {
- const page=await browser.newPage({viewport:{width:1200,height:800}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ try{
+ const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',r=>{const u=new URL(r.request().url());if(u.hostname!=='preview.test')return r.abort();return r.fulfill({path:path.join(__dirname,'..',u.pathname==='/'?'index.html':u.pathname)});});
- await page.addInitScript(()=>{window.inputSignals=[];window.mediaNodes=new Set();const add=EventTarget.prototype.addEventListener;EventTarget.prototype.addEventListener=function(t,cb,o){if(this===document&&t==='pointermove')inputSignals.push(o?.signal);return add.call(this,t,cb,o);};const replace=Element.prototype.replaceChildren;Element.prototype.replaceChildren=function(...nodes){if(this.classList.contains('frontpage-fade'))nodes.forEach(n=>mediaNodes.add(n));return replace.apply(this,nodes);};});
- await page.goto('https://preview.test/#home');
- const snapshot=()=>page.locator('.frontpage-fade-media').evaluateAll(ns=>ns.map(n=>({style:n.getAttribute('style'),role:n.dataset.role,serial:n.dataset.serial,src:n.getAttribute('src')})));
+ await page.goto('https://preview.test/#home');await page.evaluate(()=>document.fonts.ready);
  const progress=()=>page.locator('.frontpage-fade').evaluate(n=>Number(n.dataset.progress));
- const signals=()=>page.evaluate(()=>inputSignals.filter(s=>s&&!s.aborted).length);
+ const snapshot=()=>page.locator('.frontpage-fade-media').evaluateAll(ns=>ns.map(n=>({serial:Number(n.dataset.serial),index:Number(n.dataset.sequence),opacity:Number(n.style.opacity),style:n.getAttribute('style')})));
+ const freeze=async()=>{const p=await progress(),s=await snapshot();await page.waitForTimeout(350);assert.equal(await progress(),p);assert.deepEqual(await snapshot(),s)};
+ const check=async()=>{
+ const result=await page.evaluate(()=>{const header=document.querySelector('.site-header').getBoundingClientRect();return {mid:header.top+header.height/2,height:innerHeight,bg:getComputedStyle(document.querySelector('.home')).backgroundColor,overflow:document.documentElement.scrollWidth>innerWidth||document.documentElement.scrollHeight>innerHeight,media:[...document.querySelectorAll('.frontpage-fade-media')].map(n=>{const b=n.getBoundingClientRect(),s=getComputedStyle(n);return {x:b.x,y:b.y,w:b.width,h:b.height,ratio:n.naturalWidth/n.naturalHeight,transform:s.transform,fit:s.objectFit,z:Number(s.zIndex)}})}});
+ assert.ok(Math.abs(result.mid-result.height/2)<.51);assert.equal(result.bg,'rgb(255, 255, 255)');assert.equal(result.overflow,false);
+ for(const n of result.media){assert.ok(n.x>=0&&n.y>=0&&n.x+n.w<=page.viewportSize().width+.1&&n.y+n.h<=page.viewportSize().height+.1);assert.ok(Math.abs(n.w/n.h-n.ratio)<.01);assert.equal(n.transform,'none');assert.equal(n.fit,'contain');}
+ assert.ok(result.media.every((n,i)=>i===0||n.z>result.media[i-1].z));return result;
+ };
  const decode=()=>page.locator('.frontpage-fade-media').evaluateAll(ns=>Promise.all(ns.map(n=>n.decode())));
- const opacity=()=>page.locator('[data-role="incoming"]').evaluate(n=>Number(n.style.opacity));
- const geometry=async()=>{const v=page.viewportSize(),ns=await page.locator('.frontpage-fade-media').evaluateAll(ns=>ns.map(n=>{const b=n.getBoundingClientRect(),s=getComputedStyle(n);return {x:b.x,y:b.y,w:b.width,h:b.height,fit:s.objectFit,position:s.objectPosition,transform:s.transform,transition:s.transitionDuration,animation:s.animationName,pointer:s.pointerEvents,z:s.zIndex,opacity:Number(s.opacity),role:n.dataset.role};}));assert.equal(ns.length,2);for(const n of ns){assert.equal(n.x,0);assert.equal(n.y,0);assert.equal(n.w,v.width);assert.equal(n.h,v.height);assert.equal(n.fit,'cover');assert.equal(n.position,'50% 50%');assert.equal(n.transform,'none');assert.equal(n.transition,'0s');assert.equal(n.animation,'none');assert.equal(n.pointer,'none');assert.equal(n.z,n.role==='current'?'1':'2');}assert.equal(ns.find(n=>n.role==='current').opacity,1);return ns;};
- const screenshot=async name=>{if(process.env.FADE_SCREENSHOT_DIR)await page.screenshot({path:path.join(process.env.FADE_SCREENSHOT_DIR,name+'.png')});};
- await decode();await geometry();assert.equal(await progress(),0);assert.equal(await opacity(),0);assert.equal(await page.locator('[data-role="current"]').getAttribute('data-sequence'),'0');await screenshot('fade-01-initial');const listeners=await signals();
- await page.mouse.move(100,200);await page.mouse.move(300,200);assert.ok(Math.abs(await opacity()-200/1200)<1e-6);
- await page.mouse.move(100,200);assert.ok(Math.abs(await opacity()-400/1200)<1e-6);await page.mouse.move(103,204);assert.ok(Math.abs(await opacity()-405/1200)<1e-6);
- const frozen=await snapshot();await page.waitForTimeout(650);assert.deepEqual(await snapshot(),frozen);await page.mouse.move(106,208);assert.ok(Math.abs(await opacity()-410/1200)<1e-6);await geometry();
- // Reset only the pointer baseline, preserving accumulated transition progress.
- await page.evaluate(()=>{document.documentElement.dispatchEvent(new PointerEvent('pointerleave',{pointerType:'mouse'}));window.testPointerX=0;document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:0,clientY:400}));});
- const advance=async target=>{await page.evaluate(p=>{const current=Number(document.querySelector('.frontpage-fade').dataset.progress);testPointerX+=(p-current)*FrontpageMediaFade.DISTANCE_PER_IMAGE;document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:testPointerX,clientY:400}));},target);await decode();};
- await advance(.5);assert.equal(await opacity(),.5);await screenshot('fade-02-half-reveal');
- await advance(.95);await screenshot('fade-03-nearly-complete');await page.evaluate(()=>window.promotedNode=document.querySelector('[data-role="incoming"]'));
- await advance(1);assert.equal(await opacity(),0);assert.equal(await page.locator('[data-role="current"]').getAttribute('data-sequence'),'1');assert.equal(await page.locator('[data-role="incoming"]').getAttribute('data-sequence'),'2');assert.ok(await page.locator('[data-role="current"]').evaluate(n=>n===promotedNode));
- const completed=await snapshot();await page.waitForTimeout(650);assert.deepEqual(await snapshot(),completed);await screenshot('fade-04-promoted');
- await advance(1.95);await advance(2.07);assert.ok(Math.abs(await opacity()-.07)<1e-12);assert.equal(await page.locator('[data-role="current"]').getAttribute('data-sequence'),'2');await screenshot('fade-05-excess-distance');
- await advance(19.75);assert.equal(await page.locator('[data-role="incoming"]').getAttribute('data-sequence'),'0');await screenshot('fade-06-loop-reveal');await advance(20);assert.equal(await opacity(),0);assert.equal(await page.locator('[data-role="current"]').getAttribute('data-sequence'),'0');
- await advance(1e6+.375);assert.equal(await opacity(),.375);assert.equal(await page.evaluate(()=>mediaNodes.size),2);
- const before=await progress(),o=await opacity();await page.setViewportSize({width:390,height:844});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));assert.equal(await progress(),before);assert.equal(await opacity(),o);await geometry();await screenshot('fade-07-narrow');
- const wheel=await snapshot();await page.mouse.wheel(0,1000);await page.waitForTimeout(650);assert.deepEqual(await snapshot(),wheel);assert.ok(await page.evaluate(()=>scrollY===0&&document.documentElement.scrollWidth<=innerWidth&&document.documentElement.scrollHeight<=innerHeight));
- await page.setViewportSize({width:1200,height:800});assert.ok(await page.locator('.site-header').evaluate(n=>Number(getComputedStyle(n).zIndex)>2));
- for(const hash of ['work','archive','project/mystic-landscapes','info']){await page.evaluate(h=>location.hash=h,hash);await page.waitForFunction(()=>!document.querySelector('.home'));assert.equal(await signals(),listeners-1);assert.equal(await page.locator('.frontpage-fade-media').count(),0);await page.evaluate(()=>location.hash='home');await page.waitForSelector('.home');assert.equal(await signals(),listeners);assert.equal(await progress(),0);assert.equal(await opacity(),0);assert.equal(await page.locator('.frontpage-fade-media').count(),2);}
+ await decode();await check();assert.equal(await progress(),0);
+ // Exercise the homepage branch of the shared contrast controller with known pixels.
+ for(const [fill,color] of [['black','rgb(255, 255, 255)'],['white','rgb(0, 0, 0)']]){
+ await page.evaluate(async fill=>{document.querySelector('#contrast-fixture')?.remove();const n=document.createElement('img');n.id='contrast-fixture';n.className='frontpage-fade-media';n.style.cssText='left:0;top:0;width:100%;height:100%;opacity:1;z-index:8';n.src=`data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="${fill}"/></svg>`;document.querySelector('.frontpage-fade').append(n);await n.decode();Contrast.refresh()},fill);
+ await page.waitForFunction(color=>getComputedStyle(document.querySelector('.brand')).color===color,color);
+ }
+ await page.evaluate(()=>{document.querySelector('#contrast-fixture').remove();Contrast.refresh()});
+
+ await page.mouse.move(100,100);await page.mouse.move(115,100);await page.waitForFunction(()=>Number(document.querySelector('.frontpage-fade').dataset.progress)>.2);assert.ok(Math.abs(await progress()-(15/(480/8.75)))<1e-6);await freeze();
+ await page.mouse.move(100,100);await page.waitForFunction(()=>Number(document.querySelector('.frontpage-fade').dataset.progress)>.5);assert.ok(Math.abs(await progress()-(30/(480/8.75)))<1e-6);
+ await page.evaluate(()=>{document.documentElement.dispatchEvent(new PointerEvent('pointerleave'));window.pointerX=0;document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:0,clientY:100}))});
+ const advance=async target=>{await page.evaluate(async p=>{while(p-Number(document.querySelector('.frontpage-fade').dataset.progress)>1e-8){const step=Math.min(.25,p-Number(document.querySelector('.frontpage-fade').dataset.progress));pointerX+=step*FrontpageMediaFade.DISTANCE_PER_IMAGE;document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:pointerX,clientY:100}));await new Promise(requestAnimationFrame)}},target);await decode()};
+ await advance(6);assert.deepEqual((await snapshot()).map(n=>n.index),[0,1,2,3,4,5]);
+ await advance(6.5);let state=await snapshot();assert.equal(state.length,7);assert.equal(state[0].opacity,.5);assert.equal(state.at(-1).opacity,.5);await freeze();const geometry=await check();if(process.env.COLLAGE_SCREENSHOT_DIR)await page.screenshot({path:path.join(process.env.COLLAGE_SCREENSHOT_DIR,"frontpage-desktop.png")});assert.ok(new Set(geometry.media.map(n=>Math.round(n.w))).size>3);assert.ok(new Set(geometry.media.map(n=>Math.round(n.x))).size>3);
+ await advance(7);assert.deepEqual((await snapshot()).map(n=>n.index),[1,2,3,4,5,6]);await advance(8);assert.deepEqual((await snapshot()).map(n=>n.index),[2,3,4,5,6,7]);
+ await advance(20.5);assert.equal((await snapshot()).at(-1).index,0);await advance(60.375);assert.equal((await snapshot()).length,7);await freeze();
+ for(const viewport of [{width:390,height:844},{width:844,height:390},{width:1440,height:900}]){const p=await progress();await page.setViewportSize(viewport);await page.waitForTimeout(100);assert.equal(await progress(),p);await check();if(process.env.COLLAGE_SCREENSHOT_DIR&&viewport.width===390)await page.screenshot({path:path.join(process.env.COLLAGE_SCREENSHOT_DIR,"frontpage-mobile.png")});}
+ await page.mouse.wheel(0,1000);await freeze();
+ await page.locator('.main-nav a[data-route="info"]').click();await page.waitForSelector('.info');assert.equal(await page.locator('.frontpage-fade-media').count(),0);
+ for(const hash of ['home','work','archive','project/mystic-landscapes','home']){await page.evaluate(h=>location.hash=h,hash);await page.waitForTimeout(100);if(hash==='home')assert.equal(await progress(),0);else assert.equal(await page.locator('.frontpage-fade-media').count(),0)}
  assert.deepEqual(errors,[]);
- }finally{await browser.close();}
+ }finally{await browser.close()}
 });

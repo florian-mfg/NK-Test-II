@@ -8,34 +8,37 @@ const singletonPreview = (title: string) => ({prepare: () => ({title})})
 
 export const homePage = defineType({
   name: 'homePage',
-  title: 'Frontpage',
+  title: 'Startseite',
   type: 'document',
   fields: [
-    textColorField(),
+    defineField({name: 'media', title: 'Media', type: 'array', options: {sortable: true},
+      description: 'Add images or MP4 uploads and drag to reorder. An empty list intentionally leaves the Startseite blank. Older documents without this field use the local sequence.',
+      of: [defineArrayMember({type: 'frontpageMedia'})]}),
+    {...textColorField(), hidden: true},
     defineField({
       name: 'video',
       title: 'MP4 upload',
       type: 'file',
       options: {accept: 'video/mp4'},
-      description: 'Optional direct MP4 upload. The current Frontpage keeps its fixed local opacity sequence.',
+      hidden: true,
+      description: 'Legacy field retained for existing documents; use Media above.',
       validation: rule => rule.custom(value => !value || /^file-[a-zA-Z0-9]+-mp4$/.test(value.asset?._ref || '')
         ? true : 'Upload an MP4 video.'),
     }),
     defineField({
       name: 'videoTitle',
-      title: 'Accessible video title',
+      title: 'Accessible video title', hidden: true,
       type: 'string',
-      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'poster',
-      title: 'Fallback / poster image',
+      title: 'Fallback / poster image', hidden: true,
       type: 'image',
       options: {hotspot: true},
       fields: [defineField({name: 'alt', title: 'Alt text', type: 'string'})],
     }),
   ],
-  preview: singletonPreview('Frontpage'),
+  preview: singletonPreview('Startseite'),
 })
 
 export const selectedWork = defineType({

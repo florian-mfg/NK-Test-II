@@ -98,9 +98,9 @@ body.mobile-menu-open { overflow: hidden; }
 .work-menu.is-open .work-submenu { visibility: visible; pointer-events: auto; }
 .work-submenu a { font: inherit; font-size: var(--menu-text-size); line-height: 1.4; }
 
-.home { touch-action: none; position: relative; width: 100%; height: 100dvh; background: var(--dark); }
+.home { touch-action: none; position: relative; width: 100%; height: 100dvh; background: #fff; }
 .frontpage-fade { position: fixed; inset: 0; pointer-events: none; isolation: isolate; contain: strict; }
-.frontpage-fade-media { position: absolute; inset: 0; display: block; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center center; pointer-events: none; transform: none; transition: none; animation: none; }
+.frontpage-fade-media { position: absolute; display: block; max-width: none; object-fit: contain; pointer-events: none; transform: none; transition: none; animation: none; }
 /* Frontpage navigation overlays the composition without a backing surface. */
 .is-home .site-header, .is-home .site-header a, .is-home .mobile-menu-toggle { background: transparent; }
 
@@ -146,10 +146,13 @@ body.mobile-menu-open { overflow: hidden; }
 .project-slot > img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .height-auto > .project-slot > img { height: auto; }
 /* Native videos use the existing slot dimensions. */
-.project-video { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--dark); }
+/* Keep video loading/letterbox areas black, independent of white page surfaces. */
+.project-slot:has(> .project-video) { background: #000; }
+.project-video { position: relative; width: 100%; height: 100%; overflow: hidden; background: #000; }
 .height-auto > .project-slot > .project-video { height: auto; aspect-ratio: var(--video-ratio, 16 / 9); }
 .project-video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .project-video-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.project-video-poster[hidden] { display: none; }
 .project-video-toggle { position: absolute; z-index: 1; bottom: var(--pad); right: var(--pad); border: 0; padding: 0; background: transparent; cursor: pointer; font: inherit; font-size: var(--menu-text-size); line-height: 1.1; --contrast-color: #ffffff; color: var(--contrast-color); }
 /* Manual overview controls sit above their project's link and sticky title. */
 .is-work .project-video-toggle { z-index: 31; }
@@ -356,10 +359,8 @@ noscript {
   .mobile-menu-work { padding-bottom: 0; }
   .mobile-menu nav .mobile-menu-label { display: block; border: 0; padding: 0; background: transparent; color: inherit; font: inherit; font-style: normal; text-align: left; cursor: pointer; }
   .mobile-work-submenu { padding-left: 8vw; }
-  .mobile-work-submenu[hidden] { display: none; }
   .mobile-menu nav a { font-style: normal; }
-  .mobile-menu nav a:active,
-  .mobile-menu nav .mobile-menu-label[aria-expanded="true"] { font-style: italic; }
+  .mobile-menu nav a:active { font-style: normal; }
   .mobile-menu nav .mobile-menu-section { width: 100%; }
   .mobile-menu-mail { flex-shrink: 0; align-self: flex-start; margin-top: auto; padding: 4vw 1.6vw 0; font-size: calc(4vw * var(--text-scale)); line-height: 1.1; }
   .mobile-menu-mail:hover,
@@ -385,19 +386,13 @@ noscript {
     left: var(--pad);
     right: var(--pad);
     width: auto;
-    height: calc(100dvh - var(--archive-list-top));
-    padding-bottom: calc(100dvh - var(--archive-list-top) - var(--archive-row-height));
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    scroll-snap-type: y proximity;
-    scrollbar-width: none;
+    height: auto;
+    overflow: hidden;
     z-index: 2;
   }
-  .archive-list::-webkit-scrollbar { display: none; }
   .archive-row {
     grid-template-columns: 1fr;
     height: var(--archive-row-height);
-    scroll-snap-align: start;
   }
   .archive-row span,
   .archive-row:hover span { font-style: normal; }
@@ -444,8 +439,8 @@ body.is-detail :is(.detail-info-popup, .detail-info-close, .detail-info-popup p,
 }
 
 /* Index backdrop and intrinsic portrait positioning. */
-body.is-index { --dark: #fff; --ink: #000; color: var(--ink); }
-body.is-index, .is-index .archive, .is-index .archive-background { background-color: #fff; }
+body.is-index { --dark: #000; --ink: #fff; color: var(--ink); }
+body.is-index, .is-index .archive, .is-index .archive-background { background-color: #000; }
 .is-index .archive-background { display: flex; align-items: center; justify-content: center; }
 .is-index .archive-background.half { left: 0; right: 0; justify-content: flex-end; }
 .is-index .archive-background.half.portrait-left { justify-content: flex-start; }
@@ -467,8 +462,23 @@ body.is-index, .is-index .archive, .is-index .archive-background { background-co
 }
 
 @media (max-width: 700px) {
-  /* Retain mobile media shading without darkening the empty white backdrop. */
+  /* Retain mobile media shading without changing the empty black backdrop. */
   .is-index .archive-background.visible > img,
   .is-index .archive-background.visible > video,
   .is-index .archive-background.visible > .project-video { filter: brightness(.72); }
+}
+
+@media (max-width: 700px) {
+  body.is-index { overflow: hidden; height: 100dvh; }
+  .is-index .archive { position: fixed; inset: 0; min-height: 0; height: 100dvh; overflow: hidden; touch-action: none; }
+  .is-index .archive-row { display: none; }
+  .is-index .archive-row.is-active { display: grid; }
+  .mobile-menu nav .mobile-menu-label { cursor: default; }
+}
+
+/* Home alone centers the existing navigation grid as one group. */
+body.is-home { background: #fff; }
+.is-home .site-header, .is-home .site-header.is-hidden {
+  top: 50vh; top: 50dvh; bottom: auto; transform: translateY(-50%);
+  opacity: 1; pointer-events: auto; transition: none;
 }
