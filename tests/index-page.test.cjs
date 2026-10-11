@@ -112,20 +112,19 @@ test('desktop hover/click cycles only Index images and uses cropped orientation 
  }finally{app.dom.window.close();}
 });
 
-test('mobile taps cycle media before entries and scrolling never selects an entry',async()=>{
+test('mobile taps advance one project despite multiple media; scrolling never selects an entry',async()=>{
  const app=setup('#archive',true);
  try {
   await app.settle(success(content([entry('One',{previewImages:[img('one'),img('other')]}),entry('Two',{previewImages:[img('two')]})])));
   const list=app.window.document.querySelector('.archive-list');
-  rows(app)[0].click(); await new Promise(setImmediate);
-  assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
-  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/other-'));
+  const {pointer}=mobileGestureFixture(app);
+  pointer('pointerdown');pointer('pointerup'); await new Promise(setImmediate);
+  assert.equal(rows(app)[1].getAttribute('aria-current'),'true');
+  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/two-'));
   list.scrollTop=30;list.dispatchEvent(new app.window.Event('scroll'));
   await new Promise(setImmediate);
-  assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
-  rows(app)[0].click(); await new Promise(setImmediate);
   assert.equal(rows(app)[1].getAttribute('aria-current'),'true');
-  rows(app)[1].click(); await new Promise(setImmediate);
+  pointer('pointerdown');pointer('pointerup'); await new Promise(setImmediate);
   assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
  }finally{app.dom.window.close();}
@@ -385,7 +384,7 @@ test('mobile title selection starts selected project at its first media without 
   assert.equal(originalRows[1].getAttribute('aria-current'),'true');
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
   originalRows[1].click();
-  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/four-'));
+  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
   originalRows[0].click();
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
   assert.equal(app.window.document.querySelector('.archive-list'),list);

@@ -92,6 +92,7 @@ function closeMobileMenu() {
   if (mobileMenu.open) mobileMenu.close();
   mobileMenuToggle.setAttribute("aria-expanded", "false");
   document.body.classList.remove("mobile-menu-open");
+  syncViewportBackground();
 }
 
 mobileMenuToggle.addEventListener("click", () => {
@@ -102,6 +103,7 @@ mobileMenuToggle.addEventListener("click", () => {
   mobileMenu.scrollTop = 0;
   mobileMenuToggle.setAttribute("aria-expanded", "true");
   document.body.classList.add("mobile-menu-open");
+  syncViewportBackground();
 });
 mobileMenu.querySelector(".mobile-menu-close").addEventListener("click", closeMobileMenu);
 mobileMenu.addEventListener("close", closeMobileMenu);
@@ -155,8 +157,14 @@ let cleanupPage = () => {};
 
 function image(src, alt = "") { return `<img src="${src}" alt="${alt}" loading="lazy">`; }
 let currentPageRoute = "";
+function syncViewportBackground() {
+  const dark = document.body.classList.contains("is-index") && !mobileMenu.open;
+  document.documentElement.style.backgroundColor = dark ? "#000000" : "#ffffff";
+  document.querySelector('meta[name="theme-color"]').content = dark ? "#000000" : "#ffffff";
+}
 function setCurrentPage(route) {
   currentPageRoute = route;
+  syncViewportBackground();
   document.querySelectorAll("[data-route]").forEach(link => {
     const active = !link.classList.contains("mobile-menu-label") && (link.dataset.route === route || (link.dataset.route === "work" && route.startsWith("work/")));
     link.classList.toggle("active", active);
@@ -469,7 +477,7 @@ function renderArchive() {
     const attributes = `class="archive-row" data-index="${index}" data-year="${escapeModuleAttribute(entry.year || "")}"`;
     return `<button ${attributes} type="button"><span>${title}</span>${info}</button>`;
   };
-  app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true"></div><div class="archive-list">${entries.map(entryMarkup).join("")}</div></section>`;
+  app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true"></div><div class="archive-list"><div class="archive-list-track">${entries.map(entryMarkup).join("")}</div></div></section>`;
   renderedIndexPages.set(app.querySelector(".archive"), entries);
   const bg = document.querySelector(".archive-background");
   let imageRequest = 0;
@@ -587,7 +595,10 @@ function renderArchive() {
   };
   const activateMobileEntry = next => {
     activeRow = next;
+    // Restore the historical row-to-list-top offset without native scrolling.
+    list.style.setProperty("--archive-active-row", next);
     rows.forEach((row, i) => {
+      row.inert = i < next;
       row.classList.toggle("is-active", i === next);
       if (i === next) row.setAttribute("aria-current", "true");
       else row.removeAttribute("aria-current");
@@ -595,13 +606,8 @@ function renderArchive() {
     showEntryImage(entries[next], frame);
   };
   const advanceMobile = () => {
-    const entry = entries[activeRow];
-    const count = (entry.media || entry.images || []).length;
-    frame += 1;
-    if (frame >= Math.max(1, count)) {
-      frame = 0;
-      activateMobileEntry((activeRow + 1) % rows.length);
-    } else showEntryImage(entry, frame);
+    frame = 0;
+    activateMobileEntry((activeRow + 1) % rows.length);
   };
   const archive = list.closest(".archive");
   const controls = 'a, button, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
@@ -664,11 +670,8 @@ function renderArchive() {
         const gesture = rowGesture;
         rowGesture = null;
         if (event.detail && gesture && (gesture.moved || event.timeStamp - gesture.time > 500)) return;
-        if (activeRow === rowIndex) advanceMobile();
-        else {
-          frame = 0;
-          activateMobileEntry(rowIndex);
-        }
+        frame = 0;
+        activateMobileEntry(rowIndex);
         return;
       }
       const entry = entries[rowIndex];
@@ -684,9 +687,11 @@ function renderArchive() {
     activeRow = -1;
     frame = 0;
     rows.forEach(row => {
+      row.inert = false;
       row.classList.remove("is-active");
       row.removeAttribute("aria-current");
     });
+    list.style.removeProperty("--archive-active-row");
     bg.classList.remove("visible");
     if (mobile.matches) activateMobileEntry(0);
     else {

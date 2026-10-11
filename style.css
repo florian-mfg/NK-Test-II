@@ -337,6 +337,7 @@ noscript {
     inset: 0;
     width: 100%;
     max-width: none;
+    height: 100vh;
     height: 100dvh;
     max-height: none;
     margin: 0;
@@ -469,8 +470,33 @@ body.is-index, .is-index .archive, .is-index .archive-background { background-co
 }
 
 @media (max-width: 700px) {
-  body.is-index { overflow: hidden; height: 100dvh; }
-  .is-index .archive { position: fixed; inset: 0; min-height: 0; height: 100dvh; overflow: hidden; touch-action: none; }
+  body.is-index { overflow: hidden; height: 100vh; height: 100dvh; overscroll-behavior: none; }
+  .is-index .archive { position: fixed; inset: 0; width: 100vw; min-height: 0; height: 100vh; height: 100dvh; overflow: hidden; touch-action: none; }
+  .is-index .site-header {
+    top: max(var(--pad), env(safe-area-inset-top));
+    left: max(var(--pad), env(safe-area-inset-left));
+    right: max(var(--pad), env(safe-area-inset-right));
+  }
+  .is-index .archive-list {
+    --archive-list-top: calc(max(var(--pad), env(safe-area-inset-top)) + 1.1rem);
+    left: max(var(--pad), env(safe-area-inset-left));
+    right: max(var(--pad), env(safe-area-inset-right));
+    height: calc(100vh - var(--archive-list-top));
+    height: calc(100dvh - var(--archive-list-top));
+    overflow: hidden;
+  }
+  .archive-list-track {
+    transform: translateY(calc(-1 * var(--archive-active-row, 0) * var(--archive-row-height)));
+  }
+  .is-index .archive-background { inset: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
+  .is-index .archive-background > img,
+  .is-index .archive-background > video,
+  .is-index .archive-background img.is-portrait-image {
+    display: block; width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; object-fit: cover;
+  }
+  .mobile-menu[open] { padding-left: max(2.6vw, env(safe-area-inset-left)); padding-right: max(2.6vw, env(safe-area-inset-right)); }
+  body.mobile-menu-open { background-color: #fff; }
+  .mobile-menu-header { right: max(2.6vw, env(safe-area-inset-right)); }
   .mobile-menu nav .mobile-menu-label { cursor: default; }
 }
 

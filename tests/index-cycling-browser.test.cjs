@@ -82,12 +82,12 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
     if (mobile) {
       await page.goto('https://preview.test/#archive');
       await page.waitForSelector('.archive[data-source="sanity"]');
-      const seq=['one','two','three','one','mp4','three','one','mp4','three'];
+      const seq=['one','one','one'];
       for(let i=0;i<27;i++) {
-        await expectActive(seq[i%9]);
-        assert.equal(await page.locator('.archive-row[aria-current="true"]').getAttribute('data-index'),String(Math.floor((i%9)/3)));
+        await expectActive(seq[i%3]);
+        assert.equal(await page.locator('.archive-row[aria-current="true"]').getAttribute('data-index'),String(i%3));
         if(i%9===4){const before=await active();await page.locator('.detail-sound-control').tap();assert.equal(await active(),before);}
-        await page.locator('.archive-row.is-active span').first().tap();
+        await page.touchscreen.tap(195,650);
       }
       await expectActive('one');
       await page.mouse.wheel(0,700);
@@ -100,7 +100,7 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
       await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
       await expectActive('one');await session.detach();
 
-      await page.touchscreen.tap(195,650);await expectActive('two');
+      await page.touchscreen.tap(195,650);await expectActive('one');
       const originalRows = await page.locator('.archive-row').elementHandles();
       await page.locator('.archive-row').nth(2).locator('span').first().tap();
       await expectActive('one');

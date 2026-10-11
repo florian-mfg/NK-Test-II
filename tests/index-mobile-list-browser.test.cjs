@@ -2,49 +2,107 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const fs = require('node:fs');
 const {execFileSync} = require('node:child_process');
 
-test('complete mobile Index retains historical list geometry and stable rows', {skip: !process.env.BROWSER_TEST}, async () => {
-  const {chromium} = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
-  const browser = await chromium.launch({headless:true, executablePath:process.env.BROWSER_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+for (const engine of ['chromium', 'webkit']) test(`advancing mobile Index and viewport coverage (${engine})`, {skip: !process.env.BROWSER_TEST}, async () => {
+  const playwright = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
+  const browser = await playwright[engine].launch(engine === 'chromium' ? {executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'} : {});
   const root = path.join(__dirname, '..');
-  const oldCSS = execFileSync('git', ['show','245d3aa:style.css'], {cwd:root,encoding:'utf8'});
+  const output = process.env.SCREENSHOT_DIR || '/tmp/nk-mobile-review';
+  fs.mkdirSync(output, {recursive:true});
   try {
-    for (const width of [390,700]) {
-      const snapshots=[];
-      for (const historical of [true,false]) {
-        const page = await browser.newPage({viewport:{width,height:844},isMobile:true,hasTouch:true});
-        await page.route('**/*', route => {
-          const url = new URL(route.request().url());
-          if (url.pathname.includes('/data/query/')) return route.fulfill({json:{result:{projects:[]}}});
-          if (url.hostname !== 'preview.test') return route.fulfill({body:''});
-          if (historical && url.pathname === '/style.css') return route.fulfill({body:oldCSS,contentType:'text/css'});
-          if (/\.(jpg|png)$/.test(url.pathname)) return route.fulfill({body:'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200"/>',contentType:'image/svg+xml'});
-          return route.fulfill({path:path.join(root,url.pathname==='/'?'index.html':url.pathname)});
-        });
-        await page.goto('https://preview.test/#archive');
-        await page.waitForSelector('.archive[data-source="local"]');
-        await page.evaluate(()=>document.fonts.ready);
-        const snapshot=await page.locator('.archive-row').evaluateAll(rows=>rows.map(row=>{
-          const r=row.getBoundingClientRect(),s=getComputedStyle(row),t=getComputedStyle(row.firstElementChild);
-          return {title:row.firstElementChild.textContent,x:r.x,y:r.y,width:r.width,height:r.height,font:s.fontFamily,size:s.fontSize,line:s.lineHeight,padding:s.padding,align:s.textAlign,style:t.fontStyle};
-        }));
-        snapshots.push(snapshot);
-        assert.equal(snapshot.length,33);
-        assert.ok(snapshot.every(row=>row.height>0 && row.y+row.height<=844));
-        if (!historical) {
-          await page.evaluate(()=>{window.originalList=document.querySelector('.archive-list');window.originalRows=[...originalList.children];});
-          await page.locator('.archive-row').last().tap();
-          assert.equal(await page.locator('.archive-row[aria-current]').getAttribute('data-index'),'32');
-          for(let i=0;i<3;i++) await page.touchscreen.tap(width/2,820);
-          assert.equal(await page.locator('.archive-row[aria-current]').getAttribute('data-index'),'0');
-          await page.mouse.wheel(500,500);
-          assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY,list:document.querySelector('.archive-list').scrollTop,stable:originalList===document.querySelector('.archive-list')&&originalRows.every((row,i)=>row===originalList.children[i])})),{x:0,y:0,list:0,stable:true});
-          await page.screenshot({path:`/tmp/nk-mobile-index-full-${width}.png`});
-        }
-        await page.close();
-      }
-      assert.deepEqual(snapshots[1],snapshots[0]);
+    const page = await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:3});
+    await page.route('**/*', route => {
+      const url = new URL(route.request().url());
+      if (url.pathname.includes('/data/query/')) return route.fulfill({json:{result:{projects:[]}}});
+      if (url.hostname !== 'preview.test') return route.fulfill({body:''});
+      return route.fulfill({path:path.join(root,url.pathname==='/'?'index.html':url.pathname)});
+    });
+    await page.goto('https://preview.test/#archive');
+    await page.waitForSelector('.archive[data-source="local"]');
+    await page.evaluate(()=>document.fonts.ready);
+    const rows = page.locator('.archive-row');
+    const count = await rows.count();
+    const capture = async name => {
+      await page.waitForFunction(()=>{
+        const index=Number(document.querySelector('.archive-row[aria-current]').dataset.index);
+        return document.querySelector('.archive-background img')?.currentSrc.endsWith(ARCHIVE_DISPLAY_PROJECTS[index].images[0]);
+      });
+      await page.screenshot({path:`${output}/${engine}-index-${name}.png`});
+    };
+    const check = async index => {
+      const state = await page.evaluate(() => {
+        const list = document.querySelector('.archive-list'), rows = [...list.querySelectorAll('.archive-row')];
+        const active = rows.find(row=>row.hasAttribute('aria-current'));
+        const top = list.getBoundingClientRect().top;
+        return {index:Number(active.dataset.index),top:active.getBoundingClientRect().top,listTop:top,italic:getComputedStyle(active.firstElementChild).fontStyle,
+          previousHidden:rows.slice(0,Number(active.dataset.index)).every(row=>row.inert && row.getBoundingClientRect().bottom<=top+.01),
+          visible:rows.filter(row=>row.getBoundingClientRect().bottom>top+.01).length,scroll:[scrollX,scrollY,list.scrollTop],overflow:document.documentElement.scrollWidth>innerWidth};
+      });
+      assert.equal(state.index,index); assert.ok(Math.abs(state.top-state.listTop)<.1); assert.equal(state.italic,'italic');
+      assert.ok(state.previousHidden); assert.equal(state.visible,count-index); assert.deepEqual(state.scroll,[0,0,0]); assert.equal(state.overflow,false);
+    };
+    await check(0);
+    await page.waitForSelector('.archive-background img');
+    assert.deepEqual(await page.locator('.archive-background img').evaluate(img=>{const r=img.getBoundingClientRect();return [r.x,r.y,r.width,r.height,getComputedStyle(img).objectFit]}),[0,0,390,844,'cover']);
+    await capture('first');
+    // Every fallback project has multiple media. Check each individual tap.
+    for(let index=1;index<=10;index++) {
+      await page.touchscreen.tap(200,810);
+      await check(index);
     }
-  } finally {await browser.close();}
+    const middle = Math.floor(count/2);
+    await rows.nth(middle).tap(); await check(middle);
+    await capture('middle');
+    await rows.last().tap(); await check(count-1);
+    await capture('final');
+    await page.locator('.mobile-menu-toggle').tap();
+    assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#ffffff');
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).backgroundColor),'rgb(255, 255, 255)');
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.body).backgroundColor),'rgb(255, 255, 255)');
+    await page.screenshot({path:`${output}/${engine}-menu.png`});
+    await page.locator('.mobile-menu-close').tap(); await check(count-1);
+    assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#000000');
+    await page.touchscreen.tap(200,810);
+    await check(0);
+    await capture('loop');
+    if (engine === 'chromium') await page.mouse.wheel(0,500);
+    await page.evaluate(()=>{
+      const archive=document.querySelector('.archive');
+      for(const [type,y] of [['pointerdown',700],['pointermove',400],['pointerup',400]])
+        archive.dispatchEvent(new PointerEvent(type,{bubbles:true,isPrimary:true,pointerId:1,button:0,clientX:200,clientY:y}));
+    });
+    await check(0);
+    // Resize also exercises modern dynamic viewport media coverage.
+    await page.setViewportSize({width:390,height:650});
+    assert.equal(await page.locator('.archive-background img').evaluate(img=>img.getBoundingClientRect().height),650);
+    await page.setViewportSize({width:390,height:844});
+    // Desktop WebKit reports zero device insets. Inject representative values
+    // to verify CSS geometry, without claiming to emulate iOS browser chrome.
+    const safeCSS=fs.readFileSync(path.join(root,'style.css'),'utf8').replace(/env\(safe-area-inset-top\)/g,'59px').replace(/env\(safe-area-inset-bottom\)/g,'34px');
+    const safeStyle=await page.addStyleTag({content:safeCSS});
+    await check(0);
+    assert.equal(await page.locator('.site-header').evaluate(n=>n.getBoundingClientRect().top),59);
+    assert.equal(await page.locator('.archive-background').evaluate(n=>n.getBoundingClientRect().top),0);
+    await page.locator('.mobile-menu-toggle').tap();
+    assert.equal(await page.locator('.mobile-menu-header').evaluate(n=>n.getBoundingClientRect().top),59);
+    await page.locator('.mobile-menu-close').tap();
+    await safeStyle.evaluate(n=>n.remove());
+    await page.goto('https://preview.test/#home');
+    await page.waitForSelector('.home');
+    assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).backgroundColor),'rgb(255, 255, 255)');
+    assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#ffffff');
+    await page.screenshot({path:`${output}/${engine}-frontpage.png`});
+    // Compare desktop geometry to the unchanged historical desktop styles.
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto('https://preview.test/#archive');
+    await page.waitForSelector('.archive-row');
+    const geometry = () => rows.evaluateAll(rows=>rows.map(row=>{const r=row.getBoundingClientRect();return [r.x,r.y,r.width,r.height]}));
+    const current = await geometry();
+    const css = execFileSync('git',['show','HEAD:style.css'],{cwd:root,encoding:'utf8'});
+    await page.addStyleTag({content:css});
+    assert.deepEqual(await geometry(),current);
+    await browser.close();
+  } finally { await browser.close(); }
 });
