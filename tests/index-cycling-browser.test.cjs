@@ -74,7 +74,7 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
     const select = async index => {
       const row = page.locator('.archive-row').nth(index);
       if (mobile) {
-        await row.evaluate(row => row.closest('.archive-list').scrollTo({top: row.offsetTop, behavior: 'instant'}));
+        await row.tap();
       } else await row.hover();
       await page.waitForFunction(index => document.querySelectorAll('.archive-row')[index].getAttribute('aria-current') === 'true', index);
       return row;
@@ -101,6 +101,13 @@ for (const mobile of [false, true]) test(`Index one-step cycling: ${mobile ? 'to
       await expectActive('one');await session.detach();
 
       await page.touchscreen.tap(195,650);await expectActive('two');
+      const originalRows = await page.locator('.archive-row').elementHandles();
+      await page.locator('.archive-row').nth(2).locator('span').first().tap();
+      await expectActive('one');
+      assert.equal(await page.locator('.archive-row[aria-current]').getAttribute('data-index'),'2');
+      assert.equal(await originalRows[0].evaluate(row => row === document.querySelector('.archive-row')),true);
+      assert.equal(await page.locator('.archive-row:visible').count(),3);
+      await page.screenshot({path:'/tmp/nk-mobile-index-restored.png'});
       await page.evaluate(()=>location.hash='#info');await page.waitForSelector('.info');assert.equal(await page.locator('video').count(),0);
       assert.deepEqual(await page.evaluate(()=>window.indexLayoutErrors),[]);
       return;

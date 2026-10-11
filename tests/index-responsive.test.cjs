@@ -91,7 +91,7 @@ test('Index preview positions use intrinsic desktop widths and proportional mobi
     await page.waitForFunction(index=>{
      const list=document.querySelector('.archive-list'),row=list.children[index];
      return row.getAttribute('aria-current')==='true' &&
-      Math.abs(row.getBoundingClientRect().top-list.getBoundingClientRect().top)<1;
+      list.scrollTop === 0 && row.getBoundingClientRect().height > 0;
     },index,{timeout:5000});
    };
    for(const next of [1,2,0]) {

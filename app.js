@@ -664,7 +664,11 @@ function renderArchive() {
         const gesture = rowGesture;
         rowGesture = null;
         if (event.detail && gesture && (gesture.moved || event.timeStamp - gesture.time > 500)) return;
-        advanceMobile();
+        if (activeRow === rowIndex) advanceMobile();
+        else {
+          frame = 0;
+          activateMobileEntry(rowIndex);
+        }
         return;
       }
       const entry = entries[rowIndex];

@@ -471,8 +471,6 @@ body.is-index, .is-index .archive, .is-index .archive-background { background-co
 @media (max-width: 700px) {
   body.is-index { overflow: hidden; height: 100dvh; }
   .is-index .archive { position: fixed; inset: 0; min-height: 0; height: 100dvh; overflow: hidden; touch-action: none; }
-  .is-index .archive-row { display: none; }
-  .is-index .archive-row.is-active { display: grid; }
   .mobile-menu nav .mobile-menu-label { cursor: default; }
 }
 

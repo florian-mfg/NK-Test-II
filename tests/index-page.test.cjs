@@ -373,3 +373,23 @@ test('desktop ignores background tap gestures',async()=>{
   assert.equal(active(),0);assert.equal(scrolls.length,0);
  }finally{app.dom.window.close();}
 });
+
+
+test('mobile title selection starts selected project at its first media without replacing the list',async()=>{
+ const app=setup('#archive',true);
+ try {
+  await app.settle(success(content([entry('One',{previewImages:[img('one'),img('two')]}),entry('Two',{previewImages:[img('three'),img('four')]}),entry('Three')])));
+  const originalRows=rows(app),list=app.window.document.querySelector('.archive-list');
+  originalRows[0].click();
+  originalRows[1].firstElementChild.click();
+  assert.equal(originalRows[1].getAttribute('aria-current'),'true');
+  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
+  originalRows[1].click();
+  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/four-'));
+  originalRows[0].click();
+  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
+  assert.equal(app.window.document.querySelector('.archive-list'),list);
+  assert.ok(rows(app).every((row,i)=>row===originalRows[i]));
+  assert.equal(list.scrollTop,0);
+ }finally{app.dom.window.close();}
+});
