@@ -312,10 +312,11 @@ function mobileGestureFixture(app) {
  app.window.dispatchEvent(new app.window.Event('resize'));
  const scrolls=[];
  list.scrollTo=options=>{scrolls.push({...options});list.scrollTop=options.top;list.dispatchEvent(new app.window.Event('scroll'));};
- const pointer=(type,{target=list,x=150,y=300,id=1,primary=true}={})=>{
+ const pointer=(type,{target=list,x=150,y=300,id=1,primary=true,click=true}={})=>{
   const event=new app.window.Event(type,{bubbles:true});
   Object.assign(event,{pointerId:id,isPrimary:primary,button:0,clientX:x,clientY:y});
   target.dispatchEvent(event);
+  if(type==='pointerup' && click && !target.closest('a,button')) target.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));
  };
  const tick=()=>new Promise(resolve=>app.window.requestAnimationFrame(resolve));
  const active=()=>rows(app).findIndex(row=>row.getAttribute('aria-current')==='true');
@@ -390,5 +391,31 @@ test('mobile title selection starts selected project at its first media without 
   assert.equal(app.window.document.querySelector('.archive-list'),list);
   assert.ok(rows(app).every((row,i)=>row===originalRows[i]));
   assert.equal(list.scrollTop,0);
+ }finally{app.dom.window.close();}
+});
+
+test('mobile activates only on click, measures rows, and ignores a duplicate compatibility click',async()=>{
+ const app=setup('#archive',true);
+ try{
+ await app.settle(success(content([entry('One'),entry('Two'),entry('Three')])));
+ const {pointer,list,active}=mobileGestureFixture(app);
+ pointer('pointerdown');pointer('pointerup',{click:false});assert.equal(active(),0);
+ list.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));assert.equal(active(),1);
+ assert.equal(list.style.getPropertyValue('--archive-offset'),'37px');
+ list.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));assert.equal(active(),1);
+ }finally{app.dom.window.close();}
+});
+test('cold mobile images keep title/media together and late loads cannot overwrite a later tap',async()=>{
+ const app=setup('#archive',true);
+ try{
+ const decode=app.window.HTMLImageElement.prototype.decode;let resolveCold;
+ app.window.HTMLImageElement.prototype.decode=function(){if(this.src.includes('/cold-'))return new Promise(resolve=>{resolveCold=resolve;});return decode.call(this);};
+ await app.settle(success(content([entry('One',{previewImages:[img('one')]}),entry('Cold',{previewImages:[img('cold')]}),entry('Three',{previewImages:[img('three')]})])));
+ const {pointer,active}=mobileGestureFixture(app);
+ pointer('pointerdown');pointer('pointerup');assert.equal(active(),0);
+ assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
+ pointer('pointerdown');pointer('pointerup');assert.equal(active(),2);
+ resolveCold();await new Promise(setImmediate);assert.equal(active(),2);
+ assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
  }finally{app.dom.window.close();}
 });

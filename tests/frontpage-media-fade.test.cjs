@@ -1,73 +1,74 @@
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const {JSDOM}=require('../studio/node_modules/jsdom'),api=require('../frontpage-media-fade.js');
-test('collage reveals in order, crossfades oldest with newest, bounds settled window and loops',()=>{
- assert.equal(api.collageState(0)[0].opacity,0);
- assert.deepEqual(api.collageState(.4).map(n=>[n.index,n.opacity]),[[0,.4]]);
- assert.deepEqual(api.collageState(6).map(n=>n.index),[0,1,2,3,4,5]);
- const halfway=api.collageState(6.5);assert.equal(halfway.length,7);assert.equal(halfway[0].opacity,.5);assert.equal(halfway.at(-1).opacity,.5);
- assert.deepEqual(api.collageState(7).map(n=>n.index),[1,2,3,4,5,6]);
- assert.deepEqual(api.collageState(8).map(n=>n.index),[2,3,4,5,6,7]);
- assert.equal(api.collageState(20.5).at(-1).index,0);
- for(let p=0;p<1000;p+=.25){const state=api.collageState(p);assert.ok(state.length<=7);assert.equal(new Set(state.map(n=>n.index)).size,state.length);if(Number.isInteger(p)&&p>0)assert.ok(state.length<=6);}
- for(const source of api.media)assert.ok(fs.existsSync(path.join(__dirname,'..',source.src)));
- assert.equal(api.distance({x:0,y:0},{x:3,y:4}),5);
-});
-test('deterministic varied placements retain proportions and stay within responsive viewports',()=>{
- for(const [w,h] of [[1440,900],[390,844],[844,390],[320,568]]){
- const sizes=new Set(),positions=new Set();
- for(let i=0;i<40;i++){const ratio=api.media[i%20].aspectRatio,b=api.layout(i,w,h,ratio);assert.ok(b.left>=0&&b.top>=0&&b.left+b.width<=w+1e-8&&b.top+b.height<=h+1e-8);assert.ok(Math.abs(b.width/b.height-ratio)<1e-10);sizes.add(b.width);positions.add(b.left);}
- assert.ok(sizes.size>6&&positions.size>6);
+const test=require('node:test'),assert=require('node:assert/strict');
+const api=require('../frontpage-media-fade.js');
+const connected=(a,b)=>((Math.abs(a.left+a.width-b.left)<.01||Math.abs(b.left+b.width-a.left)<.01)&&Math.min(a.top+a.height,b.top+b.height)-Math.max(a.top,b.top)>0)||((Math.abs(a.top+a.height-b.top)<.01||Math.abs(b.top+b.height-a.top)<.01)&&Math.min(a.left+a.width,b.left+b.width)-Math.max(a.left,b.left)>0);
+test('direction prefers the matching shared edge',()=>{
+ const anchor={left:300,top:300,width:100,height:80},size={width:70,height:60};
+ for(const [x,y] of [[1,0],[-1,0],[0,1],[0,-1]]){
+ const rect=api.placement(anchor,size,[anchor],{x:350+x*150,y:340+y*150},{x,y},{width:1000,height:1000});
+ assert.ok(connected(anchor,rect));assert.ok(!api.overlaps(anchor,rect));
+ if(x===1)assert.equal(rect.left,400);if(x===-1)assert.equal(rect.left+rect.width,300);
+ if(y===1)assert.equal(rect.top,380);if(y===-1)assert.equal(rect.top+rect.height,300);
  }
 });
-function setup(){
- const dom=new JSDOM('<section class="home"><div id="layer"></div></section><button>Menu</button>',{runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
- let fine=true,now=0,id=0;const frames=new Map();w.matchMedia=()=>({get matches(){return fine},addEventListener(){}});
- w.requestAnimationFrame=cb=>{frames.set(++id,cb);return id};w.cancelAnimationFrame=id=>frames.delete(id);Object.defineProperty(w.performance,'now',{value:()=>now});
- for(const file of ['frontpage-media.js','frontpage-media-fade.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),dom.getInternalVMContext());
- const layer=w.document.querySelector('#layer'),home=w.document.querySelector('.home'),dispose=w.FrontpageMediaFade.init(layer);
- const event=(type,pointerType='mouse',x=0,y=0,target=home,pointerId=1)=>{const e=new w.MouseEvent(type,{bubbles:true,clientX:x,clientY:y});Object.defineProperties(e,{pointerType:{value:pointerType},pointerId:{value:pointerId}});target.dispatchEvent(e)};
- const advance=ms=>{now+=ms;const pending=[...frames.values()];frames.clear();pending.forEach(cb=>cb(now))};
- return {w,dom,layer,home,dispose,event,advance,frames,setFine:value=>fine=value};
+test('rapid turns and boundaries keep every new rectangle attached, contained and collision free',()=>{
+ for(const [width,height] of [[1440,900],[390,844],[320,568],[844,390]]){
+ let active=[];
+ for(let i=0;i<2000;i++){
+ const angle=i*.73,point={x:width/2+Math.sin(angle)*width/2,y:height/2+Math.cos(angle)*height/2},vector={x:Math.cos(angle),y:-Math.sin(angle)};
+ const size=api.dimensions({size:['small','medium','large'][i%3],aspectRatio:[.6,1,1.8][i%3]},width,height);
+ const rest=active.length===6?active.slice(1):active;
+ const rect=api.placement(active.at(-1),size,rest,point,vector,{width,height});
+ if(!rect)continue;
+ assert.ok(rect.left>=0&&rect.top>=0&&rect.left+rect.width<=width+.01&&rect.top+rect.height<=height+.01);
+ assert.ok(rest.every(b=>!api.overlaps(rect,b)));
+ assert.ok(api.centerDistance(rect,point)<=api.MAX_CURSOR_DISTANCE);
+ if(active.length)assert.ok(connected(active.at(-1),rect));
+ assert.ok(Math.abs(rect.width/rect.height-size.width/size.height)<1e-8);
+ active=[...rest,rect];assert.ok(active.length<=6);
+ }
+ assert.ok(active.length>0 && active.length<=6);
+ }
+});
+
+test('cursor proximity rejects remote edges rather than extending a remote chain',()=>{
+ const anchor={left:100,top:100,width:150,height:100};
+ assert.equal(api.placement(anchor,{width:100,height:70},[anchor],{x:900,y:600},{x:1,y:0},{width:1200,height:800},80),null);
+ const point={x:260,y:150};
+ const rect=api.placement(anchor,{width:100,height:70},[anchor],point,{x:1,y:0},{width:1200,height:800},80);
+ assert.ok(rect);assert.ok(api.centerDistance(rect,point)<=80);
+ assert.equal(api.placement(anchor,{width:100,height:70},[anchor],point,{x:1,y:0},{width:1200,height:800},10),null);
+});
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{JSDOM}=require('../studio/node_modules/jsdom');
+function inputSetup(config={}){
+ const dom=new JSDOM('<section class="home"><div id="layer"></div></section>',{runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window,layer=w.document.querySelector('#layer');
+ layer.getBoundingClientRect=()=>({left:0,top:0,width:1440,height:900});Object.defineProperty(layer,'clientWidth',{value:1440});
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'..','frontpage-media-fade.js'),'utf8'),dom.getInternalVMContext());
+ const audit=[],append=layer.append.bind(layer);layer.append=n=>{append(n);audit.push({serial:+n.dataset.serial,x:+n.dataset.brushX,y:+n.dataset.brushY,w:parseFloat(n.style.width),h:parseFloat(n.style.height),left:parseFloat(n.style.left),top:parseFloat(n.style.top),count:layer.children.length});};
+ const sequence=Array.from({length:9},(_,i)=>({type:'image',src:`photo-${i}.jpg`,size:'medium',aspectRatio:1.5}));
+ const dispose=w.FrontpageMediaFade.init(layer,sequence,config);
+ function move(x,y,samples){const e=new w.MouseEvent('pointermove',{bubbles:true,clientX:x,clientY:y});Object.defineProperty(e,'pointerType',{value:'mouse'});if(samples)Object.defineProperty(e,'getCoalescedEvents',{value:()=>samples.map(p=>({clientX:p.x,clientY:p.y}))});w.document.querySelector('.home').dispatchEvent(e);}
+ return {w,layer,audit,move,close:()=>{dispose();dom.window.close();}};
 }
-test('mouse rAF retains excess travel without skipping media or progressing while stopped',()=>{
- const s=setup();try{
- s.event('pointermove');s.event('pointermove','mouse',api.DISTANCE_PER_IMAGE*6.5);assert.equal(s.frames.size,1);s.advance(0);assert.equal(s.layer.dataset.progress,'0.5');
- const frozen=s.layer.innerHTML;s.advance(5000);assert.equal(s.layer.innerHTML,frozen);
- for(let i=2;i<=12;i++){s.event('pointermove','mouse',api.DISTANCE_PER_IMAGE*6.5+i);s.advance(0);assert.equal(Number(s.layer.dataset.progress),i*.5);}
- s.event('pointermove','mouse',api.DISTANCE_PER_IMAGE*6.5+13);s.advance(0);assert.ok(Number(s.layer.dataset.progress)===6.5);assert.equal(s.layer.children.length,7);
- const p=s.layer.dataset.progress;s.w.dispatchEvent(new s.w.Event('resize'));s.advance(0);assert.equal(s.layer.dataset.progress,p);
- s.setFine(false);s.event('pointermove','mouse',4000);s.advance(1000);assert.equal(s.layer.dataset.progress,p);
- s.dispose();assert.equal(s.layer.children.length,0);assert.equal(s.frames.size,0);
- }finally{s.dom.window.close()}
+test('rapid first movement samples from the start, preserves sizes, ordering and the six-node bound',()=>{
+ const s=inputSetup();try{
+ s.move(100,200);s.move(1200,200);
+ assert.equal(s.audit[0].x,101);assert.ok(s.audit.length>=6);
+ for(const mark of s.audit){assert.equal(mark.y,200);assert.ok(mark.x>=100&&mark.x<=1200);assert.ok(api.centerDistance({...mark,width:mark.w,height:mark.h},{x:mark.x,y:mark.y})<=96);assert.ok(mark.count<=6);assert.equal(mark.w,156);assert.equal(mark.h,104);}
+ assert.deepEqual([...s.layer.children].map(n=>+n.dataset.serial),Array.from({length:6},(_,i)=>s.audit.length-6+i));
+ const html=s.layer.innerHTML;s.move(1200,200);assert.equal(s.layer.innerHTML,html);
+ }finally{s.close();}
 });
-test('touch hold advances once for multiple fingers; release freezes exactly and resumes; controls excluded',()=>{
- const s=setup();try{
- s.setFine(false);s.event('pointerdown','touch',0,0,s.w.document.querySelector('button'));s.advance(1000);assert.equal(s.layer.dataset.progress,'0');
- s.event('pointerdown','touch');s.advance(50);assert.ok(Math.abs(Number(s.layer.dataset.progress)-api.MOBILE_TRANSITIONS_PER_SECOND*.05)<1e-12);
- s.event('pointerdown','touch',0,0,s.home,2);s.advance(50);assert.ok(Math.abs(Number(s.layer.dataset.progress)-api.MOBILE_TRANSITIONS_PER_SECOND*.10)<1e-12);
- s.event('pointerup','touch');s.advance(50);assert.ok(Math.abs(Number(s.layer.dataset.progress)-api.MOBILE_TRANSITIONS_PER_SECOND*.15)<1e-12);
- s.event('pointerup','touch',0,0,s.home,2);const frozen=s.layer.innerHTML;s.advance(2000);assert.equal(s.layer.innerHTML,frozen);assert.equal(s.frames.size,0);
- s.event('pointerdown','touch');s.advance(1000);assert.ok(Number(s.layer.dataset.progress)>api.MOBILE_TRANSITIONS_PER_SECOND*.15);s.event('pointercancel','touch');const resumed=s.layer.innerHTML;s.advance(1000);assert.equal(s.layer.innerHTML,resumed);
- s.dispose();assert.equal(s.frames.size,0);
- }finally{s.dom.window.close()}
+test('coalesced input follows its bent trajectory rather than connecting its endpoints diagonally',()=>{
+ const s=inputSetup();try{
+ s.move(100,100);s.move(600,600,[{x:600,y:100},{x:600,y:600}]);
+ assert.ok(s.audit.length>=6);
+ for(const mark of s.audit)assert.ok(Math.abs(mark.y-100)<.001||Math.abs(mark.x-600)<.001);
+ assert.ok(s.audit.some(mark=>mark.x===600&&mark.y>100));
+ }finally{s.close();}
 });
-
-test('additional 2.5x progression and connected spreads have deliberate scale hierarchy',()=>{
- assert.ok(Math.abs((480/3.5)/api.DISTANCE_PER_IMAGE-2.5)<1e-12);assert.ok(Math.abs(api.MOBILE_TRANSITIONS_PER_SECOND/2.45-2.5)<1e-12);
- for(const [w,h] of [[1440,900],[390,844]])for(const first of [0,6,12,18,24,30]){
- const boxes=Array.from({length:6},(_,i)=>api.layout(first+i,w,h,api.media[(first+i)%20].aspectRatio));
- assert.ok(Math.max(...boxes.map(b=>b.width))/Math.min(...boxes.map(b=>b.width))>2.5);
- const overlap=(a,b)=>a.left<b.left+b.width&&b.left<a.left+a.width&&a.top<b.top+b.height&&b.top<a.top+a.height;
- assert.ok(boxes.slice(1).filter((b,i)=>boxes.slice(0,i+1).some(a=>overlap(a,b))).length>=4,'at least four images attach to an existing image');
- assert.ok(boxes.some(b=>b.left===0||Math.abs(b.left+b.width-w)<1e-8),'spread reaches viewport edge');
- for(const [index,box] of boxes.entries()){
- let visible=0;
- for(let y=0;y<20;y++)for(let x=0;x<20;x++){
- const px=box.left+(x+.5)/20*box.width,py=box.top+(y+.5)/20*box.height;
- if(!boxes.slice(index+1).some(b=>px>b.left&&px<b.left+b.width&&py>b.top&&py<b.top+b.height))visible++;
- }
- assert.ok(visible>=20,`source ${first+index} at ${w} retains a recognizable exposed fragment (${visible})`);
- }
-
- }
+test('a strict configured cursor limit defers blocked placement without shrinking or skipping media',()=>{
+ const s=inputSetup({maxCursorDistance:1});try{
+ s.move(200,200);s.move(201,200);const first=s.layer.innerHTML;
+ s.move(1000,200);assert.equal(s.layer.innerHTML,first);assert.equal(s.layer.dataset.progress,'1');assert.equal(s.layer.dataset.maxCursorDistance,'1');
+ }finally{s.close();}
 });

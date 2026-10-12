@@ -593,45 +593,160 @@ function renderArchive() {
       bg.replaceChildren(nextImage);
     }, () => {}); // Keep the current preview if the requested image cannot decode.
   };
-  const activateMobileEntry = next => {
+  const archive = list.closest(".archive");
+  const track = list.querySelector(".archive-list-track");
+  let requestedMobileRow = 0;
+  let mobileRequest = 0;
+  let pendingMobileVideo = null;
+  const mobileImages = new Map();
+  const preview = entry => (entry?.media || entry?.images?.map((src, i) => ({type:"image", src, ...entry.previewImages?.[i]})) || []).find(item => item.src);
+  const alignMobileList = () => {
+    if (!mobile.matches || activeRow < 0 || events.signal.aborted) return;
+    // The difference cancels the existing transform and retains subpixel rows.
+    const offset = rows[activeRow].getBoundingClientRect().top - rows[0].getBoundingClientRect().top;
+    list.style.setProperty("--archive-offset", `${offset}px`);
+  };
+  const markMobileEntry = next => {
     activeRow = next;
-    // Restore the historical row-to-list-top offset without native scrolling.
-    list.style.setProperty("--archive-active-row", next);
     rows.forEach((row, i) => {
       row.inert = i < next;
       row.classList.toggle("is-active", i === next);
       if (i === next) row.setAttribute("aria-current", "true");
       else row.removeAttribute("aria-current");
     });
-    showEntryImage(entries[next], frame);
+    alignMobileList();
   };
-  const advanceMobile = () => {
-    frame = 0;
-    activateMobileEntry((activeRow + 1) % rows.length);
+  const prepareMobileImage = media => {
+    if (mobileImages.has(media.src)) return mobileImages.get(media.src);
+    const node = document.createElement("img");
+    const record = {node, ready:false, failed:false, waiters:[]};
+    mobileImages.set(media.src, record);
+    node.alt = media.alt || "";
+    node.loading = "eager";
+    const position = moduleImagePosition(media);
+    node.style.cssText = position ? position.slice(' style="'.length, -1) : "";
+    node.src = media.src;
+    node.decode().then(() => {
+      record.ready = true;
+      record.waiters.splice(0).forEach(callback => callback());
+    }, () => {record.failed = true; record.waiters.length = 0;});
+    return record;
   };
-  const archive = list.closest(".archive");
+  const warmMobileImages = next => {
+    // Pin the first preview for wraparound and preload only nearby projects.
+    const wanted = new Set();
+    for (const i of [0, next, ...Array.from({length:4}, (_,n)=>(next+n+1)%rows.length)]) {
+      const media = preview(entries[i]);
+      if (!media || media.type === "mp4") continue;
+      wanted.add(media.src); prepareMobileImage(media);
+    }
+    for (const src of mobileImages.keys()) if (!wanted.has(src)) mobileImages.delete(src);
+  };
+  const cancelPendingMobileVideo = () => {
+    if (!pendingMobileVideo) return;
+    pendingMobileVideo.pause(); pendingMobileVideo.removeAttribute("src"); pendingMobileVideo.load();
+    pendingMobileVideo = null;
+  };
+  const playMobileVideo = video => {
+    if (document.hidden) return;
+    video.play().catch(() => {
+      if (!video.isConnected || events.signal.aborted) return;
+      // Safari can reject audible autoplay after an asynchronous load.
+      video.muted = true; audioState.muted = true;
+      if (soundButton) {
+        soundButton.textContent = "(Sound)";
+        soundButton.setAttribute("aria-pressed", "false");
+        soundButton.setAttribute("aria-label", "Enable Index video sound");
+      }
+      video.play().catch(() => {});
+    });
+  };
+  soundButton?.addEventListener("audiochange", () => {
+    if (!mobile.matches) return;
+    const video = bg.querySelector("video");
+    if (video) {video.muted = audioState.muted; playMobileVideo(video);}
+  }, {signal:events.signal});
+  document.addEventListener("visibilitychange", () => {
+    if (!mobile.matches) return;
+    const video = bg.querySelector("video");
+    if (video) {if (document.hidden) video.pause(); else playMobileVideo(video);}
+  }, {signal:events.signal});
+  const activateMobileEntry = next => {
+    requestedMobileRow = next;
+    const request = ++mobileRequest;
+    ++imageRequest; // Invalidate any pending desktop decode during a resize.
+    cancelPendingMobileVideo();
+    bg.querySelector("video")?.pause();
+    const media = preview(entries[next]);
+    const commit = (node, video = false) => {
+      if (request !== mobileRequest || !mobile.matches || events.signal.aborted) return;
+      stopVideo();
+      bg.className = `archive-background visible full${video ? " is-video" : ""}`;
+      bg.replaceChildren(...(node ? [node] : []));
+      archive.dataset.textColor = entries[next].textColor || "auto";
+      archive.dataset.activeProject = String(next);
+      bg.dataset.projectIndex = String(next);
+      markMobileEntry(next);
+      if (video) {
+        pendingMobileVideo = null;
+        node.autoplay = true; node.muted = audioState.muted;
+        activeVideo = media;
+        cleanupVideo = () => {node.pause(); node.removeAttribute("src"); node.load(); node.remove();};
+        playMobileVideo(node);
+      }
+      warmMobileImages(next);
+    };
+    // Initial typography appears immediately; later changes commit atomically
+    // with ready media, keeping the old matching title/frame during a cold load.
+    if (activeRow < 0) markMobileEntry(next);
+    if (!media) {commit(null); return;}
+    if (media.type !== "mp4") {
+      const record = prepareMobileImage(media);
+      if (record.ready) commit(record.node);
+      else if (!record.failed) record.waiters.push(() => commit(record.node));
+      warmMobileImages(next);
+      return;
+    }
+    const video = document.createElement("video");
+    video.muted = true; video.defaultMuted = true; video.loop = true;
+    video.playsInline = true; video.controls = false; video.preload = "auto";
+    if (media.poster) video.poster = media.poster;
+    pendingMobileVideo = video;
+    video.addEventListener("loadeddata", () => commit(video,true), {once:true,signal:events.signal});
+    video.src = media.src; video.load();
+  };
+  const advanceMobile = () => activateMobileEntry((requestedMobileRow + 1) % rows.length);
   const controls = 'a, button, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
   let tap = null;
   archive.addEventListener("pointerdown", event => {
     tap = null;
-    if (!mobile.matches || !event.isPrimary || event.button !== 0 || event.target.closest(controls)) return;
-    tap = {id: event.pointerId, x: event.clientX, y: event.clientY,
-      scrollTop: list.scrollTop, pageY: window.scrollY, time: event.timeStamp, moved: false};
-  }, { passive: true, signal: events.signal });
+    if (!mobile.matches || !event.isPrimary || event.button !== 0) return;
+    tap = {id:event.pointerId,x:event.clientX,y:event.clientY,time:event.timeStamp,
+      scrollTop:list.scrollTop,pageY:window.scrollY,moved:false,ended:false};
+  }, {passive:true,signal:events.signal});
   archive.addEventListener("pointermove", event => {
-    if (!tap || event.pointerId !== tap.id) return;
-    if (Math.hypot(event.clientX - tap.x, event.clientY - tap.y) > 10) tap.moved = true;
-  }, { passive: true, signal: events.signal });
-  archive.addEventListener("pointercancel", () => { tap = null; }, { passive: true, signal: events.signal });
+    if (tap && event.pointerId === tap.id && Math.hypot(event.clientX-tap.x,event.clientY-tap.y)>10) tap.moved = true;
+  }, {passive:true,signal:events.signal});
+  archive.addEventListener("pointercancel", () => {tap = null;}, {passive:true,signal:events.signal});
   archive.addEventListener("pointerup", event => {
-    const gesture = tap;
-    tap = null;
-    if (!mobile.matches || !gesture || event.pointerId !== gesture.id || gesture.moved ||
-        event.target.closest(controls) || event.timeStamp - gesture.time > 500 ||
-        Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 10 ||
-        list.scrollTop !== gesture.scrollTop || window.scrollY !== gesture.pageY) return;
-    advanceMobile();
-  }, { passive: true, signal: events.signal });
+    if (!tap || tap.id !== event.pointerId) return;
+    tap.ended = true;
+    tap.moved ||= Math.hypot(event.clientX-tap.x,event.clientY-tap.y)>10 || event.timeStamp-tap.time>500 ||
+      list.scrollTop !== tap.scrollTop || window.scrollY !== tap.pageY;
+  }, {passive:true,signal:events.signal});
+  // One activation path: no list mutation before Safari dispatches its click.
+  archive.addEventListener("click", event => {
+    if (!mobile.matches) return;
+    const gesture = tap; tap = null;
+    if (event.detail && (!gesture || !gesture.ended || gesture.moved)) return;
+    const row = event.target.closest(".archive-row");
+    if (row) {event.preventDefault(); activateMobileEntry(Number(row.dataset.index));}
+    else if (!event.target.closest(controls)) advanceMobile();
+  }, {signal:events.signal});
+  window.addEventListener("resize", alignMobileList, {signal:events.signal});
+  const listObserver = new ResizeObserver(alignMobileList);
+  listObserver.observe(track);
+  document.fonts?.ready.then(alignMobileList);
   const activateDesktopEntry = next => {
     if (next < 0 || next === activeRow) return;
     activeRow = next;
@@ -653,27 +768,9 @@ function renderArchive() {
     activateDesktopEntry(next);
   }, { passive: true, signal: events.signal });
   rows.forEach(row => {
-    let rowGesture = null;
-    row.addEventListener("pointerdown", event => {
-      if (!mobile.matches) return;
-      rowGesture = {x: event.clientX, y: event.clientY, moved: !event.isPrimary, time: event.timeStamp};
-    }, {passive: true, signal: events.signal});
-    row.addEventListener("pointermove", event => {
-      if (rowGesture && Math.hypot(event.clientX - rowGesture.x, event.clientY - rowGesture.y) > 10) rowGesture.moved = true;
-    }, {passive: true, signal: events.signal});
-    row.addEventListener("pointercancel", () => {
-      if (rowGesture) rowGesture.moved = true;
-    }, {passive: true, signal: events.signal});
     row.addEventListener("click", event => {
+      if (mobile.matches) return; // Mobile selection is delegated above.
       const rowIndex = Number(row.dataset.index);
-      if (mobile.matches) {
-        const gesture = rowGesture;
-        rowGesture = null;
-        if (event.detail && gesture && (gesture.moved || event.timeStamp - gesture.time > 500)) return;
-        frame = 0;
-        activateMobileEntry(rowIndex);
-        return;
-      }
       const entry = entries[rowIndex];
       if (activeRow === rowIndex) {
         // Native click covers mouse, touch and keyboard once. Background pointer
@@ -691,7 +788,8 @@ function renderArchive() {
       row.classList.remove("is-active");
       row.removeAttribute("aria-current");
     });
-    list.style.removeProperty("--archive-active-row");
+    list.style.removeProperty("--archive-offset");
+    ++mobileRequest; cancelPendingMobileVideo();
     bg.classList.remove("visible");
     if (mobile.matches) activateMobileEntry(0);
     else {
@@ -702,6 +800,7 @@ function renderArchive() {
   mobile.addEventListener("change", syncLayout, { signal: events.signal });
   cleanupPage = () => {
     events.abort();
+    ++mobileRequest; cancelPendingMobileVideo(); mobileImages.clear(); listObserver.disconnect();
     stopVideo();
     soundButton?.remove();
   };

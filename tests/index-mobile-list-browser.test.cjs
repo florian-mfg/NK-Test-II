@@ -32,6 +32,7 @@ for (const engine of ['chromium', 'webkit']) test(`advancing mobile Index and vi
       await page.screenshot({path:`${output}/${engine}-index-${name}.png`});
     };
     const check = async index => {
+      await page.waitForFunction(i=>Number(document.querySelector('.archive-row[aria-current]')?.dataset.index)===i,index);
       const state = await page.evaluate(() => {
         const list = document.querySelector('.archive-list'), rows = [...list.querySelectorAll('.archive-row')];
         const active = rows.find(row=>row.hasAttribute('aria-current'));
@@ -47,10 +48,11 @@ for (const engine of ['chromium', 'webkit']) test(`advancing mobile Index and vi
     await page.waitForSelector('.archive-background img');
     assert.deepEqual(await page.locator('.archive-background img').evaluate(img=>{const r=img.getBoundingClientRect();return [r.x,r.y,r.width,r.height,getComputedStyle(img).objectFit]}),[0,0,390,844,'cover']);
     await capture('first');
-    // Every fallback project has multiple media. Check each individual tap.
-    for(let index=1;index<=10;index++) {
+    // Exercise every project in the actual fallback order, twice.
+    for(let cycle=0;cycle<2;cycle++)for(let tap=1;tap<=count;tap++) {
       await page.touchscreen.tap(200,810);
-      await check(index);
+      const index=tap%count;await check(index);
+      if(cycle===0&&tap===1)await capture('second');
     }
     const middle = Math.floor(count/2);
     await rows.nth(middle).tap(); await check(middle);

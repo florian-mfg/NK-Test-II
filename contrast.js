@@ -53,7 +53,7 @@
     return data;
   }
   function background(x, y, target) {
-    // Home composites its bounded collage over white using the existing binary colors.
+    // Home composites its bounded trail over white using the existing binary colors.
     if (document.body.matches('.is-home') && target.closest('.site-header')) {
       let luminance = 1;
       for (const node of document.querySelectorAll('.frontpage-fade-media')) {

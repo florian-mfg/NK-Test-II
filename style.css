@@ -486,8 +486,12 @@ body.is-index, .is-index .archive, .is-index .archive-background { background-co
     overflow: hidden;
   }
   .archive-list-track {
-    transform: translateY(calc(-1 * var(--archive-active-row, 0) * var(--archive-row-height)));
+    transform: translateY(calc(-1 * var(--archive-offset, 0px)));
+    transition: none;
   }
+  /* Only the visible title is a selection target; blank row space advances. */
+  .is-index .archive-row { width: fit-content; max-width: 100%; height: auto; min-height: var(--archive-row-height); }
+  .is-index .archive-background img { opacity: 1; transition: none; }
   .is-index .archive-background { inset: 0; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; }
   .is-index .archive-background > img,
   .is-index .archive-background > video,

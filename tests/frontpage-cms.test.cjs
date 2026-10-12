@@ -23,13 +23,6 @@ test('Frontpage distinguishes unavailable, legacy, malformed, explicit empty and
 });
 test('CMS size categories scale each media responsively without stretching or overflow',()=>{
  for(const [w,h] of [[1440,900],[390,844]])for(const ratio of [.6,1.5]){
- const widths=['small','medium','large'].map(size=>{const sequence=Array.from({length:6},()=>({size,aspectRatio:ratio}));const b=collage.layout(0,w,h,ratio,sequence);assert.ok(Math.abs(b.width/b.height-ratio)<1e-8);assert.ok(b.left+b.width<=w&&b.top+b.height<=h);return b.width});assert.ok(widths[0]<widths[1]&&widths[1]<widths[2]);
+ const widths=['small','medium','large'].map(size=>{const b=collage.dimensions({size,aspectRatio:ratio},w,h);assert.ok(Math.abs(b.width/b.height-ratio)<1e-8);assert.ok(b.width<=w&&b.height<=h);return b.width});assert.ok(widths[0]<widths[1]&&widths[1]<widths[2]);
  }
-});
-
-test('short CMS sequences retain all completed items within their available count',()=>{
- assert.equal(collage.collageState(6,6).length,6);
- assert.deepEqual(collage.collageState(7,6).map(n=>n.index),[1,2,3,4,5,0]);
- assert.equal(collage.collageState(2,2).length,2);
- assert.deepEqual(collage.collageState(100,1),[{serial:0,index:0,role:'current',opacity:1}]);
 });

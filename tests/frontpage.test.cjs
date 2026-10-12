@@ -35,15 +35,14 @@ const title = 'Nicolas Kawohl — Background Video';
 const content = (fields = {}) => adapter.normalize({projects: [], homePage: doc('homePage', {
   video: {asset:{_ref:"file-demo-mp4"}}, videoTitle: title, ...fields
 })});
-test('Frontpage initially prepares the first collage image and ignores late Sanity hero/video/poster settings', async () => {
+test('Frontpage starts empty until movement and ignores late Sanity hero/video/poster settings', async () => {
   const app = setup();
   try {
     const section = app.window.document.querySelector('.home');
     const header = app.window.document.querySelector('.site-header').outerHTML;
     const initial = section.outerHTML;
     assert.equal(section.querySelector('iframe, video'), null);
-        assert.equal(section.querySelector('[data-role="incoming"]').style.opacity,'0');
-    assert.equal(section.querySelector('.frontpage-fade').children.length, 1);
+    assert.equal(section.querySelector('.frontpage-fade').children.length, 0);
     await app.settle(success(content({video:{asset:{_ref:'file-second-mp4'}},
       poster: {asset: {_ref: 'image-poster123-1200x800-jpg'}}})));
     assert.equal(section.outerHTML, initial);
@@ -52,7 +51,7 @@ test('Frontpage initially prepares the first collage image and ignores late Sani
   } finally {app.dom.window.close();}
 });
 
-test('failed content requests retain the collage Frontpage', async () => {
+test('failed content requests retain the trail Frontpage', async () => {
   const app = setup();
   try {
     const initial = app.window.document.querySelector('.home').outerHTML;
@@ -70,7 +69,7 @@ test('late Frontpage response leaves other routes intact; returning Home stays c
       assert.equal(app.window.document.querySelector('#app').innerHTML, initial, hash);
       app.window.renderHome();
       assert.equal(app.window.document.querySelector('.home iframe'), null);
-      assert.equal(app.window.document.querySelector('.frontpage-fade').children.length, 1);
+      assert.equal(app.window.document.querySelector('.frontpage-fade').children.length, 0);
       assert.equal(app.requests(), 1);
     } finally {app.dom.window.close();}
   }
@@ -78,7 +77,7 @@ test('late Frontpage response leaves other routes intact; returning Home stays c
 
 test('published Frontpage media replace fallback once; explicit empty stays empty; route changes remain safe',async()=>{
  for(const media of [[],[{_key:'one',type:'image',size:'large',image:{asset:{_ref:'image-demo-1200x800-jpg'}}}]]){
- const app=setup();try{await app.settle(success(content({media})));const layer=app.window.document.querySelector('.frontpage-fade');assert.equal(layer.dataset.source,'sanity');assert.equal(layer.children.length,media.length?1:0);if(media.length)assert.match(layer.firstChild.src,/cdn.sanity.io/);app.window.renderHome();assert.equal(app.window.document.querySelector('.frontpage-fade').children.length,media.length?1:0);assert.equal(app.requests(),1)}finally{app.dom.window.close()}
+ const app=setup();try{await app.settle(success(content({media})));const layer=app.window.document.querySelector('.frontpage-fade');assert.equal(layer.dataset.source,'sanity');assert.equal(layer.children.length,0);app.window.renderHome();assert.equal(app.window.document.querySelector('.frontpage-fade').children.length,0);assert.equal(app.requests(),1)}finally{app.dom.window.close()}
  }
  const app=setup('#info');try{const before=app.window.document.querySelector('#app').innerHTML;await app.settle(success(content({media:[]})));assert.equal(app.window.document.querySelector('#app').innerHTML,before);app.window.renderHome();assert.equal(app.window.document.querySelector('.frontpage-fade').children.length,0)}finally{app.dom.window.close()}
 });

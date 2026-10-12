@@ -1,243 +1,181 @@
-/* Rolling editorial collage. Opacity changes only with accumulated input. */
+/* Stationary, edge-connected media trail. Legacy filename/API retained for callers. */
 (function (root) {
   'use strict';
   const media = root.FrontpageMedia || (typeof module !== 'undefined' && module.exports ? require('./frontpage-media.js') : []);
-
-  // Travelled CSS pixels per complete reveal. Higher = slower.
-  const PROGRESSION_MULTIPLIER = 3.5 * 2.5;
-  const MAX_PROGRESS_PER_INPUT_FRAME = 0.5;
-  const DISTANCE_PER_IMAGE = 480 / PROGRESSION_MULTIPLIER;
-  const MOBILE_TRANSITIONS_PER_SECOND = 0.70 * PROGRESSION_MULTIPLIER;
+  const WINDOW_SIZE = 6, DISTANCE_PER_IMAGE = 32, MAX_CURSOR_DISTANCE = 96;
+  const centerDistance = (rect, point) => Math.hypot(rect.left + rect.width / 2 - point.x, rect.top + rect.height / 2 - point.y);
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const distance = (a, b) => Math.hypot(b.x - a.x, b.y - a.y);
-  const WINDOW_SIZE = 6;
-  function collageState(progress, count = media.length) {
-    if (!count) return [];
-    if (count === 1) return [{serial:0,index:0,role:progress < 1 ? 'incoming':'current',opacity:Math.max(0,Math.min(1,progress))}];
-    const rounded = Math.round(progress);
-    const stable = Math.abs(progress-rounded)<1e-9 ? rounded : Math.max(0,progress);
-    const completed = Math.floor(stable), serial = completed - 1, fraction = stable - completed;
-    const size = Math.min(WINDOW_SIZE, count);
-    const first = Math.max(0, serial - size + 1), result = [];
-    for (let i = first; i <= serial; i++) {
-      result.push({serial:i, index:i % count, role:i === first && serial >= size - 1 && fraction > 0 ? 'outgoing' : 'current',
-        opacity:count > 1 && i === first && serial >= size - 1 ? 1 - fraction : 1});
-    }
-    // A one-item source must not be repeated within its own window.
-    if ((count > 1 && fraction > 0) || serial < 0) result.push({serial:serial + 1, index:(serial + 1) % count, role:'incoming', opacity:fraction});
-    return result;
+  const overlaps = (a, b) => a.left < b.left + b.width - .01 && a.left + a.width > b.left + .01 && a.top < b.top + b.height - .01 && a.top + a.height > b.top + .01;
+  function dimensions(source, width, height, ratio = source.aspectRatio || 1) {
+    const mobile = width <= 700;
+    const size = {small: mobile ? 66 : 100, medium: mobile ? 100 : 156, large: mobile ? 140 : 218}[source.size || 'medium'] || 156;
+    const longest = Math.min(size, width * .32, height * .28);
+    return ratio >= 1 ? {width: longest, height: longest / ratio} : {width: longest * ratio, height: longest};
   }
-  // Six related rectangles form an editorial spread. Each spread has a large
-  // anchor, attached medium images and small fragments; later spreads change
-  // their corner and proportions. Only positions change, never image orientation.
-  function layout(serial, width, height, ratio = 1, sequence = media) {
-    const group = Math.floor(serial / WINDOW_SIZE), slot = serial % WINDOW_SIZE;
-    const variant = group % 6, mobile = width <= 700;
-    const sizes = mobile ? [[.90,.53],[.58,.40],[.28,.19],[.67,.37],[.34,.22],[.48,.32]] :
-      [[.62,.78],[.30,.65],[.14,.30],[.38,.48],[.18,.32],[.27,.48]];
-    const boxes = [];
-    const fit = i => {
-      const source = sequence[(group * WINDOW_SIZE+i) % sequence.length];
-      const aspect = i === slot ? ratio : source?.aspectRatio || (['mp4','video'].includes(source?.type) ? 16/9 : 1);
-      const sourceSize = source?.size;
-      const categorySizes = mobile ? {small:[.29,.22],medium:[.57,.40],large:[.90,.57]} :
-        {small:[.17,.33],medium:[.35,.57],large:[.62,.78]};
-      const [w,h] = categorySizes[sourceSize] || sizes[i];
-      const scale = (variant % 3 === 2 ? [.94,1.07,.92,1.05,.90,1.08][i] : 1) *
-        (sourceSize ? [1,.90,1.08,.96,.88,1.05][i] : 1);
-      const imageWidth = Math.min(width*w*scale,height*h*aspect);
-      return {width:imageWidth,height:imageWidth/aspect};
-    };
-    for (let i=0;i<=slot;i++) {
-      const box=fit(i), anchor=boxes[0];
-      if (i===0) {box.left=0;box.top=height*(mobile ? .08 : .04);}
-      else if (mobile) {
-        // A narrow vertical spread, with edge-linked overlaps rather than a
-        // reduced copy of the desktop's horizontal composition.
-        if(i===1){box.left=anchor.width-box.width*.68;box.top=anchor.top+anchor.height*.48;}
-        if(i===2){box.left=boxes[1].left+boxes[1].width-box.width;box.top=boxes[1].top+boxes[1].height-box.height*.30;}
-        if(i===3){box.left=anchor.left;box.top=boxes[1].top+boxes[1].height-box.height*.14;}
-        if(i===4){box.left=boxes[3].left+boxes[3].width-box.width*.35;box.top=boxes[3].top+boxes[3].height*.16;}
-        if(i===5){box.left=boxes[3].left+boxes[3].width*.20;box.top=boxes[3].top+boxes[3].height-box.height*.16;}
-      } else {
-        if(i===1){box.left=anchor.width-width*.07;box.top=anchor.top+height*.07;}
-        if(i===2){box.left=boxes[1].left+boxes[1].width-box.width*.25;box.top=boxes[1].top+boxes[1].height-box.height*.35;}
-        if(i===3){box.left=anchor.left+anchor.width*.18;box.top=anchor.top+anchor.height-box.height*.22;}
-        if(i===4){box.left=boxes[3].left;box.top=boxes[3].top+boxes[3].height-box.height*.30;}
-        if(i===5){box.left=boxes[1].left+boxes[1].width*.25;box.top=boxes[3].top+boxes[3].height*.18;}
-      }
-      // Alternate attached spreads shift the lower cluster along the anchor.
-      // This changes the composition itself, in addition to its viewport corner.
-      if (variant >= 3 && i === 3) {
-        box.left = mobile ? anchor.width-box.width : anchor.width-box.width*.72;
-        box.top = anchor.top+anchor.height-box.height*.32;
-      }
-      box.left=Math.max(0,Math.min(width-box.width,box.left));
-      box.top=Math.max(0,Math.min(height-box.height,box.top));
-      boxes.push(box);
+  // On each side, test the cursor projection and interval endpoints where an
+  // obstacle starts/ends. This finds free shared-edge intervals without a grid.
+  function placement(previous, size, active, point, vector, bounds, maxCursorDistance = MAX_CURSOR_DISTANCE) {
+    if (!previous) {
+      const rect = {...size, left: clamp(point.x - size.width / 2, 0, bounds.width - size.width), top: clamp(point.y - size.height / 2, 0, bounds.height - size.height)};
+      return centerDistance(rect, point) <= maxCursorDistance && !active.some(box => overlaps(rect, box)) ? rect : null;
     }
-    const result={...boxes[slot]};
-    if(variant % 3 === 1) result.left=Math.max(0,width-result.left-result.width);
-    if(variant % 3 === 2) result.top=Math.max(0,height-result.top-result.height);
-    return result;
+    const length = Math.hypot(vector.x, vector.y) || 1;
+    const sides = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+    let best = null, score = Infinity;
+    for (const side of sides) {
+      const horizontal = !!side.x, axis = horizontal ? 'top' : 'left', extent = horizontal ? 'height' : 'width';
+      const shared = Math.min(previous[extent], size[extent]) * .25;
+      const lo = Math.max(0, previous[axis] - size[extent] + shared);
+      const hi = Math.min(bounds[extent] - size[extent], previous[axis] + previous[extent] - shared);
+      if (lo > hi) continue;
+      const desired = clamp((horizontal ? point.y : point.x) - size[extent] / 2, lo, hi);
+      const values = [desired, lo, hi, clamp(previous[axis],lo,hi), clamp(previous[axis]+previous[extent]-size[extent],lo,hi)];
+      for (const box of active) values.push(clamp(box[axis] - size[extent],lo,hi), clamp(box[axis] + box[extent],lo,hi));
+      for (const value of values) {
+        const rect = {...size, left: horizontal ? (side.x > 0 ? previous.left + previous.width : previous.left - size.width) : value,
+          top: horizontal ? value : (side.y > 0 ? previous.top + previous.height : previous.top - size.height)};
+        if (rect.left < 0 || rect.top < 0 || rect.left + rect.width > bounds.width + .01 || rect.top + rect.height > bounds.height + .01 || active.some(box => overlaps(rect,box))) continue;
+        const proximity = centerDistance(rect, point);
+        if (proximity > maxCursorDistance) continue;
+        // Proximity is primary. Direction only resolves similarly close edges;
+        // it must never pull a mark away from the sampled pointer trajectory.
+        const candidateScore = proximity + (1 - (side.x * vector.x + side.y * vector.y) / length) * 18;
+        if (candidateScore < score) {score = candidateScore; best = rect;}
+      }
+    }
+    return best;
   }
   function init(layer, sequence = media, initial = {}) {
     layer.replaceChildren();
-    layer.dataset.progress = String(initial.progress || 0);
-    if (!sequence.length) {layer.dataset.distance = '0'; root.Contrast?.refresh?.(); return () => {layer.replaceChildren();};}
-    const fine = root.matchMedia('(pointer: fine)');
-    const controller = new root.AbortController();
-    const options = {signal: controller.signal};
-    let previous = null, totalDistance = 0, progress = Math.max(0, Number(initial.progress) || 0), disposed = false, mouseBudget = 0;
-    let frame = 0, lastTouchTime = 0, paintFrame = 0, paintFromMouse = false;
-    const touches = new Set();
-    function createNode(source) {
-      const node = root.document.createElement(['video', 'mp4'].includes(source.type) ? 'video' : 'img');
-      node.className = 'frontpage-fade-media';
-      if (['video', 'mp4'].includes(source.type)) {node.muted = true; node.playsInline = true; node.preload = 'auto'; node.loop = true; node.controls = false; if (source.poster) node.poster = source.poster;}
-      else {node.alt = ''; node.draggable = false; node.decoding = 'async';}
-      return node;
-    }
+    const controller = new root.AbortController(), options = {signal: controller.signal};
+    const threshold = Math.max(8, Number(initial.distancePerImage) || DISTANCE_PER_IMAGE);
+    const maxCursorDistance = Math.max(1, Number(initial.maxCursorDistance) || (layer.clientWidth <= 700 ? 64 : MAX_CURSOR_DISTANCE));
+    let bounds = layer.getBoundingClientRect(), previous = null, travel = 0, total = 0, serial = Math.max(0, Math.floor(Number(initial.progress) || 0));
+    let touch = null, disposed = false, contrastFrame = 0, retryPlacement = false;
+    const records = [], ratios = new Map(), warm = new Map();
+    const blocked = target => target?.closest?.('a, button, input, select, textarea, summary, dialog, [role="button"], [contenteditable], .site-header, .mobile-menu');
     function release(node) {
       if (node.tagName === 'VIDEO') {node.pause(); node.removeAttribute('src'); node.load();}
-      else node.removeAttribute('src');
       node.remove();
     }
-    // Bounded warm cache for this local 20-item sequence, including fast jumps.
-    // Preloads never enter the DOM and never render or advance progress on load.
-    const preloads = sequence.filter(source => source.type === 'image').slice(0,24).map(source => {
-      const node = createNode(source); node.src = source.src;
-      if (!['video', 'mp4'].includes(source.type)) node.decode?.().catch(() => {});
-      return node;
-    });
-    const records = new Map();
-    function place(record, serial) {
-      const box = layer.getBoundingClientRect();
-      const node = record.node;
-      // Stable bounds for uploaded videos, even before metadata. The native
-      // frame uses contain inside these bounds if its dimensions are unknown.
-      const ratio = node.tagName === 'VIDEO' ? sequence[record.index].aspectRatio || 16/9 : node.naturalWidth && node.naturalHeight ? node.naturalWidth / node.naturalHeight :
-        node.videoWidth && node.videoHeight ? node.videoWidth / node.videoHeight : sequence[record.index].aspectRatio || 1;
-      const rect = layout(serial, box.width || root.innerWidth, box.height || root.innerHeight, ratio, sequence);
+    function warmNext() {
+      // A bounded image-only lookahead; never decode inactive videos.
+      const wanted = new Set();
+      for (let i = 0; i < Math.min(8, sequence.length); i++) {
+        const index = (serial+i)%sequence.length, source = sequence[index];
+        if (['video','mp4'].includes(source.type)) continue;
+        wanted.add(index);
+        if (warm.has(index)) continue;
+        const img = new root.Image(); warm.set(index,img);
+        img.onload = () => {if (!disposed && img.naturalHeight) ratios.set(index,img.naturalWidth/img.naturalHeight);};
+        img.src = source.src; img.decode?.().catch(()=>{});
+      }
+      for (const index of warm.keys()) if (!wanted.has(index)) warm.delete(index);
+    }
+    function emit(point, vector) {
+      if (!sequence.length) return false;
+      const index = serial % sequence.length, source = sequence[index];
+      const active = records.length === WINDOW_SIZE ? records.slice(1) : records;
+      const activeRects = active.map(record => record.rect);
+      const anchors = activeRects.slice().reverse();
+      const size = dimensions(source,bounds.width,bounds.height,ratios.get(index) || source.aspectRatio || (['video','mp4'].includes(source.type) ? 16/9 : 1));
+      let rect;
+      // Prefer the latest mark; a reversal may instead join another nearby
+      // retained edge. Never attach to an outgoing mark or choose a distant edge.
+      // Existing size targets and tight-corner scale fallbacks remain unchanged.
+      for (const scale of [1,.75,.5,.3]) {
+        const fragment = {width:size.width*scale,height:size.height*scale};
+        if (!anchors.length) rect = placement(null,fragment,[],point,vector,bounds,maxCursorDistance);
+        for (const anchor of anchors) {
+          rect = placement(anchor,fragment,activeRects,point,vector,bounds,maxCursorDistance);
+          if (rect) break;
+        }
+        if (rect) break;
+        // Do not shrink a correctly sized mark merely to chase the cursor.
+        // Retain the existing smaller-fragment fallback only for geometric
+        // collisions/boundaries, and wait if its valid edge is still distant.
+        if (anchors.some(anchor => placement(anchor,fragment,activeRects,point,vector,bounds,Infinity))) return false;
+      }
+      if (!rect) return false;
+      const video = ['video','mp4'].includes(source.type), node = root.document.createElement(video ? 'video' : 'img');
+      node.className = 'frontpage-fade-media';
+      Object.assign(node.dataset,{serial:String(serial),sequence:String(index),id:source.id || `local-${index}`,brushX:String(point.x),brushY:String(point.y)});
       for (const key of ['left','top','width','height']) node.style[key] = `${rect[key]}px`;
+      node.style.opacity = '1';
+      if (video) {
+        node.muted = true; node.autoplay = true; node.loop = true; node.playsInline = true; node.controls = false; node.preload = 'auto';
+        if (source.poster) node.poster = source.poster;
+        node.addEventListener('loadedmetadata',()=>{if (node.videoHeight) ratios.set(index,node.videoWidth/node.videoHeight);},{once:true, ...options});
+      } else {node.alt = ''; node.draggable = false; node.decoding = 'async';}
+      node.src = source.src;
+      // Remove first: even a MutationObserver never sees a seven-item DOM.
+      if (records.length === WINDOW_SIZE) release(records.shift().node);
+      records.push({node,rect}); layer.append(node); serial++;
+      layer.dataset.progress = String(serial);
+      if (video && !root.document.hidden) node.play().catch(()=>{node.dataset.autoplay = 'blocked';});
+      warmNext();
+      if (!contrastFrame) contrastFrame = root.requestAnimationFrame(()=>{contrastFrame = 0; if (!disposed) root.Contrast?.refresh?.();});
+      return true;
     }
-    function render() {
-      paintFrame = 0;
-      if (disposed) return;
-      const state = collageState(progress, sequence.length), live = new Set(state.map(item=>item.serial));
-      for (const [serial,record] of records) if (!live.has(serial)) {release(record.node); records.delete(serial);}
-      state.forEach((item,z)=>{
-        let record = records.get(item.serial);
-        if (!record) {
-          const source = sequence[item.index], node = createNode(source);
-          record = {node,index:item.index}; records.set(item.serial,record);
-          node.addEventListener('load',()=>{if (!disposed && records.get(item.serial) === record) place(record,item.serial);},{once:true});
-          node.addEventListener('loadedmetadata',()=>{if (!disposed && records.get(item.serial) === record) place(record,item.serial);},{once:true});
-          node.src = source.src; layer.append(node);
-        }
-        Object.assign(record.node.dataset,{sequence:String(item.index),serial:String(item.serial),role:item.role,id:sequence[item.index].id || `local-${item.index}`});
-        record.node.style.opacity = String(item.opacity); record.node.style.zIndex = String(z+1);
-        place(record,item.serial);
-        if (record.node.tagName === 'VIDEO') {
-          if (item.opacity > 0 && !root.document.hidden && record.node.paused && !record.playPending) {
-            record.playPending = true;
-            record.node.play().catch(error=>{
-              if (error?.name !== 'AbortError') record.node.dataset.autoplay = 'blocked';
-            }).finally(()=>{record.playPending = false;});
-          }
-          else if (item.opacity <= 0 || root.document.hidden) record.node.pause();
-        }
-      });
-      layer.dataset.distance = String(totalDistance); layer.dataset.progress = String(progress);
-      root.Contrast?.refresh?.();
-    }
-    function scheduleRender(fromMouse = false) {
-      paintFromMouse ||= fromMouse;
-      if (!paintFrame) paintFrame = root.requestAnimationFrame(()=>{
-        if (paintFromMouse) {
-          // Never jump over a media item during a fast/coalesced pointer burst.
-          // Excess travel is retained for the next actual input, never replayed
-          // autonomously after the pointer stops.
-          const advance = Math.min(MAX_PROGRESS_PER_INPUT_FRAME,mouseBudget);
-          progress += advance; mouseBudget -= advance;
-        }
-        paintFromMouse = false; render();
-      });
-    }
-    function reset() {
-      stopTouch(); previous = null; totalDistance = 0; progress = 0;
-      if (paintFrame) root.cancelAnimationFrame(paintFrame);
-      for (const record of records.values()) release(record.node);
-      records.clear(); preloads.forEach(release); preloads.length = 0;
-      layer.replaceChildren(); layer.dataset.distance = '0'; layer.dataset.progress = '0';
-    }
-    render();
     function move(event) {
-      if (disposed || !fine.matches || event.pointerType !== 'mouse') return;
-      let moved = false;
+      if (disposed || (event.pointerType !== 'mouse' && event.pointerId !== touch)) return;
+      if (blocked(event.target)) {previous = null; travel = 0; retryPlacement = false; return;}
       const samples = event.getCoalescedEvents?.() || [];
       for (const sample of samples.length ? samples : [event]) {
-        const point = {x: sample.clientX, y: sample.clientY};
-        if (previous) {
-          const travelled = distance(previous, point);
-          totalDistance += travelled; mouseBudget += travelled / DISTANCE_PER_IMAGE; moved ||= travelled > 0;
+        const point = {x:sample.clientX-bounds.left,y:sample.clientY-bounds.top};
+        if (!previous) {previous = point; continue;}
+        const length = distance(previous,point), vector = {x:point.x-previous.x,y:point.y-previous.y};
+        if (!length) continue;
+        if (!records.length) {
+          // Start at the beginning of the travelled segment, not its endpoint.
+          // Otherwise a rapid first gesture anchors the chain ahead of its path.
+          const step = Math.min(1, length);
+          retryPlacement = !emit({x:previous.x + vector.x * step / length,y:previous.y + vector.y * step / length},vector);
         }
-        previous = point;
+        // Consume long/coalesced segments at spatial intervals in this input,
+        // with no animation queue that could continue after movement stops.
+        let consumed = 0;
+        while (travel + length - consumed >= threshold) {
+          consumed += threshold - travel; travel = 0;
+          retryPlacement = !emit({x:previous.x+vector.x*consumed/length,y:previous.y+vector.y*consumed/length},vector);
+        }
+        travel += length-consumed;
+        // Once travel is eligible but blocked, also test subsequent live path
+        // endpoints. Narrow free intervals must not fall between 32px samples.
+        // A successful retry consumes the budget; nothing is replayed while idle.
+        if (retryPlacement && consumed < length && emit(point,vector)) {retryPlacement = false; travel = 0;}
+        total += length; previous = point;
       }
-      if (moved && mouseBudget > 0) scheduleRender(true);
+      layer.dataset.distance = String(total);
     }
-    function stopTouch() {
-      touches.clear();
-      if (frame) root.cancelAnimationFrame(frame);
-      frame = 0; lastTouchTime = 0;
-    }
-    function tick(now) {
-      frame = 0;
-      if (disposed || !touches.size || root.document.hidden) {stopTouch(); return;}
-      progress += Math.min(MAX_PROGRESS_PER_INPUT_FRAME,Math.max(0, now - lastTouchTime) / 1000 * MOBILE_TRANSITIONS_PER_SECOND);
-      lastTouchTime = now;
-      render();
-      frame = root.requestAnimationFrame(tick);
-    }
-    function touchDown(event) {
-      if (disposed || root.document.hidden || event.pointerType !== 'touch') return;
-      // Do not capture or prevent navigation taps, including the menu backdrop.
-      if (event.target.closest?.('a, button, input, select, textarea, summary, dialog, [role="button"], [contenteditable]:not([contenteditable="false"]), .site-header')) return;
-      touches.add(event.pointerId);
-      // Native touch capture keeps release/cancel routed here even after movement.
-      event.target.setPointerCapture?.(event.pointerId);
-      if (!frame) {
-        lastTouchTime = root.performance.now();
-        frame = root.requestAnimationFrame(tick);
+    function end(event) {if (event.pointerId === touch) {touch = null; previous = null; travel = 0; retryPlacement = false;}}
+    root.document.addEventListener('pointerdown',event=>{
+      if (event.pointerType !== 'touch' || touch !== null || blocked(event.target)) return;
+      touch = event.pointerId; previous = {x:event.clientX-bounds.left,y:event.clientY-bounds.top}; travel = 0; retryPlacement = false;
+      if (event.isTrusted) event.target.setPointerCapture?.(event.pointerId);
+    },options);
+    root.document.addEventListener('pointermove',move,{...options,passive:true});
+    for (const type of ['pointerup','pointercancel','lostpointercapture']) root.document.addEventListener(type,end,options);
+    root.document.documentElement.addEventListener('pointerleave',()=>{previous = null; travel = 0; retryPlacement = false;},options);
+    root.addEventListener('blur',()=>{previous = null; touch = null; travel = 0; retryPlacement = false;},options);
+    root.document.addEventListener('visibilitychange',()=>{
+      for (const {node} of records) if (node.tagName === 'VIDEO') {
+        if (root.document.hidden) node.pause(); else node.play().catch(()=>{});
       }
+      previous = null; travel = 0; retryPlacement = false;
+    },options);
+    function resize() {
+      const next = layer.getBoundingClientRect();
+      if (next.width === bounds.width && next.height === bounds.height) return;
+      // A resized coordinate system starts a fresh trail; sequence order persists.
+      records.splice(0).forEach(r=>release(r.node)); bounds = next; previous = null; travel = 0; retryPlacement = false;
     }
-    function touchEnd(event) {
-      if (!touches.delete(event.pointerId)) return;
-      if (!touches.size) {
-        progress += Math.min(MAX_PROGRESS_PER_INPUT_FRAME,Math.max(0, root.performance.now() - lastTouchTime) / 1000 * MOBILE_TRANSITIONS_PER_SECOND);
-        render(); stopTouch();
-      }
-    }
-    root.document.addEventListener('pointerdown', touchDown, options);
-    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
-      root.document.addEventListener(type, touchEnd, options);
-    }
-    root.document.addEventListener('visibilitychange', () => {
-      for (const record of records.values()) {
-        if (record.node.tagName !== 'VIDEO') continue;
-        if (root.document.hidden) record.node.pause();
-        else if (Number(record.node.style.opacity) > 0) record.node.play().catch(() => {});
-      }
-      if (root.document.hidden) {previous = null; stopTouch();}
-    }, options);
-    root.document.addEventListener('pointermove', move, {...options, passive: true});
-    root.document.documentElement.addEventListener('pointerleave', () => {previous = null;}, options);
-    root.addEventListener('blur', () => {previous = null; stopTouch();}, options);
-    root.addEventListener('resize', () => {previous = null; scheduleRender();}, options);
-    root.visualViewport?.addEventListener('resize', () => scheduleRender(), options);
-    fine.addEventListener('change', () => {previous = null; stopTouch();}, options);
-    return () => {disposed = true; controller.abort(); reset();};
+    root.addEventListener('resize',resize,options); root.visualViewport?.addEventListener('resize',resize,options);
+    layer.dataset.progress = String(serial); layer.dataset.distance = '0'; layer.dataset.maxCursorDistance = String(maxCursorDistance); warmNext();
+    return () => {disposed = true; controller.abort(); if (contrastFrame) root.cancelAnimationFrame(contrastFrame); records.splice(0).forEach(r=>release(r.node)); warm.clear(); root.Contrast?.refresh?.();};
   }
-  const api = {init, media, distance, collageState, layout, WINDOW_SIZE, MAX_PROGRESS_PER_INPUT_FRAME, PROGRESSION_MULTIPLIER, DISTANCE_PER_IMAGE, MOBILE_TRANSITIONS_PER_SECOND};
+  const api = {init,media,distance,dimensions,placement,overlaps,centerDistance,WINDOW_SIZE,DISTANCE_PER_IMAGE,MAX_CURSOR_DISTANCE};
   root.FrontpageMediaFade = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
