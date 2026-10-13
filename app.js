@@ -595,26 +595,73 @@ function renderArchive() {
   };
   const archive = list.closest(".archive");
   const track = list.querySelector(".archive-list-track");
-  let requestedMobileRow = 0;
+  let visualRow = 0;
+  let mobileRows = rows;
+  let moving = false;
+  let movementTimer = 0;
+  let stripNeedsResize = false;
+  const mobileQueue = [];
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const rebuildMobileStrip = () => {
+    track.querySelectorAll('[data-repeat]').forEach(row => row.remove());
+    if (mobile.matches) {
+      // Include enough complete cycles to fill even a one-project viewport.
+      const cycleHeight = rows.reduce((sum, row) => sum + row.getBoundingClientRect().height, 0);
+      const copies = Math.max(2, Math.ceil(list.clientHeight / Math.max(1, cycleHeight)) + 1);
+      for (let copy = 1; copy <= copies; copy++) {
+        for (const row of rows) {
+          const clone = row.cloneNode(true);
+          clone.dataset.repeat = String(copy);
+          clone.removeAttribute("aria-current");
+          clone.classList.remove("is-active");
+          track.append(clone);
+        }
+      }
+    }
+    mobileRows = [...track.querySelectorAll(".archive-row")];
+  };
   let mobileRequest = 0;
   let pendingMobileVideo = null;
   const mobileImages = new Map();
   const preview = entry => (entry?.media || entry?.images?.map((src, i) => ({type:"image", src, ...entry.previewImages?.[i]})) || []).find(item => item.src);
   const alignMobileList = () => {
     if (!mobile.matches || activeRow < 0 || events.signal.aborted) return;
-    // The difference cancels the existing transform and retains subpixel rows.
-    const offset = rows[activeRow].getBoundingClientRect().top - rows[0].getBoundingClientRect().top;
+    const offset = mobileRows[visualRow].getBoundingClientRect().top - mobileRows[0].getBoundingClientRect().top;
     list.style.setProperty("--archive-offset", `${offset}px`);
   };
   const markMobileEntry = next => {
     activeRow = next;
-    rows.forEach((row, i) => {
-      row.inert = i < next;
-      row.classList.toggle("is-active", i === next);
-      if (i === next) row.setAttribute("aria-current", "true");
+    mobileRows.forEach((row, i) => {
+      row.inert = i < visualRow;
+      row.classList.toggle("is-active", i === visualRow);
+      if (i === visualRow) row.setAttribute("aria-current", "true");
       else row.removeAttribute("aria-current");
     });
     alignMobileList();
+  };
+  const finishMobileMovement = () => {
+    clearTimeout(movementTimer);
+    track.classList.remove("is-moving");
+    // Equivalent copies occupy exactly the same pixels: normalize between moves.
+    visualRow %= rows.length;
+    if (stripNeedsResize) { rebuildMobileStrip(); stripNeedsResize = false; }
+    markMobileEntry(activeRow);
+    void track.offsetHeight;
+    moving = false;
+    drainMobileQueue();
+  };
+  const drainMobileQueue = () => {
+    if (moving || !mobile.matches || events.signal.aborted || !mobileQueue.length) return;
+    const selection = mobileQueue.shift();
+    const next = selection === null ? (activeRow + 1) % rows.length : selection;
+    const distance = selection === null ? 1 : (next - activeRow + rows.length) % rows.length;
+    if (!distance) { drainMobileQueue(); return; }
+    moving = true;
+    activateMobileEntry(next, distance);
+  };
+  const enqueueMobile = selection => {
+    mobileQueue.push(selection);
+    drainMobileQueue();
   };
   const prepareMobileImage = media => {
     if (mobileImages.has(media.src)) return mobileImages.get(media.src);
@@ -629,7 +676,7 @@ function renderArchive() {
     node.decode().then(() => {
       record.ready = true;
       record.waiters.splice(0).forEach(callback => callback());
-    }, () => {record.failed = true; record.waiters.length = 0;});
+    }, () => {record.failed = true; record.waiters.splice(0).forEach(callback => callback());});
     return record;
   };
   const warmMobileImages = next => {
@@ -671,22 +718,30 @@ function renderArchive() {
     const video = bg.querySelector("video");
     if (video) {if (document.hidden) video.pause(); else playMobileVideo(video);}
   }, {signal:events.signal});
-  const activateMobileEntry = next => {
-    requestedMobileRow = next;
+  const activateMobileEntry = (next, distance = 0) => {
     const request = ++mobileRequest;
     ++imageRequest; // Invalidate any pending desktop decode during a resize.
     cancelPendingMobileVideo();
     bg.querySelector("video")?.pause();
     const media = preview(entries[next]);
+    let committed = false;
     const commit = (node, video = false) => {
-      if (request !== mobileRequest || !mobile.matches || events.signal.aborted) return;
+      if (committed || request !== mobileRequest || !mobile.matches || events.signal.aborted) return;
+      committed = true;
       stopVideo();
       bg.className = `archive-background visible full${video ? " is-video" : ""}`;
       bg.replaceChildren(...(node ? [node] : []));
       archive.dataset.textColor = entries[next].textColor || "auto";
       archive.dataset.activeProject = String(next);
       bg.dataset.projectIndex = String(next);
+      visualRow += distance;
+      track.classList.toggle("is-moving", distance > 0 && !reducedMotion.matches);
       markMobileEntry(next);
+      if (distance > 0 && !reducedMotion.matches) {
+        movementTimer = setTimeout(finishMobileMovement, 420);
+      } else {
+        movementTimer = setTimeout(finishMobileMovement, 0);
+      }
       if (video) {
         pendingMobileVideo = null;
         node.autoplay = true; node.muted = audioState.muted;
@@ -703,7 +758,8 @@ function renderArchive() {
     if (media.type !== "mp4") {
       const record = prepareMobileImage(media);
       if (record.ready) commit(record.node);
-      else if (!record.failed) record.waiters.push(() => commit(record.node));
+      else if (record.failed) commit(null);
+      else record.waiters.push(() => commit(record.failed ? null : record.node));
       warmMobileImages(next);
       return;
     }
@@ -713,9 +769,10 @@ function renderArchive() {
     if (media.poster) video.poster = media.poster;
     pendingMobileVideo = video;
     video.addEventListener("loadeddata", () => commit(video,true), {once:true,signal:events.signal});
+    video.addEventListener("error", () => commit(null), {once:true,signal:events.signal});
     video.src = media.src; video.load();
   };
-  const advanceMobile = () => activateMobileEntry((requestedMobileRow + 1) % rows.length);
+  const advanceMobile = () => enqueueMobile(null);
   const controls = 'a, button, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
   let tap = null;
   archive.addEventListener("pointerdown", event => {
@@ -740,13 +797,19 @@ function renderArchive() {
     const gesture = tap; tap = null;
     if (event.detail && (!gesture || !gesture.ended || gesture.moved)) return;
     const row = event.target.closest(".archive-row");
-    if (row) {event.preventDefault(); activateMobileEntry(Number(row.dataset.index));}
+    if (row) {event.preventDefault(); enqueueMobile(Number(row.dataset.index));}
     else if (!event.target.closest(controls)) advanceMobile();
   }, {signal:events.signal});
-  window.addEventListener("resize", alignMobileList, {signal:events.signal});
+  const resizeMobileStrip = () => {
+    if (!mobile.matches || events.signal.aborted) return;
+    if (moving) stripNeedsResize = true;
+    else { rebuildMobileStrip(); markMobileEntry(activeRow); }
+    alignMobileList();
+  };
+  window.addEventListener("resize", resizeMobileStrip, {signal:events.signal});
   const listObserver = new ResizeObserver(alignMobileList);
   listObserver.observe(track);
-  document.fonts?.ready.then(alignMobileList);
+  document.fonts?.ready.then(resizeMobileStrip);
   const activateDesktopEntry = next => {
     if (next < 0 || next === activeRow) return;
     activeRow = next;
@@ -781,6 +844,12 @@ function renderArchive() {
     }, { signal: events.signal });
   });
   const syncLayout = () => {
+    clearTimeout(movementTimer);
+    mobileQueue.length = 0;
+    moving = mobile.matches;
+    visualRow = 0;
+    track.classList.remove("is-moving");
+    rebuildMobileStrip();
     activeRow = -1;
     frame = 0;
     rows.forEach(row => {
@@ -800,6 +869,7 @@ function renderArchive() {
   mobile.addEventListener("change", syncLayout, { signal: events.signal });
   cleanupPage = () => {
     events.abort();
+    clearTimeout(movementTimer); mobileQueue.length = 0;
     ++mobileRequest; cancelPendingMobileVideo(); mobileImages.clear(); listObserver.disconnect();
     stopVideo();
     soundButton?.remove();

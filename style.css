@@ -488,7 +488,9 @@ body.is-index, .is-index .archive, .is-index .archive-background { background-co
   .archive-list-track {
     transform: translateY(calc(-1 * var(--archive-offset, 0px)));
     transition: none;
+    will-change: transform;
   }
+  .archive-list-track.is-moving { transition: transform 400ms cubic-bezier(.22, 1, .36, 1); }
   /* Only the visible title is a selection target; blank row space advances. */
   .is-index .archive-row { width: fit-content; max-width: 100%; height: auto; min-height: var(--archive-row-height); }
   .is-index .archive-background img { opacity: 1; transition: none; }

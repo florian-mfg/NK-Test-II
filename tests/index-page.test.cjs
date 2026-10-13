@@ -13,7 +13,8 @@ function setup(hash = '#archive', mobile = false) {
   const {window} = dom;
   const scrollCalls = [];
   window.scrollTo = (x, y) => {scrollCalls.push([x, y]); window.scrollY = y;};
-  window.matchMedia = () => ({matches: mobile, addEventListener() {}});
+  // Unit tests exercise reduced-motion progression; real motion is covered in browsers.
+  window.matchMedia = query => ({matches: query.includes("prefers-reduced-motion") || mobile, addEventListener() {}});
   window.HTMLElement.prototype.scrollTo = function({top}) { this.scrollTop = top; };
   // jsdom does not load/decode images; these unit fixtures are immediately ready.
   window.HTMLImageElement.prototype.decode = function() { return {then: ready => ready()}; };
@@ -29,7 +30,7 @@ function setup(hash = '#archive', mobile = false) {
   window.SanityData = {load: () => {requests++; return pending;}};
   for (const file of ['projects.js', 'project-modules.js', 'project-video.js', 'app.js']) vm.runInContext(read(file), dom.getInternalVMContext());
   window.fitWorkMenu();
-  const flush = () => new Promise(yes => setImmediate(yes));
+  const flush = () => new Promise(yes => setTimeout(yes, 10));
   return {window, dom, scrollCalls, requests: () => requests, reject: async () => {reject(new Error('offline')); await flush();},
     settle: async result => {resolve(result); await flush();}};
 }
@@ -39,7 +40,7 @@ const img = (id, extra = {}) => ({asset:{_ref:`image-${id}-1200x800-jpg`}, ...ex
 const project = (id, extra = {}) => ({_id:id,_type:'project',slug:{current:id},title:`Project ${id}`,category:'Video',year:2026,additionalInfo:'Inherited info',modules:[],...extra});
 const entry = (title, extra = {}) => ({displayTitle:title,previewImages:[img('index')],...extra});
 const content = (entries, projects=[]) => adapter.normalize({projects,indexPage:doc('indexPage',{entries})});
-const rows = app => [...app.window.document.querySelectorAll('.archive-row')];
+const rows = app => [...app.window.document.querySelectorAll('.archive-row:not([data-repeat])')];
 const titles = app => rows(app).map(row=>row.firstElementChild.textContent);
 const fire = (app, row, name) => {
  if (name === 'mousemove') {
@@ -118,13 +119,13 @@ test('mobile taps advance one project despite multiple media; scrolling never se
   await app.settle(success(content([entry('One',{previewImages:[img('one'),img('other')]}),entry('Two',{previewImages:[img('two')]})])));
   const list=app.window.document.querySelector('.archive-list');
   const {pointer}=mobileGestureFixture(app);
-  pointer('pointerdown');pointer('pointerup'); await new Promise(setImmediate);
+  pointer('pointerdown');pointer('pointerup'); await new Promise(resolve=>setTimeout(resolve,10));
   assert.equal(rows(app)[1].getAttribute('aria-current'),'true');
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/two-'));
   list.scrollTop=30;list.dispatchEvent(new app.window.Event('scroll'));
   await new Promise(setImmediate);
   assert.equal(rows(app)[1].getAttribute('aria-current'),'true');
-  pointer('pointerdown');pointer('pointerup'); await new Promise(setImmediate);
+  pointer('pointerdown');pointer('pointerup'); await new Promise(resolve=>setTimeout(resolve,10));
   assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
  }finally{app.dom.window.close();}
@@ -305,10 +306,12 @@ test('desktop starts on the first preview and changes only inside actual vertica
 function mobileGestureFixture(app) {
  const list=app.window.document.querySelector('.archive-list');
  list.getBoundingClientRect=()=>({top:50});
- rows(app).forEach((row,index)=>{
-  Object.defineProperty(row,'offsetTop',{value:index*37});
-  row.getBoundingClientRect=()=>({top:50+index*37-list.scrollTop,bottom:50+(index+1)*37-list.scrollTop});
- });
+ // Give every cyclic copy geometry; jsdom has no layout engine.
+ app.window.HTMLElement.prototype.getBoundingClientRect=function(){
+  if(!this.classList.contains('archive-row'))return {top:0,bottom:0,height:0};
+  const index=[...this.parentNode.children].indexOf(this);
+  return {top:50+index*37-list.scrollTop,bottom:50+(index+1)*37-list.scrollTop,height:37};
+ };
  app.window.dispatchEvent(new app.window.Event('resize'));
  const scrolls=[];
  list.scrollTo=options=>{scrolls.push({...options});list.scrollTop=options.top;list.dispatchEvent(new app.window.Event('scroll'));};
@@ -319,7 +322,7 @@ function mobileGestureFixture(app) {
   if(type==='pointerup' && click && !target.closest('a,button')) target.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));
  };
  const tick=()=>new Promise(resolve=>app.window.requestAnimationFrame(resolve));
- const active=()=>rows(app).findIndex(row=>row.getAttribute('aria-current')==='true');
+ const active=()=>Number(app.window.document.querySelector('.archive-row[aria-current]')?.dataset.index ?? -1);
  return {list,scrolls,pointer,tick,active};
 }
 
@@ -382,11 +385,13 @@ test('mobile title selection starts selected project at its first media without 
   const originalRows=rows(app),list=app.window.document.querySelector('.archive-list');
   originalRows[0].click();
   originalRows[1].firstElementChild.click();
+  await new Promise(resolve=>setTimeout(resolve,10));
   assert.equal(originalRows[1].getAttribute('aria-current'),'true');
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
   originalRows[1].click();
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
   originalRows[0].click();
+  await new Promise(resolve=>setTimeout(resolve,10));
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
   assert.equal(app.window.document.querySelector('.archive-list'),list);
   assert.ok(rows(app).every((row,i)=>row===originalRows[i]));
@@ -405,7 +410,7 @@ test('mobile activates only on click, measures rows, and ignores a duplicate com
  list.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));assert.equal(active(),1);
  }finally{app.dom.window.close();}
 });
-test('cold mobile images keep title/media together and late loads cannot overwrite a later tap',async()=>{
+test('cold mobile images keep title/media together and later taps wait in order',async()=>{
  const app=setup('#archive',true);
  try{
  const decode=app.window.HTMLImageElement.prototype.decode;let resolveCold;
@@ -414,8 +419,10 @@ test('cold mobile images keep title/media together and late loads cannot overwri
  const {pointer,active}=mobileGestureFixture(app);
  pointer('pointerdown');pointer('pointerup');assert.equal(active(),0);
  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
- pointer('pointerdown');pointer('pointerup');assert.equal(active(),2);
- resolveCold();await new Promise(setImmediate);assert.equal(active(),2);
+ pointer('pointerdown');pointer('pointerup');assert.equal(active(),0);
+ const trace=[];new app.window.MutationObserver(()=>trace.push(active())).observe(app.window.document.querySelector('.archive'),{attributes:true,attributeFilter:['data-active-project']});
+ resolveCold();await new Promise(resolve=>setTimeout(resolve,10));assert.equal(active(),2);
+ assert.deepEqual(trace,[1,2]);
  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
  }finally{app.dom.window.close();}
 });
