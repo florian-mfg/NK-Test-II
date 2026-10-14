@@ -220,6 +220,11 @@ body.mobile-menu-open { overflow: hidden; }
 .is-index a,
 .is-index button { cursor: url("material/cursor-index-2.svg") 12 7, ew-resize; }
 .archive-additional-info { padding-left: 0; }
+@media (min-width: 701px) {
+  .archive-additional-info { visibility: hidden; }
+  .archive-row:hover .archive-additional-info,
+  .archive-list:not(:has(.archive-row:hover)) .archive-row:focus-within .archive-additional-info { visibility: visible; }
+}
 
 .info { min-height: 100svh; padding: calc(var(--pad) + 1.7 * clamp(15px, 1.2vw, 26px)) var(--pad) var(--pad); background: var(--dark); color: var(--ink); font-size: var(--menu-text-size); line-height: 1.1; }
 .info-columns { display: grid; grid-template-columns: 51% 49%; gap: 0; align-items: start; margin-top: calc(4 * var(--menu-font-size)); }
