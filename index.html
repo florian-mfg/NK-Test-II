@@ -6,6 +6,7 @@
     <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="Nicolas Kawohl — animation, videography and photography." />
     <title>Nicolas Kawohl</title>
+    <script src="frontpage-boot.js"></script>
     <link rel="stylesheet" href="style.css" />
     <script src="projects.js" defer></script>
     <script src="project-modules.js" defer></script>
@@ -14,16 +15,17 @@
     <script src="sanity-data.js" defer></script>
     <script src="contrast.js" defer></script>
     <script src="frontpage-media.js" defer></script>
+    <script src="frontpage-loading.js" defer></script>
     <script src="frontpage-media-fade.js" defer></script>
     <script src="app.js" defer></script>
   </head>
   <body>
     <header class="site-header" aria-label="Main navigation">
-      <a class="brand" href="#home">Nicolas Kawohl</a>
+      <a class="brand" href="#home"><span>Nicolas</span> <span>Kawohl</span></a>
       <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu">Menu</button>
       <nav class="main-nav" aria-label="Site pages">
         <div class="work-menu">
-          <a class="work-toggle" href="#work" aria-expanded="false" aria-controls="work-submenu" data-route="work">Selected Work</a>
+          <button type="button" class="work-toggle" aria-expanded="false" aria-controls="work-submenu" data-route="work">Selected Work</button>
           <div class="work-submenu" id="work-submenu" inert>
             <a href="#work/video" data-route="work/video">Video</a>
             <a href="#work/commissioned" data-route="work/commissioned">Commissioned</a>
@@ -37,13 +39,13 @@
     </header>
     <dialog class="mobile-menu" id="mobile-menu" aria-label="Site menu">
       <div class="mobile-menu-header">
-        <a class="brand" href="#home">Nicolas Kawohl</a>
+        <a class="brand" href="#home"><span>Nicolas</span> <span>Kawohl</span></a>
         <button class="mobile-menu-close" type="button" autofocus>Close</button>
       </div>
       <nav aria-label="Mobile site pages">
         <div class="mobile-menu-work">
-          <span class="mobile-menu-label" data-route="work">Selected Work</span>
-          <div class="mobile-work-submenu" id="mobile-work-submenu">
+          <button type="button" class="mobile-menu-label" data-route="work" aria-expanded="false" aria-controls="mobile-work-submenu">Selected Work</button>
+          <div class="mobile-work-submenu" id="mobile-work-submenu" hidden>
           <a href="#work/video" data-route="work/video">Video</a>
           <a href="#work/commissioned" data-route="work/commissioned">Commissioned</a>
           <a href="#work/graphic" data-route="work/graphic">Graphic</a>

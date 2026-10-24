@@ -29,8 +29,22 @@
   root.Contrast = api;
   if (!root.document) return;
   const document = root.document, cache = new Map();
-  const targets = '.site-header > a, .site-header .main-nav a, .mobile-menu-toggle, .project-title > span, .project-kind, .detail-back, .detail-info-label, .detail-sound-control, .archive-list, .project-video-toggle';
+  const targets = '.site-header > a, .site-header .main-nav :is(a, .work-toggle), .mobile-menu-toggle, .project-title > span, .project-kind, .detail-back, .detail-info-label, .detail-sound-control, .archive-list, .project-video-toggle';
   let timer, cursorTimer, cursorPoint;
+  // Frontpage supplies already-decoded images during preparation. Store only
+  // the small luminance grid, avoiding a second image request during input.
+  api.prepareImage = (src, image) => {
+    if (cache.has(src)) return;
+    const data = {grid: null, width: image.naturalWidth, height: image.naturalHeight};
+    cache.set(src, data);
+    if (cache.size > 64) cache.delete(cache.keys().next().value);
+    try {
+      const canvas = document.createElement('canvas'); canvas.width = canvas.height = SIZE;
+      const context = canvas.getContext('2d', {willReadFrequently: true});
+      context.drawImage(image, 0, 0, SIZE, SIZE);
+      data.grid = context.getImageData(0, 0, SIZE, SIZE).data;
+    } catch { /* Keep the existing fallback for unavailable canvas pixels. */ }
+  };
   function imageData(src) {
     if (cache.has(src)) return cache.get(src);
     const data = {grid: null, width: 0, height: 0};

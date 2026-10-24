@@ -16,7 +16,7 @@ for(const engine of ['chromium','webkit'])test(`${engine}: 300 full-size real-ph
     try{return callback.call(this,event);}finally{brushTimings.push(performance.now()-start);}
    }:callback,options);
   });
-  await page.mouse.move(5,height/4);await page.goto(site?`${site}?brush=${process.env.EXPECTED_COMMIT||Date.now()}#home`:'https://preview.test/#home');await page.evaluate(()=>document.fonts.ready);
+  await page.mouse.move(5,height/4);await page.goto(site?`${site}?brush=${process.env.EXPECTED_COMMIT||Date.now()}#home`:'https://preview.test/#home');await page.evaluate(()=>document.fonts.ready);await page.waitForFunction(()=>document.querySelector(".frontpage-fade")?.dataset.ready==="true");
   if(site){await page.waitForFunction(()=>sanityLoadSettled&&sanityContent);assert.equal(await page.evaluate(()=>sanityContent.homePage?.media==null),true,'published Frontpage keeps its local fallback');}
   const realRatios=await page.evaluate(()=>Promise.all(FrontpageMedia.map(source=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve({actual:image.naturalWidth/image.naturalHeight,expected:source.aspectRatio});image.onerror=reject;image.src=source.src;}))));
   for(const ratio of realRatios)assert.ok(Math.abs(ratio.actual-ratio.expected)<1e-7,'fallback metadata agrees with actual photograph dimensions');

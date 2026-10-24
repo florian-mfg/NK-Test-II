@@ -255,7 +255,7 @@ function applySanityGlobals() {
   const brand = hasNavigation ? navigation.home.label : settings?.brandName;
   // With neither document available the original HTML remains the fallback.
   if (brand !== undefined && (settings || brand)) {
-    document.querySelectorAll(".brand").forEach(node => { node.textContent = brand; });
+    document.querySelectorAll(".brand").forEach(node => { if(node.textContent!==brand) node.textContent = brand; });
   }
   if (settings) {
     document.title = settings.defaultPageTitle;
@@ -301,7 +301,7 @@ function applySanityGlobals() {
       }
       const anchor = node === group ? node.querySelector('[data-route="work"]') : node;
       anchor.textContent = item.label;
-      anchor.href = item.href;
+      if (anchor.tagName === "A") anchor.href = item.href;
       node.hidden = false;
       node.style.display = "";
       container.append(node);
@@ -325,21 +325,42 @@ function frontpageSequence() {
   return sanityContent?.homePage?.media ?? globalThis.FrontpageMedia;
 }
 
+let homeSession = null;
 function hydrateFrontpage() {
-  const layer = app.querySelector('.home .frontpage-fade');
-  if (!layer || sanityContent?.homePage?.media == null || layer.dataset.source === 'sanity') return;
-  const progress = Number(layer.dataset.progress || 0);
-  cleanupPage();
-  layer.dataset.source = 'sanity';
-  cleanupPage = globalThis.FrontpageMediaFade?.init(layer, frontpageSequence(), {progress}) || (() => {});
+  if (homeSession) homeSession.start();
 }
 
 function renderHome() {
   cleanupPage();
-  document.body.className = "is-home";
+  document.documentElement.classList.add("home-pending");
+  document.body.className = "is-home home-loading";
   setCurrentPage("");
-  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="auto"><div class="frontpage-fade" aria-hidden="true"></div></section>`;
-  cleanupPage = globalThis.FrontpageMediaFade?.init(app.querySelector(".frontpage-fade"), frontpageSequence()) || (() => {});
+  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="auto" aria-busy="true"><div class="frontpage-fade" aria-hidden="true"></div></section>`;
+  const layer=app.querySelector('.frontpage-fade'), controller=new AbortController();
+  let started=false, prepared=null, stopBrush=()=>{}, animation=null;
+  const session={start:async()=>{
+    if(started || !sanityLoadSettled || controller.signal.aborted)return;
+    started=true;
+    layer.dataset.source=sanityContent?.homePage?.media!=null?'sanity':'local';
+    await Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 1500))]);
+    if(controller.signal.aborted || !globalThis.document)return;
+    const visibleMediaLimit=sanityContent?.homePage?.visibleMediaLimit ?? 3;
+    animation=FrontpageLoading.wordmark(header.querySelector('.brand'));
+    prepared=await FrontpageLoading.prepare(frontpageSequence()||[],{visibleMediaLimit,signal:controller.signal,onProgress:p=>{layer.dataset.loadingProgress=String(p);animation.progress(p);}});
+    if(controller.signal.aborted || !globalThis.document){prepared.dispose();return;}
+    layer.dataset.preparation=JSON.stringify(prepared.results);
+    layer.dataset.source=sanityContent?.homePage?.media!=null?'sanity':'local';
+    await animation.complete();
+    if(controller.signal.aborted || !globalThis.document)return;
+    animation.dispose();
+    document.documentElement.classList.remove('home-pending');
+    document.body.classList.remove('home-loading');
+    app.querySelector('.home').setAttribute('aria-busy','false');
+    stopBrush=globalThis.FrontpageMediaFade?.init(layer,prepared.sequence,{prepared,visibleMediaLimit}) || (()=>{});
+    layer.dataset.ready='true';
+  }};
+  homeSession=session;session.start();
+  cleanupPage=()=>{controller.abort();animation?.dispose();stopBrush();prepared?.dispose();document.documentElement.classList.remove('home-pending');document.body.classList.remove('home-loading');if(homeSession===session)homeSession=null;};
 }
 
 function renderWorkModule(module, project) {
@@ -968,7 +989,10 @@ function applySanityInfo() {
   arrange();
   const layoutEvents = new AbortController();
   mobileMenuBreakpoint.addEventListener("change", arrange, {signal: layoutEvents.signal});
-  cleanupPage = () => layoutEvents.abort();
+  const cleanupLayout = cleanupPage;
+  cleanupPage = () => { layoutEvents.abort(); cleanupLayout(); };
+  // Keep the native upward scroll range at its bottom after CMS hydration.
+  resetInfoIntroScroll(section);
   hydratedInfoPages.add(section);
 }
 
@@ -992,6 +1016,7 @@ async function loadInfoContent() {
     // Existing local content remains the fallback, including offline use.
   } finally {
     sanityLoadSettled = true;
+    hydrateFrontpage();
     const pending = app.querySelector(".detail[aria-busy='true']");
     const [page, id] = location.hash.replace(/^#\/?/, "").split("/");
     // Complete only the active pending detail. Never reroute or reset scrolling.
@@ -1002,11 +1027,61 @@ async function loadInfoContent() {
   }
 }
 
+function resetInfoIntroScroll(section) {
+  const scroller = section.querySelector('.info-intro-scroll');
+  scroller.scrollTop = 0;
+}
+
+// Selected Work centers its title line box at 50vh. Measure the actual font
+// baselines so Info can use that reference without changing section typography.
+function alignInfoBaseline(section) {
+  const events = new AbortController();
+  const update = () => {
+    if (!section.isConnected || mobileMenuBreakpoint.matches) return;
+    const probe = document.createElement('div');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.inert = true;
+    Object.assign(probe.style, {position:'fixed', left:'0', top:'0', height:'100vh', visibility:'hidden', pointerEvents:'none'});
+    const reference = document.createElement('a');
+    reference.className = 'project-title';
+    Object.assign(reference.style, {width:'max-content', margin:'0'});
+    const referenceText = document.createElement('span');
+    const infoText = document.createElement('div');
+    const heading = section.querySelector('.info-details h2, .info-side-section h2');
+    infoText.style.font = getComputedStyle(heading).font;
+    const marker = node => {
+      const baseline = document.createElement('span');
+      Object.assign(baseline.style, {display:'inline-block', width:'0', height:'0', verticalAlign:'baseline'});
+      node.append(document.createTextNode('Ag'), baseline);
+      return baseline;
+    };
+    const titleBaseline = marker(referenceText), infoBaseline = marker(infoText);
+    reference.append(referenceText); probe.append(reference, infoText); document.body.append(probe);
+    const infoBox = infoText.getBoundingClientRect();
+    const offset = titleBaseline.getBoundingClientRect().top - parseFloat(getComputedStyle(reference).top)
+      - (infoBaseline.getBoundingClientRect().top - infoBox.top);
+    section.style.setProperty('--info-baseline-offset', `${offset}px`);
+    probe.remove();
+    // Keep the last line anchored after font/viewport changes.
+    resetInfoIntroScroll(section);
+  };
+  update();
+  window.addEventListener('resize', update, {signal:events.signal});
+  document.fonts.addEventListener('loadingdone', update, {signal:events.signal});
+  return () => events.abort();
+}
+
 function renderInfo() {
   document.body.className = "is-info";
   setCurrentPage("info");
   app.innerHTML = `<section class="info">
-    <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of photography, generativity, motion design and cgi.</p>
+    <div class="info-introduction">
+      <div class="info-intro-scroll" role="region" aria-label="Introduction" tabindex="0">
+        <div class="info-intro-content">
+          <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of photography, generativity, motion design and cgi.</p>
+        </div>
+      </div>
+    </div>
     <div class="info-columns">
       <div class="info-column info-details">
         <section class="info-cv"><h2>CV</h2><p>2022 – 2025 Work at Eps51<br>2014 – 2021 Academy of Fine Arts</p></section>
@@ -1020,6 +1095,7 @@ function renderInfo() {
       </section>
     </div>
   </section>`;
+  cleanupPage = alignInfoBaseline(app.querySelector(".info"));
   applySanityInfo();
 }
 
@@ -1229,16 +1305,18 @@ workMenu.addEventListener("focusin", () => setWorkMenu(true));
 workMenu.addEventListener("focusout", event => {
   if (!workMenu.contains(event.relatedTarget)) setWorkMenu(false);
 });
-let touchOpenedMenu = false;
-workToggle.addEventListener("pointerdown", event => {
-  touchOpenedMenu = event.pointerType === "touch" && !workMenu.classList.contains("is-open");
-});
+let workTouchState=null;
+workToggle.addEventListener('pointerdown',event=>{workTouchState=event.pointerType==='touch'?workMenu.classList.contains('is-open'):null;});
 workToggle.addEventListener("click", event => {
-  if (touchOpenedMenu) {
-    event.preventDefault();
-    setWorkMenu(true);
-    touchOpenedMenu = false;
-  } else setWorkMenu(false);
+  event.preventDefault();
+  setWorkMenu(workTouchState===null?true:!workTouchState);
+  workTouchState=null;
+});
+const mobileWorkToggle=mobileMenu.querySelector('.mobile-menu-label');
+mobileWorkToggle.addEventListener('click',()=>{
+  const open=mobileWorkToggle.getAttribute('aria-expanded')!=='true';
+  mobileWorkToggle.setAttribute('aria-expanded',String(open));
+  mobileWorkSubmenu.hidden=!open;
 });
 workSubmenu.addEventListener("click", event => {
   if (event.target.closest("a")) {

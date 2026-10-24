@@ -16,6 +16,7 @@ function content(extra = {}) {
 function setup(hash = '#info', mobile = false) {
   const dom = new JSDOM(read('index.html'), {url: `https://example.com/portfolio/${hash}`, runScripts: 'outside-only', pretendToBeVisual: true});
   const {window} = dom;
+  require('./frontpage-loading-stub.cjs').install(window);
   const scrollCalls = [];
   window.scrollTo = (x, y) => {scrollCalls.push([x, y]); window.scrollY = y;};
   const breakpoint = new window.EventTarget();
@@ -171,9 +172,11 @@ test('other routes keep their local DOM and direct project routing during async 
     const app = setup(hash);
     try {
       const initial = app.window.document.querySelector('#app').innerHTML;
+      const initialNode = app.window.document.querySelector('#app').firstElementChild;
       await app.settle(success(content()));
       assert.equal(app.window.location.hash, hash);
-      assert.equal(app.window.document.querySelector('#app').innerHTML, initial, hash);
+      if(hash==='#home') assert.equal(app.window.document.querySelector('#app').firstElementChild,initialNode);
+      else assert.equal(app.window.document.querySelector('#app').innerHTML, initial, hash);
       assert.equal(app.requests(), 1);
       app.window.renderInfo();
       assert.equal(app.window.document.querySelector('.info-work p').textContent, 'Eps51');
@@ -186,8 +189,10 @@ test('navigating away from Info before completion does not render it again', asy
   try {
     app.window.renderHome();
     const initial = app.window.document.querySelector('#app').innerHTML;
+      const initialNode = app.window.document.querySelector('#app').firstElementChild;
     await app.settle(success(content()));
-    assert.equal(app.window.document.querySelector('#app').innerHTML, initial);
+    if(app.window.document.querySelector('.home')) assert.equal(app.window.document.querySelector('#app').firstElementChild,initialNode);
+      else assert.equal(app.window.document.querySelector('#app').innerHTML, initial);
   } finally {app.dom.window.close();}
 });
 
@@ -278,7 +283,8 @@ test('additional introduction follows the biography with escaped text and the sa
     assert.equal(intro.textContent, 'Biography');
     assert.equal(intro.nextElementSibling, extra);
     assert.equal(extra.innerHTML, 'More<br>&lt;b&gt;Plain text&lt;/b&gt;');
-    assert.equal(extra.nextElementSibling.className, 'info-columns');
+    assert.equal(extra.parentElement.className, 'info-intro-content');
+    assert.equal(extra.closest('.info-introduction').nextElementSibling.className, 'info-columns');
     app.window.applySanityInfo();
     assert.equal(app.window.document.querySelectorAll('.info-additional-intro').length, 1);
   } finally {app.dom.window.close();}
@@ -377,7 +383,8 @@ test('absent, empty and whitespace additional introduction create no extra DOM o
       await app.settle(success(content({infoPage: doc('infoPage', {additionalIntroduction})})));
       const root = app.window.document.querySelector('.info');
       assert.equal(root.querySelector('.info-additional-intro'), null);
-      assert.equal(root.querySelector('.info-intro').nextElementSibling.className, 'info-columns');
+      assert.equal(root.querySelector('.info-intro').parentElement.className, 'info-intro-content');
+      assert.equal(root.querySelector('.info-introduction').nextElementSibling.className, 'info-columns');
     } finally {app.dom.window.close();}
   }
 });

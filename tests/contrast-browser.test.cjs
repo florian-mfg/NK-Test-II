@@ -61,8 +61,13 @@ test('shared contrast adapts real images, Index changes, cursor, MP4 overrides a
   await color('.brand','rgb(0, 0, 0)');
   for(const [setting,expected] of [['auto','rgb(0, 0, 0)'],['black','rgb(0, 0, 0)'],['white','rgb(0, 0, 0)']]) {
    homeColor=setting;await page.goto('https://preview.test/#home');await page.reload();
+   await page.waitForFunction(()=>document.querySelector('.frontpage-fade')?.dataset.ready==='true');
    await color('.site-header .brand',expected);
-   assert.equal(await page.evaluate(()=>window.pixelReads),0);
+   const preparedReads=await page.evaluate(()=>window.pixelReads);
+   assert.equal(preparedReads,20,'Frontpage samples its decoded images during preparation');
+   await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
+   await page.mouse.move(500,200);await page.mouse.move(501,200);
+   assert.equal(await page.evaluate(()=>window.pixelReads),preparedReads,'input reuses prepared contrast samples');
    assert.equal(await page.locator('.home iframe').count(),0);
    assert.equal(await page.locator('.frontpage-fade-media').count(),1);
   }

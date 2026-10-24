@@ -26,3 +26,13 @@ test('CMS size categories scale each media responsively without stretching or ov
  const widths=['small','medium','large'].map(size=>{const b=collage.dimensions({size,aspectRatio:ratio},w,h);assert.ok(Math.abs(b.width/b.height-ratio)<1e-8);assert.ok(b.width<=w&&b.height<=h);return b.width});assert.ok(widths[0]<widths[1]&&widths[1]<widths[2]);
  }
 });
+test('Frontpage visible-media limit accepts only integers 1–10 and defaults legacy/invalid values to three',()=>{
+ assert.match(api.query,/homePage[^\n]+visibleMediaLimit/);
+ for(const value of [1,2,3,4,5,6,7,8,9,10,undefined,null,0,11,-1,1.5,'5',true,{},[],NaN,Infinity]){
+  const homePage={...document([]),visibleMediaLimit:value};
+  const before=JSON.stringify(homePage);
+  const expected=Number.isInteger(value)&&value>=1&&value<=10?value:3;
+  assert.equal(api.normalize({projects:[],homePage}).homePage.visibleMediaLimit,expected,String(value));
+  assert.equal(JSON.stringify(homePage),before,'normalization does not migrate content');
+ }
+});

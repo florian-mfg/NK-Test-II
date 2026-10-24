@@ -11,6 +11,7 @@ const doc = (type, fields = {}) => ({_id: type, _type: type, ...fields});
 function setup(hash = '#archive', mobile = false) {
   const dom = new JSDOM(read('index.html'), {url: `https://example.com/portfolio/${hash}`, runScripts: 'outside-only', pretendToBeVisual: true});
   const {window} = dom;
+  require('./frontpage-loading-stub.cjs').install(window);
   const scrollCalls = [];
   window.scrollTo = (x, y) => {scrollCalls.push([x, y]); window.scrollY = y;};
   window.matchMedia = () => ({matches: mobile, addEventListener() {}});

@@ -49,9 +49,9 @@
     const rect={...size,edge,
       left:horizontal?(edge==='right'?previous.left+previous.width:previous.left-size.width):cursor-size.width/2,
       top:horizontal?cursor-size.height/2:(edge==='bottom'?previous.top+previous.height:previous.top-size.height)};
-    // FIFO leaves at most one obstacle besides the current item. Usually the
-    // centered rectangle is already free. Only two edge-aligned shifts can be
-    // needed to avoid that obstacle while sharing the crossed edge.
+    // Check at most nine retained rectangles and two shifts around the first
+    // obstacle. Keep the existing bounded heuristic for every FIFO size; do
+    // not search combinations of alignments when more obstacles remain.
     const obstacle=active.find(box=>box!==previous && overlaps(rect,box));
     if (!obstacle) return rect;
     const lo=previous[axis]-size[extent]+.001, hi=previous[axis]+previous[extent]-.001;
@@ -83,7 +83,10 @@
     return unreachable[hit.edge]?{...hit,continuation:true}:null;
   }
   function init(layer, sequence = media, initial = {}) {
+    const requestedLimit = initial.visibleMediaLimit ?? initial.prepared?.visibleMediaLimit;
+    const windowSize = Number.isInteger(requestedLimit) && requestedLimit >= 1 && requestedLimit <= 10 ? requestedLimit : WINDOW_SIZE;
     layer.replaceChildren();
+    layer.dataset.visibleMediaLimit = String(windowSize);
     const controller = new root.AbortController(), options = {signal: controller.signal};
     function viewportBounds() {
       // Measurements occur only at initialization and viewport changes.
@@ -93,14 +96,16 @@
       return {left:box.left,top:box.top,width,height,viewLeft,viewTop,viewRight:viewLeft+width,viewBottom:viewTop+height};
     }
     let bounds=viewportBounds(),previous=null,serial=Math.max(0,Math.floor(Number(initial.progress)||0)),resume=false;
+    let strandedTravel=0;
     let touch = null, disposed = false, contrastFrame = 0;
     const records = [], ratios = new Map(), sizes = new Map(), warm = new Map();
     const blocked = target => target?.closest?.('a, button, input, select, textarea, summary, dialog, [role="button"], [contenteditable], .site-header, .mobile-menu');
     function release(node) {
-      if (node.tagName === 'VIDEO') {node.pause(); node.removeAttribute('src'); node.load();}
+      if (node.tagName === 'VIDEO') {node.pause(); if(!initial.prepared){node.removeAttribute('src'); node.load();}}
       node.remove();
     }
     function warmNext() {
+      if(initial.prepared)return;
       // A bounded image-only lookahead; never decode inactive videos.
       const wanted = new Set();
       for (let i = 0; i < Math.min(8, sequence.length); i++) {
@@ -117,7 +122,7 @@
     function emit(point, crossing = null) {
       if (!sequence.length || !bounds.width || !bounds.height) return false;
       const index = serial % sequence.length, source = sequence[index];
-      const active = records.length === WINDOW_SIZE ? records.slice(1) : records;
+      const active = records.length === windowSize ? records.slice(1) : records;
       const activeRects = active.map(record => record.rect);
       let size=sizes.get(index);
       if(!size) {
@@ -133,20 +138,22 @@
         rect={...size,left:clamp(point.x,bounds.viewLeft+EDGE_MARGIN,bounds.viewRight-EDGE_MARGIN)-size.width/2,
           top:clamp(point.y,bounds.viewTop+EDGE_MARGIN,bounds.viewBottom-EDGE_MARGIN)-size.height/2,edge:'continuation'};
       }
-      const video = ['video','mp4'].includes(source.type), node = root.document.createElement(video ? 'video' : 'img');
+      // Release FIFO before acquiring so even a one-item sequence can reuse nodes.
+      if (records.length === windowSize) release(records.shift().node);
+      const video = ['video','mp4'].includes(source.type), node = initial.prepared
+        ? initial.prepared.acquire(source,records.map(r=>r.node)) : root.document.createElement(video ? 'video' : 'img');
       node.className = 'frontpage-fade-media';
+      for(const key of ['exitEdge','sharedEdge','overlapFallback']) delete node.dataset[key];
       Object.assign(node.dataset,{serial:String(serial),sequence:String(index),id:source.id || `local-${index}`,brushX:String(point.x),brushY:String(point.y)});
       for (const key of ['left','top','width','height']) node.style[key] = `${rect[key]}px`;
       node.style.opacity = '1';
       if (crossing) {node.dataset.exitEdge = crossing.edge; node.dataset.sharedEdge = rect.edge; if(rect.overlapFallback) node.dataset.overlapFallback='true';}
       if (video) {
         node.muted = true; node.autoplay = true; node.loop = true; node.playsInline = true; node.controls = false; node.preload = 'auto';
-        if (source.poster) node.poster = source.poster;
-        node.addEventListener('loadedmetadata',()=>{if (node.videoHeight) {ratios.set(index,node.videoWidth/node.videoHeight); sizes.delete(index);}},{once:true, ...options});
+        if (source.poster && !initial.prepared) node.poster = source.poster;
+        if(!initial.prepared) node.addEventListener('loadedmetadata',()=>{if (node.videoHeight) {ratios.set(index,node.videoWidth/node.videoHeight); sizes.delete(index);}},{once:true, ...options});
       } else {node.alt = ''; node.draggable = false; node.decoding = 'async';}
-      node.src = source.src;
-      // Remove first: even a MutationObserver never sees a fourth item.
-      if (records.length === WINDOW_SIZE) release(records.shift().node);
+      if (!initial.prepared) node.src = source.src;
       records.push({node,rect}); layer.append(node); serial++;
       layer.dataset.progress = String(serial);
       if (video && !root.document.hidden) node.play().catch(()=>{node.dataset.autoplay = 'blocked';});
@@ -171,7 +178,13 @@
           } else {
             const rect=records.at(-1).rect;
             const crossing=boundaryExit(rect,previous,point)||viewportExit(rect,previous,point,bounds);
-            if(crossing) {attempted=true;emit(crossing.point,crossing);}
+            if(crossing) {strandedTravel=0;attempted=true;emit(crossing.point,crossing);}
+            else if(!inside(rect,previous)&&!inside(rect,point)) {
+              // A fast event may skip past the new rectangle entirely. Require
+              // fresh movement beyond the same 8px boundary band before recovery.
+              strandedTravel+=distance(previous,point);
+              if(strandedTravel>EDGE_MARGIN){strandedTravel=0;attempted=true;emit(point,{edge:'viewport',point,continuation:true});}
+            } else strandedTravel=0;
           }
         }
         previous=point;

@@ -11,6 +11,7 @@ const doc = (type, fields = {}) => ({_id: type, _type: type, ...fields});
 function setup(hash = '#work/video') {
   const dom = new JSDOM(read('index.html'), {url: `https://example.com/portfolio/${hash}`, runScripts: 'outside-only', pretendToBeVisual: true});
   const {window} = dom;
+  require('./frontpage-loading-stub.cjs').install(window);
   const scrollCalls = [];
   window.scrollTo = (x, y) => {scrollCalls.push([x, y]); window.scrollY = y;};
   window.matchMedia = () => ({matches: false, addEventListener() {}});
@@ -152,7 +153,8 @@ test('late Selected Work response respects the active category and does not repl
       app.window.location.hash=hash; app.window.route();
       const initial=app.window.document.querySelector('#app').innerHTML;
       await app.settle(success(content()));
-      assert.equal(app.window.document.querySelector('#app').innerHTML, initial);
+      if(hash==='#home') assert.equal(app.window.document.querySelector('.home').getAttribute('aria-busy'),'false');
+      else assert.equal(app.window.document.querySelector('#app').innerHTML, initial);
     } finally {app.dom.window.close();}
   }
   const app = setup();

@@ -226,15 +226,23 @@ body.mobile-menu-open { overflow: hidden; }
   .archive-list:not(:has(.archive-row:hover)) .archive-row:focus-within .archive-additional-info { visibility: visible; }
 }
 
-.info { min-height: 100svh; padding: calc(var(--pad) + 1.7 * clamp(15px, 1.2vw, 26px)) var(--pad) var(--pad); background: var(--dark); color: var(--ink); font-size: var(--menu-text-size); line-height: 1.1; }
-.info-columns { display: grid; grid-template-columns: 51% 49%; gap: 0; align-items: start; margin-top: calc(4 * var(--menu-font-size)); }
+.info { --info-top: calc(var(--pad) + 1.7 * clamp(15px, 1.2vw, 26px)); min-height: 100svh; padding: var(--info-top) var(--pad) var(--pad); background: var(--dark); color: var(--ink); font-size: var(--menu-text-size); line-height: 1.1; }
+.info-columns { display: grid; grid-template-columns: 51% 49%; gap: 0; align-items: start; margin-top: 0; }
 .info-column { min-width: 0; overflow-wrap: anywhere; }
-.info-intro { max-width: 34%; }
+/* Keep the lower rows on their approved baseline; introduction grows upward.
+   Eight of the existing twelve equal project tracks = four of six columns. */
+.info-introduction { height: max(0px, calc(50vh + var(--info-baseline-offset, 0px) - var(--info-top))); padding-bottom: calc(3 * var(--menu-font-size)); display: flex; flex-direction: column; justify-content: flex-end; }
+/* Whole-pixel scroll height avoids WebKit shifting a reversed scroll origin.
+   Flex end alignment keeps the bottom exact; only the clipped top edge rounds. */
+.info-intro-scroll { flex: 0 1 auto; min-height: 0; max-height: round(down, 100%, 1px); display: flex; flex-direction: column-reverse; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; overflow-anchor: none; scroll-behavior: auto; }
+.info-intro-content { flex: 0 0 auto; width: 100%; }
+.info-intro-scroll:focus-visible { outline: 1px solid currentColor; outline-offset: 2px; }
 .info-details { display: grid; gap: calc(2.5 * var(--menu-font-size)); }
 .info-details section, .info-side-section { display: grid; grid-template-columns: calc(9.375% + 4.28125 * var(--menu-font-size)) minmax(0, 1fr); column-gap: calc(.75 * var(--menu-font-size)); align-items: start; }
 .info-details section { padding-right: var(--menu-font-size); }
 .info-details section > p, .info-side-section > p { min-width: 0; }
 .info h2, .info h3, .info p { margin: 0; font: inherit; }
+.info .info-intro { width: calc(100% * 8 / 12); max-width: none; font-size: clamp(14px, 1.6vw, 32px); line-height: 1.1; overflow-wrap: anywhere; }
 .info .info-additional-intro { margin-top: calc(2.5 * var(--menu-font-size)); }
 .info a:hover { font-style: italic; }
 /* Reserve both font styles so value-only hover cannot change wrapping or geometry. */
@@ -404,8 +412,10 @@ noscript {
   .archive-row:hover span { font-style: normal; }
   .archive-row.is-active > span { font-style: italic; }
   .archive-additional-info { display: none; }
-  .info-intro { max-width: none; }
-  .info-columns { grid-template-columns: 1fr; gap: 2rem; margin-top: calc(2.5 * var(--menu-font-size)); }
+  .info-introduction { height: auto; display: block; }
+  .info-intro-scroll { max-height: none; display: block; overflow: visible; }
+  .info .info-intro { width: 100%; font-size: clamp(14px, 3.4vw, 20px); }
+  .info-columns { grid-template-columns: 1fr; gap: 2rem; margin-top: 0; }
   .info-details section { padding-right: 0; }
   .info-details section, .info-side-section { grid-template-columns: minmax(0, .875fr) minmax(0, 3.125fr); column-gap: .53125rem; }
 }
@@ -418,7 +428,7 @@ noscript {
 /* Binary overlay colors, decided by the shared contrast controller. */
 body { --contrast-color: #ffffff; }
 body:is(.is-work, .is-detail, .is-info) { --contrast-color: #000000; }
-.site-header > a, .site-header .main-nav a, .mobile-menu-toggle,
+.site-header > a, .site-header .main-nav :is(a, .work-toggle), .mobile-menu-toggle,
 .project-title > span, .project-kind, .open-cursor,
 .detail-back, .detail-info-label, .detail-sound-control, .archive-list {
   color: var(--contrast-color);
@@ -517,3 +527,19 @@ body.is-home { background: #fff; }
   top: 50vh; top: 50dvh; bottom: auto; transform: translateY(-50%);
   opacity: 1; pointer-events: auto; transition: none;
 }
+
+/* Native submenu buttons retain the existing navigation metrics. */
+.work-toggle, .mobile-menu-label { border: 0; padding: 0; margin: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.main-nav .work-toggle { font-size: var(--menu-text-size); line-height: inherit; }
+.work-toggle:hover, .work-toggle:focus-visible { font-style: italic; }
+.mobile-work-submenu[hidden] { display: none; }
+.home-loading .site-header { top: 50dvh; transition: none; }
+.home-loading .site-header > :not(.brand) { visibility: hidden; pointer-events: none; }
+.home-loading .brand { overflow: visible; color: #000; font-style: normal; }
+.site-header .brand span { display: inline-block; }
+.frontpage-fade-media { border: 0; outline: 0; padding: 0; margin: 0; background: transparent; }
+.home-pending, .home-pending body { background: #fff; }
+.home-pending .site-header { transform: translateY(-50%); top: 50dvh; color: #000; transition: none; }
+.home-pending .site-header > :not(.brand) { visibility: hidden; }
+.home-pending .site-header .brand { overflow: visible; }
+.home-pending .brand:not([data-animating]) span:last-child { position: fixed; right: var(--pad); }

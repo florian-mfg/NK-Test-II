@@ -43,7 +43,7 @@
   const published = '!(_id in path("drafts.**")) && !(_id in path("versions.**"))';
   // Fixed singleton IDs, explicit projections, no per-slot network calls.
   const query = `{
-    "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,textColor,video{asset->{_id,url,mimeType}},videoTitle,poster${imageFields},media[]{_key,type,size,image${imageFields},video{asset->{_id,url,mimeType,metadata{dimensions{width,height,aspectRatio}}}},poster${imageFields}}},
+    "homePage": *[_type == "homePage" && _id == "homePage"][0]{_id,_type,visibleMediaLimit,textColor,video{asset->{_id,url,mimeType}},videoTitle,poster${imageFields},media[]{_key,type,size,image${imageFields},video{asset->{_id,url,mimeType,metadata{dimensions{width,height,aspectRatio}}}},poster${imageFields}}},
     "siteSettings": *[_type == "siteSettings" && _id == "siteSettings"][0]{_id,_type,brandName,email,instagram,phone,defaultPageTitle,defaultDescription,socialImage${imageFields},footerLinks[]{label,destination}},
     "navigation": *[_type == "navigation" && _id == "navigation"][0]{_id,_type,homeLabel,items[]{label,destination},categories[]{label,destination},mobileContact{label,destination}},
     "infoPage": *[_type == "infoPage" && _id == "infoPage"][0]{_id,_type,introduction,additionalIntroduction,sectionOrder[]{section},cvLabel,workLabel,skillsLabel,newsLabel,publicationsLabel,contactLabel,selectedClientsLabel,cv[]{period,text},work,skills,news[]{title,additionalInfo,url},publications[]{title,additionalInfo,url},contactLinks[]{label,destination},selectedClients},
@@ -422,7 +422,7 @@
         url.pathname.startsWith(`/files/${config.projectId}/${config.dataset}/`) &&
         url.pathname.endsWith('.mp4') && (!file?.mimeType || file.mimeType === 'video/mp4') ? {type: 'mp4', src} : null;
       if (homeDoc.video && !video) issue(issues, 'homePage.video', 'invalid_video', 'Expected a directly uploaded MP4 asset.');
-      homePage = {media: frontpageMedia(homeDoc.media, issues), textColor: textColor(homeDoc.textColor), video, videoTitle: string(homeDoc.videoTitle), poster: homeDoc.poster ? image(homeDoc.poster, issues, 'homePage.poster') : null};
+      homePage = {visibleMediaLimit: Number.isInteger(homeDoc.visibleMediaLimit) && homeDoc.visibleMediaLimit >= 1 && homeDoc.visibleMediaLimit <= 10 ? homeDoc.visibleMediaLimit : 3, media: frontpageMedia(homeDoc.media, issues), textColor: textColor(homeDoc.textColor), video, videoTitle: string(homeDoc.videoTitle), poster: homeDoc.poster ? image(homeDoc.poster, issues, 'homePage.poster') : null};
     }
 
     const navigationDoc = singleton(raw, 'navigation', issues, availability);

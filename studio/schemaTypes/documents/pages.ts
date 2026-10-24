@@ -12,8 +12,15 @@ export const homePage = defineType({
   type: 'document',
   fields: [
     defineField({name: 'media', title: 'Media', type: 'array', options: {sortable: true},
-      description: 'Add images or MP4 uploads and drag to reorder. An empty list intentionally leaves the Startseite blank. Older documents without this field use the local sequence.',
+      description: 'Add up to 20 images or MP4 uploads and drag to reorder. An empty list intentionally leaves the Startseite blank. Older documents without this field use the local sequence.',
+      validation: rule => rule.max(20),
       of: [defineArrayMember({type: 'frontpageMedia'})]}),
+    defineField({
+      name: 'visibleMediaLimit', title: 'Simultaneously Visible Media', type: 'number',
+      description: 'Choose how many images or videos can be visible on the Frontpage at the same time.',
+      initialValue: 3,
+      validation: rule => rule.integer().min(1).max(10),
+    }),
     {...textColorField(), hidden: true},
     defineField({
       name: 'video',

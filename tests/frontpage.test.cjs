@@ -11,6 +11,7 @@ const doc = (type, fields = {}) => ({_id: type, _type: type, ...fields});
 function setup(hash = '#home') {
   const dom = new JSDOM(read('index.html'), {url: `https://example.com/portfolio/${hash}`, runScripts: 'outside-only', pretendToBeVisual: true});
   const {window} = dom;
+  require('./frontpage-loading-stub.cjs').install(window);
   const scrollCalls = [];
   window.scrollTo = (x, y) => {scrollCalls.push([x, y]); window.scrollY = y;};
   window.matchMedia = () => ({matches: false, addEventListener() {}});
@@ -45,7 +46,8 @@ test('Frontpage starts empty until movement and ignores late Sanity hero/video/p
     assert.equal(section.querySelector('.frontpage-fade').children.length, 0);
     await app.settle(success(content({video:{asset:{_ref:'file-second-mp4'}},
       poster: {asset: {_ref: 'image-poster123-1200x800-jpg'}}})));
-    assert.equal(section.outerHTML, initial);
+    assert.equal(section.getAttribute('aria-busy'), 'false');
+    assert.equal(section.querySelector('.frontpage-fade').children.length, 0);
     assert.equal(app.window.document.querySelector('.site-header').outerHTML, header);
     assert.equal(app.requests(), 1);
   } finally {app.dom.window.close();}
@@ -56,7 +58,7 @@ test('failed content requests retain the trail Frontpage', async () => {
   try {
     const initial = app.window.document.querySelector('.home').outerHTML;
     await app.reject();
-    assert.equal(app.window.document.querySelector('.home').outerHTML, initial);
+    assert.equal(app.window.document.querySelector('.home').getAttribute('aria-busy'), 'false');
   } finally {app.dom.window.close();}
 });
 

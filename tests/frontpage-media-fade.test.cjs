@@ -92,15 +92,17 @@ test('inside movement never spawns; exact exits drive a three-node FIFO and sequ
   assert.ok(s.audit.every(a=>a.count<=3));
  } finally {s.close();}
 });
-test('fast and coalesced moves emit at most once and do not catch up while outside', () => {
+test('fast and coalesced moves emit at most once and recover from skipped rectangles', () => {
  const s=setup();try {
   s.move(300,200);s.move(1200,200);assert.equal(s.audit.length,1);
-  s.move(1300,210);assert.equal(s.audit.length,1,'outside-only movement has no crossing');
+  s.move(1300,210);assert.equal(s.audit.length,2,'fresh outside travel recovers a skipped rectangle');
+  assert.equal(s.layer.lastElementChild.dataset.sharedEdge,'continuation');
   let r=s.rect();s.move(r.left+r.width/2,r.top+r.height/2);
   const n=s.audit.length;
   s.move(1200,700,[{x:r.left+r.width+30,y:r.top+r.height/2},{x:1100,y:600}]);
   assert.equal(s.audit.length,n+1);
-  const html=s.layer.innerHTML;s.move(1300,800);assert.equal(s.layer.innerHTML,html);
+  const count=s.audit.length;s.move(1300,800);assert.ok(s.audit.length<=count+1);
+  const html=s.layer.innerHTML;s.move(1300,800);assert.equal(s.layer.innerHTML,html,'stationary events cannot spawn');
  } finally {s.close();}
 });
 test('a nearby flush alignment can avoid an obstacle even when it no longer contains the cursor',()=>{
