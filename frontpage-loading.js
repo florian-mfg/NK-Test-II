@@ -17,6 +17,7 @@
       visibleMediaLimit <= 10
         ? visibleMediaLimit
         : 3;
+    const mobileVideo = root.matchMedia?.("(pointer: coarse)").matches || /iPhone|iPad|iPod/.test(root.navigator?.userAgent || "");
     const deadline = Date.now() + budget,
       jobs = new Map(),
       results = [];
@@ -42,7 +43,7 @@
     let completed = 0;
     const progress = () => onProgress(++completed / (jobs.size * 2 || 1));
     function release(node) {
-      node.onload = node.onerror = node.onloadeddata = null;
+      node.onload = node.onerror = node.onloadeddata = node.onloadedmetadata = null;
       node.remove();
       node.removeAttribute("src");
       if (node.tagName === "VIDEO") {
@@ -64,7 +65,7 @@
           done = true;
           clearTimeout(timer);
           signal?.removeEventListener("abort", abort);
-          node.onload = node.onerror = node.onloadeddata = null;
+          node.onload = node.onerror = node.onloadeddata = node.onloadedmetadata = null;
           if (status !== "ready") release(node);
           resolve({ status, node });
         };
@@ -74,12 +75,24 @@
           Math.max(1, Math.min(timeout, deadline - Date.now())),
         );
         signal?.addEventListener("abort", abort, { once: true });
-        node.onerror = () => finish("failed");
+        node.onerror = () => {
+          if (video) console.warn("Frontpage video failed", job.source.src, node.error?.code, node.error?.message);
+          job.error = node.error ? {code: node.error.code, message: node.error.message} : undefined;
+          finish("failed");
+        };
         if (video) {
           node.muted = true;
+          node.defaultMuted = true;
+          node.setAttribute("muted", "");
+          node.setAttribute("playsinline", "");
           node.loop = true;
           node.playsInline = true;
-          node.preload = "auto";
+          // iOS may defer decoded frames on detached, non-playing videos.
+          // Metadata gives dimensions and validates the resource without autoplay.
+          node.preload = mobileVideo ? "metadata" : "auto";
+          node.onloadedmetadata = () => {
+            if (mobileVideo && node.videoWidth && node.videoHeight) finish("ready");
+          };
           node.onloadeddata = () => {
             if (node.videoWidth && node.readyState >= 2) finish("ready");
           };
@@ -98,17 +111,23 @@
           };
         }
         node.src = job.source.src;
+        if (video) node.load();
         if (signal?.aborted) abort();
       });
     }
     async function run(items, task) {
-      const queue = [...items];
-      await Promise.all(
-        Array.from({ length: Math.min(4, queue.length) }, async () => {
+      const all = [...items];
+      const videos = all.filter(job => ["video", "mp4"].includes(job.source.type));
+      const images = all.filter(job => !videos.includes(job));
+      async function drain(queue, concurrency) {
+        await Promise.all(Array.from({length: Math.min(concurrency, queue.length)}, async () => {
           while (queue.length && !signal?.aborted) await task(queue.shift());
-        }),
-      );
+        }));
+      }
+      // Only one video resource prepares at a time; images retain parallel loading.
+      await Promise.all([drain(videos, 1), drain(images, 4)]);
     }
+
     await run(jobs.values(), async (job) => {
       const result = await loadNode(job);
       job.status = result.status;
@@ -144,9 +163,10 @@
       }
       results.push({
         src: job.source.src,
+        error: job.error,
         status: job.status,
         readiness: ["video", "mp4"].includes(job.source.type)
-          ? "current-frame"
+          ? (mobileVideo ? "metadata" : "current-frame")
           : "decoded-image",
       });
       progress();

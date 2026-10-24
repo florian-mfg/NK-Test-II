@@ -1,4 +1,6 @@
 import {defineArrayMember, defineField} from 'sanity'
+import {categoryLabel} from '../../components/ProjectCategoriesInput'
+export {categoryLabel}
 
 // Stored project values remain compatible with the original schema.
 export const categories = ['Video', 'Commissioned', 'Graphic'] as const
@@ -14,7 +16,7 @@ export const pageDestinations = [
   {title: 'Info', value: 'info'},
 ]
 export const categoryDestinations = categories.map((category) => ({
-  title: category,
+  title: categoryLabel(category),
   value: `work/${category.toLowerCase()}`,
 }))
 export const footerDestinations = [

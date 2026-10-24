@@ -156,7 +156,16 @@
       if (!initial.prepared) node.src = source.src;
       records.push({node,rect}); layer.append(node); serial++;
       layer.dataset.progress = String(serial);
-      if (video && !root.document.hidden) node.play().catch(()=>{node.dataset.autoplay = 'blocked';});
+      if (video) {
+        node.onerror = () => {
+          node.dataset.playbackError = String(node.error?.code || 'unknown');
+          console.warn('Frontpage video playback failed', source.src, node.error?.code, node.error?.message);
+        };
+        if (!root.document.hidden) node.play().then(()=>{delete node.dataset.autoplay;}).catch(error=>{
+          node.dataset.autoplay = error.name === 'NotSupportedError' ? 'unsupported' : 'blocked';
+          if (error.name === 'NotSupportedError') console.warn('Unsupported Frontpage video codec or source', source.src, error.message);
+        });
+      }
       warmNext();
       if (!contrastFrame) contrastFrame = root.requestAnimationFrame(()=>{contrastFrame = 0; if (!disposed) root.Contrast?.refresh?.();});
       return true;

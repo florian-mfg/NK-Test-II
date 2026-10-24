@@ -4,6 +4,8 @@ exports.setup=async(browser,engine,mobile,raw=null,bytes=null)=>{
  const viewport=mobile?{width:390,height:844}:{width:1440,height:900};
  const page=await browser.newPage({viewport,isMobile:mobile,hasTouch:mobile});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ if(!bytes && raw?.homePage?.media?.some(item=>item.type==='mp4'))
+  bytes=await require('./native-media-fixture.cjs').recordMP4(page);
  await page.route('**/*',r=>{const u=new URL(r.request().url());
   if(u.hostname==='preview.test')return r.fulfill({path:path.join(root,u.pathname==='/'?'index.html':u.pathname)});
   if(raw&&u.pathname.includes('/data/query/'))return r.fulfill({json:{result:raw}});
@@ -16,7 +18,7 @@ exports.setup=async(browser,engine,mobile,raw=null,bytes=null)=>{
  });
  const cdp=mobile&&engine==='chromium'?await page.context().newCDPSession(page):null;
  let down=false,loadSerial=0;
- const load=async()=>{down=false;await page.mouse.move(5,viewport.height/2);await page.goto(`https://preview.test/?boundary=${++loadSerial}#home`);await page.evaluate(()=>document.fonts.ready);if(raw)await page.waitForFunction(()=>document.querySelector('.frontpage-fade')?.dataset.source==='sanity');await page.evaluate(()=>{
+ const load=async()=>{down=false;await page.mouse.move(5,viewport.height/2);await page.goto(`https://preview.test/?boundary=${++loadSerial}#home`);await page.evaluate(()=>document.fonts.ready);await page.waitForFunction(()=>document.querySelector('.frontpage-fade')?.dataset.ready==='true');if(raw)await page.waitForFunction(()=>document.querySelector('.frontpage-fade')?.dataset.source==='sanity');await page.evaluate(()=>{
   const layer=document.querySelector('.frontpage-fade'),append=layer.append.bind(layer);window.brushAudit=[];
   const read=n=>({serial:+n.dataset.serial,index:+n.dataset.sequence,x:parseFloat(n.style.left),y:parseFloat(n.style.top),w:parseFloat(n.style.width),h:parseFloat(n.style.height),stamp:{x:+n.dataset.brushX,y:+n.dataset.brushY},exit:n.dataset.exitEdge,edge:n.dataset.sharedEdge,overlapFallback:n.dataset.overlapFallback,opacity:n.style.opacity});
   layer.append=n=>{const before=[...layer.children].map(read);append(n);brushAudit.push({rect:read(n),before,count:layer.children.length});};

@@ -1,7 +1,7 @@
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {projectModules} from '../objects/projectModules'
 import {ProjectCategoriesInput, projectCategories} from '../../components/ProjectCategoriesInput'
-import {categories, textColorField} from '../shared/content'
+import {categories, categoryLabel, textColorField} from '../shared/content'
 import {indexMedia} from '../objects/indexMedia'
 
 export const project = defineType({
@@ -47,7 +47,7 @@ export const project = defineType({
       description: 'Select one or more categories for this project.',
       type: 'array',
       of: [defineArrayMember({type: 'string'})],
-      options: {list: categories.map(value => ({title: value, value}))},
+      options: {list: categories.map(value => ({title: categoryLabel(value), value}))},
       components: {input: ProjectCategoriesInput},
       validation: (rule) => rule.unique().custom((value, context) => {
         if (value == null) return projectCategories(context.document).length > 0 || 'Select at least one category.'
@@ -112,7 +112,7 @@ export const project = defineType({
     prepare({title, category, categories, year}) {
       return {
         title: title || 'Untitled project',
-        subtitle: [projectCategories({category, categories}).join(', '), year].filter(Boolean).join(' — '),
+        subtitle: [projectCategories({category, categories}).map(categoryLabel).join(', '), year].filter(Boolean).join(' — '),
       }
     },
   },

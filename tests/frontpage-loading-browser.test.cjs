@@ -14,7 +14,7 @@ for(const engine of ['chromium','webkit']) test(`${engine}: real loading, failur
   if(u.hostname==='cdn.sanity.io'){
    requests++;
    if(u.pathname.includes('demo19'))return r.abort();
-   if(u.pathname.endsWith('.mp4'))return r.fulfill({body:u.pathname.includes('portrait')?portrait:bytes,contentType:'video/mp4'});
+   if(u.pathname.endsWith('.mp4')){await gate;return r.fulfill({body:u.pathname.includes('portrait')?portrait:bytes,contentType:'video/mp4'});}
    await gate;
    return r.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="160" height="90"><rect width="160" height="90" fill="#666"/></svg>'});
   }if(u.hostname==='unreachable.test'){await new Promise(r=>setTimeout(r,200));return r.abort();}return r.abort();

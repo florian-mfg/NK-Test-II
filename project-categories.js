@@ -8,7 +8,11 @@
       typeof value === 'string' && name.toLowerCase() === value.trim().toLowerCase()
     )).filter(value => value !== undefined))];
   }
-  const api = {projectCategories};
+  // Display labels are independent of existing stored values and route keys.
+  function categoryLabel(value) {
+    return typeof value === 'string' && value.trim().toLowerCase() === 'commissioned' ? 'Photography' : value;
+  }
+  const api = {projectCategories, categoryLabel};
   root.ProjectCategories = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

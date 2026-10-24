@@ -1,7 +1,7 @@
 import {type ArrayOfPrimitivesInputProps, PatchEvent, set, useFormValue} from 'sanity'
 import '../../project-categories.js'
 
-export const {projectCategories} = (globalThis as typeof globalThis & {
+export const {projectCategories, categoryLabel} = (globalThis as typeof globalThis & {
   ProjectCategories: typeof import('../../project-categories.js')
 }).ProjectCategories
 

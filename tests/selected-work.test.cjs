@@ -441,7 +441,7 @@ test('only the bottom Graphic label is suppressed; category routing, projects an
       await app.settle(success(content({video:[],commissioned:[],graphic:[],[category.toLowerCase()]:[{_ref:'doc-one'}]},[project('one',category)])));
       assert.deepEqual(ids(app),['one']);
       const label=app.window.document.querySelector('.project-kind');
-      assert.equal(label?.textContent||'',category==='Graphic'?'':category);
+      assert.equal(label?.textContent||'',category==='Graphic'?'':category==='Commissioned'?'Photography':category);
       assert.ok(app.window.document.querySelector('a[href="#work/graphic"]'));
       assert.equal(app.window.document.querySelector('.work').dataset.category,category);
     }finally{app.dom.window.close();}

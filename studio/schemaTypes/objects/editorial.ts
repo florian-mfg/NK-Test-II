@@ -111,7 +111,7 @@ export const editorialLinks = linkTypes.map(({name, title, destinations}) =>
       select: {title: 'label', destination: 'destination'},
       prepare({title: label, destination}) {
         return {
-          title: label || title,
+          title: name === 'categoryLink' && destination === 'work/commissioned' ? 'Photography' : label || title,
           subtitle: destinations.find((item) => item.value === destination)?.title,
         }
       },

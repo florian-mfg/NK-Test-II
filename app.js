@@ -335,7 +335,7 @@ function renderHome() {
   document.documentElement.classList.add("home-pending");
   document.body.className = "is-home home-loading";
   setCurrentPage("");
-  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="auto" aria-busy="true"><div class="frontpage-fade" aria-hidden="true"></div></section>`;
+  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="auto" aria-busy="true"><div class="frontpage-fade" aria-hidden="true"></div><span class="frontpage-loading-indicator" role="status">(Loading)</span></section>`;
   const layer=app.querySelector('.frontpage-fade'), controller=new AbortController();
   let started=false, prepared=null, stopBrush=()=>{}, animation=null;
   const session={start:async()=>{
@@ -355,6 +355,7 @@ function renderHome() {
     animation.dispose();
     document.documentElement.classList.remove('home-pending');
     document.body.classList.remove('home-loading');
+    app.querySelector('.frontpage-loading-indicator')?.remove();
     app.querySelector('.home').setAttribute('aria-busy','false');
     stopBrush=globalThis.FrontpageMediaFade?.init(layer,prepared.sequence,{prepared,visibleMediaLimit}) || (()=>{});
     layer.dataset.ready='true';
@@ -470,7 +471,7 @@ function renderWork(category = "Video") {
     <article class="project-preview" data-text-color="${p.textColor || "auto"}" data-category="${category}" data-project="${escapeModuleAttribute(p.id)}"${category === selectedCategory ? "" : " hidden"}>
       ${p.detailPageEnabled === false || spacerOnly ? "" : `<a class="project-link" href="#project/${encodeURIComponent(p.id)}" aria-label="Open ${escapeModuleAttribute(p.title)}"></a>`}
       <div class="project-modules">${renderWorkPreview(p)}</div>
-      ${i === selectedProjects.length - 1 && category !== "Graphic" && !spacerOnly ? `<span class="project-kind">${category}</span>` : ""}
+      ${i === selectedProjects.length - 1 && category !== "Graphic" && !spacerOnly ? `<span class="project-kind">${category === "Commissioned" ? "Photography" : category}</span>` : ""}
     </article>`;
   }).join("");
   app.innerHTML = `<section class="work" data-category="${selectedCategory}" data-source="${useLocal(selectedCategory) ? "local" : "sanity"}"><div class="projects">${projects}</div></section>`;
@@ -1037,7 +1038,7 @@ function resetInfoIntroScroll(section) {
 function alignInfoBaseline(section) {
   const events = new AbortController();
   const update = () => {
-    if (!section.isConnected || mobileMenuBreakpoint.matches) return;
+    if (!section.isConnected) return;
     const probe = document.createElement('div');
     probe.setAttribute('aria-hidden', 'true');
     probe.inert = true;
@@ -1058,8 +1059,9 @@ function alignInfoBaseline(section) {
     const titleBaseline = marker(referenceText), infoBaseline = marker(infoText);
     reference.append(referenceText); probe.append(reference, infoText); document.body.append(probe);
     const infoBox = infoText.getBoundingClientRect();
-    const offset = titleBaseline.getBoundingClientRect().top - parseFloat(getComputedStyle(reference).top)
-      - (infoBaseline.getBoundingClientRect().top - infoBox.top);
+    const infoAscent = infoBaseline.getBoundingClientRect().top - infoBox.top;
+    const offset = mobileMenuBreakpoint.matches ? -infoAscent
+      : titleBaseline.getBoundingClientRect().top - parseFloat(getComputedStyle(reference).top) - infoAscent;
     section.style.setProperty('--info-baseline-offset', `${offset}px`);
     probe.remove();
     // Keep the last line anchored after font/viewport changes.

@@ -40,7 +40,7 @@ const settings = (extra={}) => doc('siteSettings',{brandName:'Studio Name',email
 const visible = container => [...container.children].filter(n=>!n.hidden);
 const categories = d => ['.work-submenu','.mobile-menu-work'].map(selector=>[...d.querySelectorAll(`${selector} [data-route^="work/"]`)].map(n=>n.textContent));
 
-test('shared CMS order, editable labels, stable routes and existing menu nodes/interactions',async()=>{
+test('fixed category order, compatible labels, stable routes and existing menu nodes/interactions',async()=>{
  const app=setup('#info',true),d=app.window.document;
  try{
   const toggle=d.querySelector('.work-toggle'),submenu=d.querySelector('.work-submenu'),page=d.querySelector('#app').firstElementChild;
@@ -49,7 +49,7 @@ test('shared CMS order, editable labels, stable routes and existing menu nodes/i
   assert.equal(d.querySelector('.work-toggle'),toggle);assert.equal(d.querySelector('.work-submenu'),submenu);
   assert.equal(d.querySelector('#app').firstElementChild,page);assert.equal(app.scrollCalls.length,scrolls);
   for(const selector of ['.main-nav','.mobile-menu nav']) assert.deepEqual(visible(d.querySelector(selector)).map(n=>n.matches('a')?n.dataset.route:'work'),['info','work','archive']);
-  assert.deepEqual(categories(d),[['Design','Motion','Clients'],['Design','Motion','Clients']]);
+  assert.deepEqual(categories(d),[['Motion','Photography','Design'],['Motion','Photography','Design']]);
   assert.equal(d.querySelector('.main-nav [data-route="info"]').getAttribute('aria-current'),'page');
   assert.equal(d.querySelector('.main-nav [data-route="archive"]').getAttribute('href'),'#archive');
   app.window.setWorkMenu(true);assert.equal(toggle.getAttribute('aria-expanded'),'true');assert.equal(submenu.inert,false);
@@ -83,7 +83,7 @@ test('published optional emptiness stays empty and schema title fallback uses CM
   assert.equal(d.title,'Brand');assert.equal(d.querySelector('meta[name="description"]').content,'');assert.equal(d.querySelector('meta[property="og:image"]'),null);
   assert.equal(d.querySelector('.mobile-menu-mail').hidden,true);assert.equal(d.querySelector('.mobile-menu-mail').hasAttribute('href'),false);
   assert.equal(visible(d.querySelector('.main-nav')).length,0);
-  assert.deepEqual(categories(d),[['Video','Commissioned','Graphic'],['Video','Commissioned','Graphic']]);
+  assert.deepEqual(categories(d),[['Video','Photography','Graphic'],['Video','Photography','Graphic']]);
   const id=vm.runInContext('WORK_PROJECTS.find(p=>p.detailPageEnabled !== false).id',app.dom.getInternalVMContext());app.window.renderProject(id);
   assert.deepEqual([...d.querySelectorAll('.project-footer-links a')].map(a=>a.textContent),['Imprint','Privacy Policy']);
  }finally{app.dom.window.close();}
@@ -97,7 +97,7 @@ test('missing documents/request failures keep local globals with shared default 
    await app.settle(result);
    assert.equal(d.querySelector('.site-header').innerHTML,header);assert.equal(d.querySelector('#app').innerHTML,legal);
    assert.equal(d.title,'Nicolas Kawohl');assert.equal(d.querySelector('.mobile-menu-mail').getAttribute('href'),'mailto:mail@nicolas-kawohl.com');
-   assert.deepEqual(categories(d),[['Video','Commissioned','Graphic'],['Video','Commissioned','Graphic']]);
+   assert.deepEqual(categories(d),[['Video','Photography','Graphic'],['Video','Photography','Graphic']]);
   }finally{app.dom.window.close();}
  }
 });

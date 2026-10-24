@@ -180,9 +180,9 @@ test('shared category defaults have the approved order and stable destinations',
   assert.deepEqual(result.navigation.categories.map(c => c.category), ['Video', 'Commissioned', 'Graphic']);
   assert.deepEqual(result.navigation.categories.map(c => c.href), ['#work/video', '#work/commissioned', '#work/graphic']);
   const cms = data.normalize(fixture({navigation: doc('navigation', {categories: [{label: 'New label', destination: 'work/graphic'}, {label: 'Films', destination: 'work/video'}, {label: 'Clients', destination: 'work/commissioned'}]})}));
-  assert.deepEqual(cms.navigation.categories.map(c => c.category), ['Graphic', 'Video', 'Commissioned']);
-  assert.equal(cms.navigation.categories[0].label, 'New label');
-  assert.equal(cms.navigation.categories[0].href, '#work/graphic');
+  assert.deepEqual(cms.navigation.categories.map(c => c.category), ['Video', 'Commissioned', 'Graphic']);
+  assert.equal(cms.navigation.categories[2].label, 'New label');
+  assert.equal(cms.navigation.categories[2].href, '#work/graphic');
 });
 
 test('Index metadata and 1–3 preview images are independent of Projects and legacy overrides', () => {
@@ -377,4 +377,20 @@ test('multi-category projects retain one identity and independently curated plac
   assert.equal(empty.projects.length,0,'explicit empty membership must not restore legacy Graphic');
   const unplaced = data.normalize(fixture({projects:[original],selectedWork:doc('selectedWork',{video:[],commissioned:[],graphic:[]})}));
   assert.deepEqual(unplaced.selectedWork,{video:[],commissioned:[],graphic:[]});
+});
+
+
+test('Photography display leaves legacy memberships, curated order, slugs and editorial text intact', () => {
+  const raw = fixture({projects:[project('one','Commissioned',{description:'Commissioned editorial text'}), project('two','commissioned')],
+    selectedWork:doc('selectedWork',{video:[],commissioned:[{_ref:'two'},{_ref:'one'}],graphic:[]}),
+    navigation:doc('navigation',{categories:[{label:'Commissioned',destination:'work/commissioned'},{label:'Duplicate',destination:'work/commissioned'}]})});
+  const before=JSON.stringify(raw), result=data.normalize(raw);
+  assert.equal(JSON.stringify(raw),before);
+  assert.deepEqual(result.selectedWork.commissioned,['two','one']);
+  assert.equal(result.projectsById.one.category,'Commissioned');
+  assert.equal(result.projectsById.two.category,'Commissioned');
+  assert.equal(result.projectsById.one.id,'one');
+  assert.equal(result.projectsById.one.description,'Commissioned editorial text');
+  assert.deepEqual(result.navigation.categories.map(c=>c.label),['Video','Photography','Graphic']);
+  assert.equal(result.navigation.categories[1].href,'#work/commissioned');
 });

@@ -21,7 +21,7 @@
 (function (root) {
   'use strict';
 
-  const {projectCategories} = typeof module !== 'undefined' && module.exports ? require('./project-categories.js') : root.ProjectCategories;
+  const {projectCategories, categoryLabel} = typeof module !== 'undefined' && module.exports ? require('./project-categories.js') : root.ProjectCategories;
 
   const config = Object.freeze({
     projectId: 'ck6xe2er', dataset: 'production', apiVersion: '2025-02-19',
@@ -35,7 +35,7 @@
   });
   const heights = ['auto', 'small', 'medium', 'large', 'viewport'];
   const defaultCategoryNavigation = Object.freeze(categories.map(label => Object.freeze({
-    id: label.toLowerCase(), category: label, label,
+    id: label.toLowerCase(), category: label, label: categoryLabel(label),
     destination: `work/${label.toLowerCase()}`, href: `#work/${label.toLowerCase()}`
   })));
   const imageFields = '{asset->{_id,url,metadata{dimensions{width,height}}},crop,hotspot,alt}';
@@ -438,13 +438,14 @@
         issue(issues, `navigation.categories[${index}]`, 'invalid_category_link', 'Unknown or duplicate category destination omitted.'); continue;
       }
       seenCategories.add(base.id);
-      navigation.categories.push({...base, label: text(item.label) || base.label});
+      navigation.categories.push({...base, label: base.id === 'commissioned' ? 'Photography' : text(item.label) || base.label});
     }
-    // CMS order wins when provided. Missing categories are appended in the one
-    // shared default order; no separate desktop/mobile arrays exist.
+    // Preserve stored route keys; show the requested Video / Photography / Graphic order.
     for (const category of defaultCategoryNavigation) {
       if (!seenCategories.has(category.id)) navigation.categories.push({...category});
     }
+
+    navigation.categories.sort((a, b) => categories.indexOf(a.category) - categories.indexOf(b.category));
 
     const infoDoc = singleton(raw, 'infoPage', issues, availability);
     const defaultInfoOrder = ['cv', 'work', 'skills', 'news', 'publications', 'contactLinks', 'selectedClients'];

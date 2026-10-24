@@ -403,7 +403,9 @@ test('mobile activates only on click, measures rows, and ignores a duplicate com
  const app=setup('#archive',true);
  try{
  await app.settle(success(content([entry('One'),entry('Two'),entry('Three')])));
- const {pointer,list,active}=mobileGestureFixture(app);
+ const {pointer,list,active,tick}=mobileGestureFixture(app);
+ // Initial layout unlocks input on the next animation frame, not a wall-clock delay.
+ await tick();
  pointer('pointerdown');pointer('pointerup',{click:false});assert.equal(active(),0);
  list.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));assert.equal(active(),1);
  assert.equal(list.style.getPropertyValue('--archive-offset'),'37px');

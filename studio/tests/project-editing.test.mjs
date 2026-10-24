@@ -4,7 +4,7 @@ import {set, unset} from 'sanity'
 import {mapProjectDuplicate, duplicateProjectIdentity} from '../actions/duplicateProject.ts'
 import {categorySelectionPatch, projectCategories} from '../components/ProjectCategoriesInput.tsx'
 import {project} from '../schemaTypes/documents/project.ts'
-import {selectedWork} from '../schemaTypes/documents/pages.ts'
+import {navigation, selectedWork} from '../schemaTypes/documents/pages.ts'
 import importedConfig from '../sanity.config.ts'
 const config = importedConfig.default ?? importedConfig
 const field = (schema, name) => schema.fields.find(item => item.name === name)
@@ -95,3 +95,17 @@ test('same project is valid in both matching curated lists, with draft membershi
   const draftContext = {getClient:()=>({fetch:async()=>[document,{...document,_id:'drafts.one',categories:['Graphic']}]})}
   assert.notEqual(await validator(field(selectedWork,'video').of[0])({_ref:'one'},draftContext),true)
 })
+
+
+test('Photography labels preserve category storage, reference filters and legacy project previews', () => {
+  const options=field(project,'categories').options.list;
+  assert.deepEqual(options,[{title:'Video',value:'Video'},{title:'Photography',value:'Commissioned'},{title:'Graphic',value:'Graphic'}]);
+  assert.equal(field(selectedWork,'commissioned').title,'Photography');
+  assert.match(field(selectedWork,'commissioned').description,/Photography/);
+  assert.equal(field(selectedWork,'commissioned').of[0].options.filterParams.category,'Commissioned');
+  const legacy={title:'Test',category:'commissioned',year:'2026'}, before=JSON.stringify(legacy);
+  assert.equal(project.preview.prepare(legacy).subtitle,'Photography — 2026');
+  assert.equal(JSON.stringify(legacy),before);
+  assert.deepEqual(navigation.initialValue.categories.map(c=>[c.label,c.destination]),[
+    ['Video','work/video'],['Photography','work/commissioned'],['Graphic','work/graphic']]);
+});

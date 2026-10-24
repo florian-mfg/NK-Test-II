@@ -2,7 +2,7 @@ import {defineArrayMember, defineField, defineType} from 'sanity'
 import {projectCategories} from '../../components/ProjectCategoriesInput'
 import {InfoSectionContentField} from '../../components/InfoSectionContentField'
 import {InfoSectionOrderInput, InfoSectionOrderPreview, infoSections, defaultInfoSectionOrder} from '../../components/InfoSectionOrderInput'
-import {categories, orderedStrings, textColorField} from '../shared/content'
+import {categories, categoryLabel, orderedStrings, textColorField} from '../shared/content'
 
 const singletonPreview = (title: string) => ({prepare: () => ({title})})
 
@@ -55,9 +55,9 @@ export const selectedWork = defineType({
   fields: categories.map((category) =>
     defineField({
       name: category.toLowerCase(),
-      title: category,
+      title: categoryLabel(category),
       type: 'array',
-      description: `Choose ${category} projects and drag to reorder. Edit project content under Projects.`,
+      description: `Choose ${categoryLabel(category)} projects and drag to reorder. Edit project content under Projects.`,
       options: {sortable: true},
       of: [
         defineArrayMember({
@@ -78,7 +78,7 @@ export const selectedWork = defineType({
               return (
                 !project ||
                 projectCategories(project).includes(category) ||
-                `This project belongs to ${projectCategories(project).join(', ') || 'no category'}. Choose a ${category} project.`
+                `This project belongs to ${projectCategories(project).map(categoryLabel).join(', ') || 'no category'}. Choose a ${categoryLabel(category)} project.`
               )
             }),
         }),
@@ -294,7 +294,7 @@ export const navigation = defineType({
       title: 'Selected Work category links',
       type: 'array',
       options: {sortable: true},
-      description: 'Drag to reorder. Labels may change, but keep all three category destinations.',
+      description: 'The website displays Video, Photography, Graphic in that order. Keep all three destinations; Photography retains the legacy commissioned identifier.',
       of: [defineArrayMember({type: 'categoryLink'})],
       validation: (rule) =>
         rule
@@ -306,7 +306,7 @@ export const navigation = defineType({
             return (
               categories.every((category) =>
                 destinations.includes(`work/${category.toLowerCase()}`),
-              ) || 'Include Video, Commissioned, and Graphic once each.'
+              ) || 'Include Video, Photography, and Graphic once each.'
             )
           }),
     }),
@@ -324,10 +324,10 @@ export const navigation = defineType({
       {_key: 'index', _type: 'navigationItem', label: 'Index', destination: 'archive'},
       {_key: 'info', _type: 'navigationItem', label: 'Info', destination: 'info'},
     ],
-    categories: ['Commissioned', 'Graphic', 'Video'].map((label) => ({
+    categories: categories.map((label) => ({
       _key: label.toLowerCase(),
       _type: 'categoryLink',
-      label,
+      label: categoryLabel(label),
       destination: `work/${label.toLowerCase()}`,
     })),
     mobileContact: {_type: 'contactLink', label: 'Mail', destination: 'email'},
