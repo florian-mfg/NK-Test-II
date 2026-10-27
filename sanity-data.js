@@ -50,9 +50,9 @@
     "projects": *[_type == "project" && ${published}] | order(_id asc) {
       _id,_type,title,slug,category,categories,year,additionalInfo,description,detailPageEnabled,textColor,
       indexmaterial{textColor,media[]${indexMediaFields}},
-      selectedWorkPreview{type,alt,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields},
-        composition[]{_type,type,size,height,order,slots[]{type,alt,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields}}}},
-      modules[]{_type,type,size,height,order,slots[]{type,text,textSize,alt,playback,video{asset->{_id,url,mimeType}},image${imageFields},poster${imageFields}}}
+      selectedWorkPreview{type,alt,playback,mediaDisplay,video{asset->{_id,url,mimeType,metadata{dimensions{width,height,aspectRatio}}}},image${imageFields},poster${imageFields},
+        composition[]{_type,type,size,height,order,slots[]{type,alt,playback,mediaDisplay,video{asset->{_id,url,mimeType,metadata{dimensions{width,height,aspectRatio}}}},image${imageFields},poster${imageFields}}}},
+      modules[]{_type,type,size,height,order,slots[]{type,text,textSize,alt,playback,mediaDisplay,video{asset->{_id,url,mimeType,metadata{dimensions{width,height,aspectRatio}}}},image${imageFields},poster${imageFields}}}
     },
     "selectedWork": *[_type == "selectedWork" && _id == "selectedWork"][0]{_id,_type,video[]{_ref},commissioned[]{_ref},graphic[]{_ref}},
     "indexPage": *[_type == "indexPage" && _id == "indexPage"][0]{_id,_type,entries[]{_key,_type,project{_ref},displayTitle,year,additionalInfo,textColor,initialLayout,previewImages[]${indexMediaFields}}},
@@ -135,6 +135,16 @@
     };
   }
 
+  // Only module Auto Height media bypass saved crop transformations.
+  function moduleImageSource(media, auto) {
+    if (!auto) return media.src;
+    const url = new URL(media.assetUrl);
+    ['rect', 'h', 'fit', 'crop'].forEach(key => url.searchParams.delete(key));
+    url.searchParams.set('w', String(Math.min(media.width || 2560, 2560)));
+    url.searchParams.set('auto', 'format');
+    return url.href;
+  }
+
   // Frontpage records reuse the Project upload normalizer and CDN policy.
   function frontpageMedia(value, issues) {
     if (value == null) return null; // Unconfigured legacy singleton: local fallback.
@@ -204,7 +214,10 @@
       }
       if (record(slot) && slot.type === 'image') {
         const media = image(slot.image, issues, slotPath);
-        if (media) return {type: 'image', src: media.src, alt: typeof slot.alt === 'string' ? slot.alt : undefined, image: media};
+        if (media) {
+          const auto = slot.mediaDisplay === 'auto';
+          return {type: 'image', ...(auto ? {mediaDisplay: 'auto'} : {}), src: moduleImageSource(media, auto), alt: typeof slot.alt === 'string' ? slot.alt : undefined, image: media};
+        }
       }
       if (record(slot) && slot.type === 'mp4') {
         // Same Sanity file reference and CDN validation policy as Index uploads.
@@ -217,9 +230,13 @@
             url.pathname.startsWith(`/files/${config.projectId}/${config.dataset}/`) &&
             url.pathname.endsWith('.mp4') && (!file?.mimeType || file.mimeType === 'video/mp4')) {
           const posterImage = slot.poster ? image(slot.poster, issues, `${slotPath}.poster`) : null;
-          return {type: 'mp4', src, ...(['autoplay', 'manual'].includes(slot.playback) ? {playback: slot.playback} : {}),
+          const dimensions = file.metadata?.dimensions;
+          const positive = value => typeof value === 'number' && Number.isFinite(value) && value > 0;
+          const aspectRatio = positive(dimensions?.width) && positive(dimensions?.height)
+            ? dimensions.width / dimensions.height : positive(dimensions?.aspectRatio) ? dimensions.aspectRatio : undefined;
+          return {type: 'mp4', src, ...(slot.mediaDisplay === 'auto' ? {mediaDisplay: 'auto', ...(aspectRatio ? {aspectRatio} : {})} : {}), ...(['autoplay', 'manual'].includes(slot.playback) ? {playback: slot.playback} : {}),
             alt: typeof slot.alt === 'string' ? slot.alt : undefined,
-            ...(posterImage ? {poster: posterImage.src, posterImage} : {})};
+            ...(posterImage ? {poster: moduleImageSource(posterImage, slot.mediaDisplay === 'auto'), posterImage} : {})};
         }
         issue(issues, slotPath, 'invalid_video', 'Invalid Project MP4 asset.');
       }

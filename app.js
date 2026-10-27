@@ -992,8 +992,6 @@ function applySanityInfo() {
   mobileMenuBreakpoint.addEventListener("change", arrange, {signal: layoutEvents.signal});
   const cleanupLayout = cleanupPage;
   cleanupPage = () => { layoutEvents.abort(); cleanupLayout(); };
-  // Keep the native upward scroll range at its bottom after CMS hydration.
-  resetInfoIntroScroll(section);
   hydratedInfoPages.add(section);
 }
 
@@ -1028,11 +1026,6 @@ async function loadInfoContent() {
   }
 }
 
-function resetInfoIntroScroll(section) {
-  const scroller = section.querySelector('.info-intro-scroll');
-  scroller.scrollTop = 0;
-}
-
 // Selected Work centers its title line box at 50vh. Measure the actual font
 // baselines so Info can use that reference without changing section typography.
 function alignInfoBaseline(section) {
@@ -1064,8 +1057,6 @@ function alignInfoBaseline(section) {
       : titleBaseline.getBoundingClientRect().top - parseFloat(getComputedStyle(reference).top) - infoAscent;
     section.style.setProperty('--info-baseline-offset', `${offset}px`);
     probe.remove();
-    // Keep the last line anchored after font/viewport changes.
-    resetInfoIntroScroll(section);
   };
   update();
   window.addEventListener('resize', update, {signal:events.signal});
@@ -1078,10 +1069,8 @@ function renderInfo() {
   setCurrentPage("info");
   app.innerHTML = `<section class="info">
     <div class="info-introduction">
-      <div class="info-intro-scroll" role="region" aria-label="Introduction" tabindex="0">
-        <div class="info-intro-content">
-          <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of photography, generativity, motion design and cgi.</p>
-        </div>
+      <div class="info-intro-content">
+        <p class="info-intro">A Berlin based multidisciplinary designer, working in various fields of photography, generativity, motion design and cgi.</p>
       </div>
     </div>
     <div class="info-columns">

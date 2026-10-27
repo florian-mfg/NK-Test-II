@@ -46,6 +46,7 @@ export function createProjectModules({namePrefix = '', slotType = 'mediaSlot'} =
           _type: slotType,
           _key: `slot-${index + 1}`,
           type: 'empty',
+          mediaDisplay: 'crop',
         })),
       },
       fields: [

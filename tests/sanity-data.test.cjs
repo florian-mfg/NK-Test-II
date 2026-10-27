@@ -316,7 +316,7 @@ test('independent Selected Work image and MP4 previews normalize without changin
     assert.deepEqual(result.projects[0].modules, baseline.modules);
     assert.equal(result.projects[0].modulesValid, true);
   }
-  assert.ok(data.query.includes('selectedWorkPreview{type,alt,playback,video{asset->{_id,url,mimeType}},image'));
+  assert.ok(data.query.includes('selectedWorkPreview{type,alt,playback,mediaDisplay,video{asset->{_id,url,mimeType,metadata{dimensions{width,height,aspectRatio}}}},image'));
 });
 
 test('preview normalization preserves missing slots and explicit permutations without mutating source data', () => {

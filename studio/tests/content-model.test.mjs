@@ -217,7 +217,7 @@ test('Selected Work Preview supports ordered compositions and reuses module geom
   const detailSlot = schemaTypes.find(type => type.name === 'mediaSlot')
   assert.equal(field(project, 'selectedWorkPreview').type, 'selectedWorkPreview')
   assert.equal(field(project, 'selectedWorkPreview').validation, undefined)
-  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'playback', 'video', 'poster', 'alt'])
+  assert.deepEqual(slot.fields.map(field => field.name), ['type', 'image', 'mediaDisplay', 'playback', 'video', 'poster', 'alt'])
   const [validate] = validators(field(slot, 'type'))
   for (const type of ['image', 'mp4', 'empty']) assert.equal(validate(type), true)
   for (const type of ['text']) assert.notEqual(validate(type), true)
@@ -425,5 +425,30 @@ test('MP4 playback is an optional per-slot choice', () => {
     const [validate] = validators(playback)
     for (const value of [undefined, '', 'autoplay', 'manual']) assert.equal(validate(value), true)
     assert.notEqual(validate('invalid'), true)
+  }
+})
+
+
+test('Media Display is shared per slot, defaults to Crop and survives serialization and duplication', () => {
+  const detail = schemaTypes.find(type => type.name === 'mediaSlot')
+  const preview = schemaTypes.find(type => type.name === 'previewMediaSlot')
+  const display = field(detail, 'mediaDisplay')
+  assert.equal(field(preview, 'mediaDisplay'), display)
+  assert.equal(display.title, 'Media Display')
+  assert.equal(display.initialValue, 'crop')
+  assert.deepEqual(display.options.list, [{title: 'Crop', value: 'crop'}, {title: 'Auto Height', value: 'auto'}])
+  const [validate] = validators(display)
+  for (const value of [undefined, 'crop', 'auto']) assert.equal(validate(value), true)
+  assert.notEqual(validate('bad'), true)
+  for (const type of ['image', 'mp4']) assert.equal(display.hidden({parent: {type}}), false)
+  for (const type of ['text', 'empty']) assert.equal(display.hidden({parent: {type}}), true)
+  for (const layout of schemaTypes.filter(type => type.initialValue?.slots)) {
+    assert.ok(layout.initialValue.slots.every(slot => slot.mediaDisplay === 'crop'))
+    const row = structuredClone(layout.initialValue)
+    row.slots[0] = {...row.slots[0], type: 'image', mediaDisplay: 'auto'}
+    const saved = JSON.parse(JSON.stringify([row, {...structuredClone(row), _key: 'duplicate'}])).reverse()
+    assert.equal(saved[0].slots[0].mediaDisplay, 'auto')
+    assert.equal(saved[1].slots[0].mediaDisplay, 'auto')
+    assert.equal(field(layout, 'slots').options.sortable, false)
   }
 })

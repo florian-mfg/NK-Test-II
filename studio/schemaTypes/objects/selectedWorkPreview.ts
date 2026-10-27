@@ -7,7 +7,7 @@ export const previewMediaSlot = defineType({
   name: 'previewMediaSlot',
   title: 'Preview slot',
   type: 'object',
-  initialValue: {type: 'empty'},
+  initialValue: {type: 'empty', mediaDisplay: 'crop'},
   fields: [
     defineField({
       name: 'type',
@@ -34,7 +34,7 @@ export const previewMediaSlot = defineType({
       },
     }),
     ...mediaSlot.fields.filter((field) =>
-      ['image', 'video', 'playback', 'poster', 'alt'].includes(field.name),
+      ['image', 'mediaDisplay', 'video', 'playback', 'poster', 'alt'].includes(field.name),
     ),
   ],
   preview: mediaSlot.preview,
@@ -63,7 +63,7 @@ export const selectedWorkPreview = defineType({
     // Full Width; the migration moves it into the editor without re-uploading.
     defineField({name: 'type', type: 'string', hidden: true}),
     ...mediaSlot.fields
-      .filter((field) => ['image', 'video', 'playback', 'poster', 'alt'].includes(field.name))
+      .filter((field) => ['image', 'mediaDisplay', 'video', 'playback', 'poster', 'alt'].includes(field.name))
       .map((field) => ({...field, hidden: true, validation: undefined})),
   ],
   validation: (rule) =>

@@ -65,22 +65,26 @@ function renderProjectModule(module, title = "", mode = "detail") {
       return `<div class="project-slot project-slot-text text-size-${textSize}" ${style}>${paragraphs}</div>`;
     }
     const label = escapeModuleAttribute(slot.alt ?? title);
+    const auto = slot.mediaDisplay === "auto";
+    const dimensions = slot.image;
+    const imageSize = auto && dimensions?.width > 0 && dimensions?.height > 0
+      ? ` width="${Number(dimensions.width)}" height="${Number(dimensions.height)}"` : "";
     let media;
-    if (slot.type === "image") media = `<img src="${moduleMediaUrl(slot.src)}" alt="${label}" loading="lazy" decoding="async"${moduleImagePosition(slot.image)}>`;
+    if (slot.type === "image") media = `<img src="${moduleMediaUrl(slot.src)}" alt="${label}" loading="lazy" decoding="async"${auto ? imageSize : moduleImagePosition(slot.image)}>`;
     else if (slot.type === "mp4") {
       const playback = ["autoplay", "manual"].includes(slot.playback)
         ? slot.playback : mode === "overview" ? "autoplay" : "manual";
       const teaser = playback === "autoplay";
-      media = `<div class="project-video" data-playback="${playback}"${mode === "detail" ? ' data-project-detail-video' : ""}>
+      media = `<div class="project-video"${auto && Number.isFinite(slot.aspectRatio) && slot.aspectRatio > 0 ? ` style="--video-ratio: ${slot.aspectRatio}"` : ""} data-playback="${playback}"${mode === "detail" ? ' data-project-detail-video' : ""}>
         ${slot.poster ? `<img class="project-video-poster" src="${moduleMediaUrl(slot.poster)}" alt="" aria-hidden="true"${moduleImagePosition(slot.posterImage)}>` : ""}
         <video data-project-native-src="${moduleMediaUrl(slot.src)}" aria-label="${label || "Project video"}" playsinline preload="metadata" ${teaser ? "autoplay muted loop" : ""}></video>
         ${teaser && mode !== "detail" ? "" : `<button class="project-video-toggle" type="button" aria-label="Play video" disabled>(Play)</button>`}
       </div>`;
     } else throw new Error("Unsupported project media type");
-    return `<figure class="project-slot" ${style}>${media}</figure>`;
+    return `<figure class="project-slot${auto ? " media-display-auto" : ""}" ${style}>${media}</figure>`;
   }).join("");
   const empty = module.slots.every(slot => slot == null);
-  return `<div class="project-module height-${height}${empty ? " is-empty" : ""}" data-module-type="${module.type}">${slots}</div>`;
+  return `<div class="project-module height-${height}${module.slots.some(slot => slot?.mediaDisplay === "auto" && ["image", "mp4"].includes(slot.type)) ? " has-auto-media" : ""}${empty ? " is-empty" : ""}" data-module-type="${module.type}">${slots}</div>`;
 }
 
 function renderProjectModules(modules, title = "", mode = "detail") {

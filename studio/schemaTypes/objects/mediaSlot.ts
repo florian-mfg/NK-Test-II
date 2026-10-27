@@ -3,7 +3,7 @@ export const mediaSlot = defineType({
   name: 'mediaSlot',
   title: 'Content Slot',
   type: 'object',
-  initialValue: {type: 'empty'},
+  initialValue: {type: 'empty', mediaDisplay: 'crop'},
   fields: [
     defineField({
       name: 'type',
@@ -76,6 +76,20 @@ export const mediaSlot = defineType({
             ? 'Upload an image, or choose another media type.'
             : true,
         ),
+    }),
+    defineField({
+      name: 'mediaDisplay',
+      title: 'Media Display',
+      type: 'string',
+      initialValue: 'crop',
+      description: "Crop fills the module's predefined dimensions. Auto Height displays the entire image or video at its original aspect ratio.",
+      options: {layout: 'radio', list: [
+        {title: 'Crop', value: 'crop'},
+        {title: 'Auto Height', value: 'auto'},
+      ]},
+      hidden: ({parent}) => !['image', 'mp4'].includes(parent?.type),
+      validation: (rule) => rule.custom(value =>
+        value == null || ['crop', 'auto'].includes(value) || 'Choose Crop or Auto Height.'),
     }),
     defineField({
       name: 'playback',
