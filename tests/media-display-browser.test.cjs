@@ -42,6 +42,7 @@ for(const engine of ['chromium','webkit']) test(`${engine}: all media layouts, i
       }));
       const before=await measure();
       await page.evaluate(async()=>{for(const img of document.images)img.loading='eager';await Promise.all([...document.images].map(img=>img.decode()));});
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       const rows=await measure();
       const rem=await page.evaluate(()=>parseFloat(getComputedStyle(document.documentElement).fontSize));
       rows.forEach((row,index)=>{
@@ -49,16 +50,16 @@ for(const engine of ['chromium','webkit']) test(`${engine}: all media layouts, i
         for(const slot of row.slots) {
           const expected=width<=700?row.w:row.w*slot.span/12;
           assert.ok(Math.abs(slot.w-expected)<1,`${width}/${height}: column width`);
-          assert.ok(Math.abs(slot.media.w-slot.w)<1,'media uses assigned width');
+          assert.ok(slot.auto||height==='auto'?Math.abs(slot.media.w-slot.w)<1:slot.media.w>=slot.w-1.01,'media covers its assigned width');
           if(slot.auto) {
             assert.ok(Math.abs(slot.media.h-slot.media.w/slot.ratio)<1,'original aspect ratio');
             assert.ok(Math.abs(slot.h-slot.media.h)<1,'no empty container space');
-            assert.equal(slot.fit,'contain');
+            assert.equal(slot.fit,'fill');
             assert.ok(Math.abs(before[index].slots[row.slots.indexOf(slot)].h-slot.h)<1,'no image loading shift');
           } else if(height!=='auto') {
             const expectedHeight=height==='small'?Math.min(24*rem,Math.max(12*rem,width*.25)):height==='medium'?Math.min(42*rem,Math.max(20*rem,width*.45)):height==='large'?Math.min(width*.75,900):900;
             assert.ok(Math.abs(slot.h-expectedHeight)<1,`Crop dimensions ${slot.h} vs ${expectedHeight}`);
-            assert.equal(slot.fit,'cover');
+            assert.equal(slot.fit,'fill');
           }
           if(width>700) assert.ok(Math.abs(slot.y-row.y)<1,'top alignment');
           else {assert.ok(slot.y>=bottom-1,'stacked without overlap');bottom=slot.b;}
@@ -82,6 +83,7 @@ for(const engine of ['chromium','webkit']) test(`${engine}: all media layouts, i
         window.cleanupVideos=initProjectVideos(document.querySelector('main'));
       },{layouts});
       await page.waitForFunction(()=>[...document.querySelectorAll('video')].every(v=>v.videoWidth&&v.videoHeight));
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       const measured=await page.evaluate(()=>[...document.querySelectorAll('.project-module')].map(row=>{
         const r=row.getBoundingClientRect();
         return {width:r.width,bottom:r.bottom,top:r.top,slots:[...row.children].map(slot=>{
@@ -93,8 +95,8 @@ for(const engine of ['chromium','webkit']) test(`${engine}: all media layouts, i
       measured.forEach((row,i)=>{
         for(const slot of row.slots) {
           assert.ok(Math.abs(slot.width-(width<=700?row.width:row.width*slot.span/12))<1);
-          if(slot.auto) {assert.ok(Math.abs(slot.height-slot.width/slot.ratio)<1);assert.equal(slot.fit,'contain');}
-          else assert.equal(slot.fit,'cover');
+          if(slot.auto) {assert.ok(Math.abs(slot.height-slot.width/slot.ratio)<1);assert.equal(slot.fit,'fill');}
+          else assert.equal(slot.fit,'fill');
           assert.ok(slot.bottom<=row.bottom+1);
           if(width>700)assert.ok(Math.abs(slot.top-row.top)<1);
         }
@@ -119,7 +121,7 @@ for(const engine of ['chromium','webkit']) test(`${engine}: all media layouts, i
         return {auto:slot.classList.contains('media-display-auto'),w:r.width,h:r.height,ratio:v.videoWidth/v.videoHeight,fit:getComputedStyle(v).objectFit,b:r.bottom,rowBottom:row.bottom,initial:initialBoxes[i],button:!!box.querySelector('button'),muted:v.muted};
       }));
       for(const [i,v] of videos.entries()) {
-        if(v.auto) {assert.ok(Math.abs(v.h-v.w/v.ratio)<1,'native MP4 ratio');assert.equal(v.fit,'contain');}
+        if(v.auto) {assert.ok(Math.abs(v.h-v.w/v.ratio)<1,'native MP4 ratio');assert.equal(v.fit,'fill');}
         if(i===0) {assert.ok(Math.abs(v.h-v.initial.h)<1,'known video ratio stable');assert.equal(v.button,true);assert.equal(v.muted,true);}
         if(i===3) assert.ok(Math.abs(v.initial.w/v.initial.h-16/9)<.02,'unknown video stable temporary 16:9');
         assert.ok(v.b<=v.rowBottom+1,'video fits module');

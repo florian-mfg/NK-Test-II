@@ -268,6 +268,7 @@ function initProjectVideos(root, options = {}) {
       let intersection;
       {
         frame.addEventListener('loadedmetadata', metadata);
+        frame.addEventListener('resize', metadata);
         document.addEventListener('visibilitychange', syncPlayback);
         if (globalThis.IntersectionObserver) {
           intersection = new IntersectionObserver(entries => {
@@ -292,6 +293,7 @@ function initProjectVideos(root, options = {}) {
         intersection?.disconnect();
         {
           frame.removeEventListener('loadedmetadata', metadata);
+          frame.removeEventListener('resize', metadata);
           document.removeEventListener('visibilitychange', syncPlayback);
         }
         button?.removeEventListener('click', toggle);

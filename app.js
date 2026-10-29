@@ -223,6 +223,17 @@ function setWorkMenu(open) {
   workSubmenu.inert = !open;
 }
 
+function renderGlobalFooter() {
+  return `  <footer class="project-footer" aria-label="Contact and legal information">
+    <nav class="project-footer-links" aria-label="Footer">
+      <a href="mailto:mail@nicolas-kawohl.com">Mail</a>
+      <a href="https://www.instagram.com/nicocaw/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a href="#imprint">Imprint</a>
+      <a href="#privacy-policy">Privacy Policy</a>
+    </nav>
+  </footer>`;
+}
+
 // Global bindings update only existing interface nodes, never the active page/player.
 function applySanityFooter() {
   const settings = sanityContent?.siteSettings;
@@ -335,24 +346,29 @@ function renderHome() {
   document.documentElement.classList.add("home-pending");
   document.body.className = "is-home home-loading";
   setCurrentPage("");
-  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="auto" aria-busy="true"><div class="frontpage-fade" aria-hidden="true"></div><span class="frontpage-loading-indicator" role="status">(Loading)</span></section>`;
+  app.innerHTML = `<section class="home" aria-label="Frontpage" data-text-color="auto" aria-busy="true"><div class="frontpage-fade" aria-hidden="true"></div><div class="frontpage-loading-indicator" role="progressbar" aria-label="Preparing Frontpage media" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div></section>`;
   const layer=app.querySelector('.frontpage-fade'), controller=new AbortController();
-  let started=false, prepared=null, stopBrush=()=>{}, animation=null;
+  const indicator=app.querySelector('.frontpage-loading-indicator');
+  let started=false, prepared=null, stopBrush=()=>{}, progress=0;
+  layer.dataset.loadingProgress='0';
+  const updateProgress=p=>{
+    if(controller.signal.aborted)return;
+    progress=Math.max(progress,Math.min(1,p));
+    layer.dataset.loadingProgress=String(progress);
+    indicator.setAttribute('aria-valuenow',String(Math.round(progress*100)));
+    indicator.firstElementChild.style.transform=`scaleX(${progress})`;
+  };
   const session={start:async()=>{
     if(started || !sanityLoadSettled || controller.signal.aborted)return;
     started=true;
     layer.dataset.source=sanityContent?.homePage?.media!=null?'sanity':'local';
-    await Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 1500))]);
     if(controller.signal.aborted || !globalThis.document)return;
     const visibleMediaLimit=sanityContent?.homePage?.visibleMediaLimit ?? 3;
-    animation=FrontpageLoading.wordmark(header.querySelector('.brand'));
-    prepared=await FrontpageLoading.prepare(frontpageSequence()||[],{visibleMediaLimit,signal:controller.signal,onProgress:p=>{layer.dataset.loadingProgress=String(p);animation.progress(p);}});
+    prepared=await FrontpageLoading.prepare(frontpageSequence()||[],{visibleMediaLimit,signal:controller.signal,onProgress:updateProgress});
     if(controller.signal.aborted || !globalThis.document){prepared.dispose();return;}
     layer.dataset.preparation=JSON.stringify(prepared.results);
     layer.dataset.source=sanityContent?.homePage?.media!=null?'sanity':'local';
-    await animation.complete();
-    if(controller.signal.aborted || !globalThis.document)return;
-    animation.dispose();
+    updateProgress(1);
     document.documentElement.classList.remove('home-pending');
     document.body.classList.remove('home-loading');
     app.querySelector('.frontpage-loading-indicator')?.remove();
@@ -361,7 +377,7 @@ function renderHome() {
     layer.dataset.ready='true';
   }};
   homeSession=session;session.start();
-  cleanupPage=()=>{controller.abort();animation?.dispose();stopBrush();prepared?.dispose();document.documentElement.classList.remove('home-pending');document.body.classList.remove('home-loading');if(homeSession===session)homeSession=null;};
+  cleanupPage=()=>{controller.abort();stopBrush();prepared?.dispose();document.documentElement.classList.remove('home-pending');document.body.classList.remove('home-loading');if(homeSession===session)homeSession=null;};
 }
 
 function renderWorkModule(module, project) {
@@ -372,14 +388,16 @@ function renderWorkModule(module, project) {
     slots: module.slots.map(slot => slot?.type === "text" ? null : slot)
   };
   if (hasText && previewModule.slots.every(slot => slot == null)) return "";
+  const mediaMarkup = renderProjectModule(previewModule, project.title, "overview");
+  if (!mediaMarkup) return "";
   const title = escapeModuleAttribute(project.title);
   const href = `#project/${encodeURIComponent(project.id)}`;
   const empty = previewModule.slots.every(slot => slot == null);
   const titleTag = project.detailPageEnabled === false ? "span" : "a";
   const titleLink = project.detailPageEnabled === false ? "" : ` href="${href}" aria-label="Open ${title}"`;
   return `<section class="project-module-preview${empty ? " is-empty" : ""}" aria-label="${title}">
-    <${titleTag} class="project-title"${titleLink}><span>${title}</span>${project.additionalInfo ? `<span class="project-additional-info">${escapeModuleAttribute(project.additionalInfo)}</span>` : ""}</${titleTag}>
-    ${renderProjectModule(previewModule, project.title, "overview")}
+    <div class="project-title-track"><${titleTag} class="project-title"${titleLink}><span>${title}</span>${project.additionalInfo ? `<span class="project-additional-info">${escapeModuleAttribute(project.additionalInfo)}</span>` : ""}</${titleTag}></div>
+    ${mediaMarkup}
   </section>`;
 }
 
@@ -919,9 +937,9 @@ function applySanityInfo() {
   const needsSettings = info.contactLinks.length > 0 || issues.some(issue =>
     issue.path.startsWith("infoPage.contactLinks") && issue.code === "missing_contact");
   // Malformed content is different from intentionally empty published arrays.
-  if (issues.some(issue => issue.path.startsWith("infoPage") && issue.code !== "missing_contact")) return;
+  // Ignore empty entries, but retain the fallback for malformed field containers.
+  if (issues.some(issue => issue.path.startsWith("infoPage") && ["invalid_array", "invalid_document"].includes(issue.code))) return;
   const labels = {
-    ".info-cv h2": info.cvLabel,
     ".info-work h2": info.workLabel,
     ".info-skills h2": info.skillsLabel,
     ".info-contact h2": info.contactLabel,
@@ -933,7 +951,6 @@ function applySanityInfo() {
   const lines = values => values.map(value => escapeModuleAttribute(value).replace(/\r?\n/g, "<br>")).join("<br>");
   const content = {
     ".info-intro": lines([info.introduction]),
-    ".info-cv p": lines(info.cv.map(entry => [entry.period, entry.text].filter(Boolean).join(" "))),
     ".info-work p": lines(info.work),
     ".info-skills p": lines(info.skills),
     ".info-contact p": info.contactLinks.map(renderInfoContactLink).join("<br>"),
@@ -960,7 +977,7 @@ function applySanityInfo() {
     heading.textContent = info[`${id}Label`];
     const paragraph = document.createElement("p");
     paragraph.innerHTML = info[id].map(entry => {
-      const label = lines([[entry.title, entry.additionalInfo].filter(Boolean).join(" ")]);
+      const label = lines([[entry.title, entry.additionalInfo].filter(Boolean).join(" ") || entry.href]);
       return entry.href ? `<a href="${escapeModuleAttribute(entry.href)}" target="_blank" rel="noopener noreferrer">${label}</a>` : label;
     }).join("<br>");
     node.append(heading, paragraph);
@@ -971,13 +988,21 @@ function applySanityInfo() {
     news: ".info-news", publications: ".info-publications",
     contactLinks: ".info-contact", selectedClients: ".info-clients"
   };
-  const orderedSections = info.sectionOrder.map(id => section.querySelector(sectionSelectors[id])).filter(Boolean);
+  // Remove empty sections themselves, including their grid slots and spacing.
+  section.querySelector('.info-cv')?.remove();
+  for (const [id, selector] of Object.entries(sectionSelectors)) {
+    if (id !== 'cv' && !info[id]?.length) section.querySelector(selector)?.remove();
+  }
+  if (!info.introduction.trim()) section.querySelector('.info-intro').hidden = true;
+  const orderedSections = info.sectionOrder.filter(id => id !== 'cv').map(id => section.querySelector(sectionSelectors[id])).filter(Boolean);
   const columns = section.querySelector(".info-columns");
   const arrange = () => {
     // Desktop pins Clients to the right. Mobile retains the saved sequence and
     // the existing spacing between the stacked columns, without duplicate DOM.
     const side = mobileMenuBreakpoint.matches ? orderedSections.at(-1) : section.querySelector(".info-clients");
-    const ordered = [...orderedSections.filter(node => node !== side), side];
+    const ordered = [...orderedSections.filter(node => node !== side), side].filter(Boolean);
+    details.hidden = !orderedSections.some(node => node !== side);
+    columns.hidden = !orderedSections.length;
     ordered.forEach((node, index) => {
       const isSide = node === side;
       node.classList.toggle("info-column", isSide);
@@ -1042,7 +1067,7 @@ function alignInfoBaseline(section) {
     const referenceText = document.createElement('span');
     const infoText = document.createElement('div');
     const heading = section.querySelector('.info-details h2, .info-side-section h2');
-    infoText.style.font = getComputedStyle(heading).font;
+    infoText.style.font = getComputedStyle(heading || section).font;
     const marker = node => {
       const baseline = document.createElement('span');
       Object.assign(baseline.style, {display:'inline-block', width:'0', height:'0', verticalAlign:'baseline'});
@@ -1075,7 +1100,6 @@ function renderInfo() {
     </div>
     <div class="info-columns">
       <div class="info-column info-details">
-        <section class="info-cv"><h2>CV</h2><p>2022 – 2025 Work at Eps51<br>2014 – 2021 Academy of Fine Arts</p></section>
         <section class="info-work"><h2>Work</h2><p>EPS51<br>Berlin<br>Artistic Director of Der Fahrende Raum<br>Buchhandlung Walther König at Haus der Kunst, Munich</p></section>
         <section class="info-skills"><h2>Skills</h2><p>Video<br>Graphic<br>Animation</p></section>
         <section class="info-contact"><h2>Contact</h2><p></p></section>
@@ -1085,7 +1109,8 @@ function renderInfo() {
         <p>Eps51<br>Welt<br>William Fan<br>DNA Club Munich<br>Fachhochschule Potsdam<br>Rethink<br>Icon Magazine<br>Richert Beil<br>European Month of Photography<br>Ahlberg ME<br>Gectalt Jewelry<br>German Press Days<br>Dawid Tomaszewski<br>Horror Vacui<br>On time PR<br>Uhren Magazin<br>CLAV<br>BFW<br>Henkel<br>Some Magazine<br>S/O Berlin Das Stue<br>Bacq Berlin<br>The Alqemist<br>Runtime<br>Friedman Berlin<br>Frederik Constantin Victor<br>MGUN Berlin<br>Zinnober Blumen<br>Suprema<br>Hong Bock<br>The Green Bean<br>Perfect Skin<br>Necklacy</p>
       </section>
     </div>
-  </section>`;
+  </section>${renderGlobalFooter()}`;
+  applySanityFooter();
   cleanupPage = alignInfoBaseline(app.querySelector(".info"));
   applySanityInfo();
 }
@@ -1217,14 +1242,7 @@ function renderProject(id) {
       ${infoMarkup}
     </section>
   </div>
-  <footer class="project-footer" aria-label="Contact and legal information">
-    <nav class="project-footer-links" aria-label="Footer">
-      <a href="mailto:mail@nicolas-kawohl.com">Mail</a>
-      <a href="https://www.instagram.com/nicocaw/" target="_blank" rel="noopener noreferrer">Instagram</a>
-      <a href="#imprint">Imprint</a>
-      <a href="#privacy-policy">Privacy Policy</a>
-    </nav>
-  </footer>`;
+  ${renderGlobalFooter()}`;
   applySanityFooter();
   renderedDetailProjects.set(app.querySelector(".detail"), project);
   // The fixed, vertically centered title has no flow height. Reserve its actual

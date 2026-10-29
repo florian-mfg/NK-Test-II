@@ -1,3 +1,3 @@
-// Runs before first paint so the loading wordmark never flashes in the header.
+// Keep the normal Frontpage header position from the first paint.
 if (!location.hash || /^#\/?home(?:$|\/)/.test(location.hash))
   document.documentElement.classList.add("home-pending");

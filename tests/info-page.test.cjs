@@ -88,10 +88,10 @@ test('Info updates only existing paragraphs and respects published empty arrays'
     assert.equal(document.querySelector('.info-intro').textContent, 'Berliner Boy');
     assert.equal(document.querySelector('.info-work p').textContent, 'Eps51');
     assert.equal(document.querySelector('.info-skills p').textContent, 'Tattooboss');
-    assert.equal(document.querySelector('.info-cv p').innerHTML, '');
-    assert.equal(document.querySelector('.info-clients p').innerHTML, '');
+    assert.equal(document.querySelector('.info-cv'), null);
+    assert.equal(document.querySelector('.info-clients'), null);
     assert.equal(document.querySelector('.info-contact a').href, 'mailto:published@example.com');
-    assert.deepEqual([...root.querySelectorAll('section, div, h2, p')], wrappers);
+    assert.ok([...root.querySelectorAll('section, div, h2, p')].every(node => wrappers.includes(node)));
     assert.equal(document.querySelector('.main-nav').outerHTML, header);
     assert.equal(document.querySelector('.mobile-menu nav').outerHTML, menu);
     assert.equal(app.scrollCalls.length, scrollCount);
@@ -131,7 +131,7 @@ test('missing settings do not invent contact destinations while published Info w
     assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
     assert.equal(app.window.document.querySelector('.info-work p').textContent, 'Eps51');
     assert.equal(app.window.document.querySelector('.info-skills p').textContent, 'Tattooboss');
-    assert.equal(app.window.document.querySelector('.info-contact p').innerHTML, contacts);
+    assert.equal(app.window.document.querySelector('.info-contact'), null);
   } finally {app.dom.window.close();}
 });
 
@@ -140,7 +140,7 @@ test('CMS contact emptiness is respected; settings are optional when no contacts
   try {
     await app.settle(success(content({siteSettings: null, infoPage: doc('infoPage', {introduction: 'Berliner Boy', contactLinks: []})})));
     assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
-    assert.equal(app.window.document.querySelector('.info-contact p').innerHTML, '');
+    assert.equal(app.window.document.querySelector('.info-contact'), null);
   } finally {app.dom.window.close();}
 });
 
@@ -204,7 +204,7 @@ test('ordered arrays and line breaks remain ordered, and CMS strings are escaped
     const {document} = app.window;
     assert.equal(document.querySelector('.info-intro img'), null);
     assert.equal(document.querySelector('.info-intro').textContent, '<img src=x onerror=alert(1)>');
-    assert.equal(document.querySelector('.info-cv p').innerHTML, '2025 Second<br>2020 First');
+    assert.equal(document.querySelector('.info-cv'), null);
     assert.equal(document.querySelector('.info-work p').innerHTML, 'Two<br>One<br>More');
     assert.equal(document.querySelector('.info-skills p').innerHTML, 'B<br>A');
     assert.equal(document.querySelector('.info-clients p').innerHTML, 'Z<br>Y');
@@ -258,11 +258,11 @@ test('legacy section orders keep Clients right on desktop and preserve labels an
       const selectors = ['.info-cv', '.info-work', '.info-skills', '.info-contact', '.info-clients'];
       const original = Object.fromEntries(legacyOrder.map((id, index) => [id, root.querySelector(selectors[index])]));
       const fields = Object.fromEntries(labelFields.map((field, index) => [field, `Custom ${index}`]));
-      await app.settle(success(content({infoPage: doc('infoPage', {...fields, sectionOrder: savedOrder(order),
+      await app.settle(success(content({infoPage: doc('infoPage', {...fields, work: ['Work'], skills: ['Skill'], selectedClients: ['Client'], sectionOrder: savedOrder(order),
         contactLinks: [{label: 'Write', destination: 'email'}]})})));
-      const desktopOrder = [...order.filter(id => id !== 'selectedClients'), 'selectedClients'];
+      const desktopOrder = [...order.filter(id => id !== 'selectedClients' && id !== 'cv'), 'selectedClients'];
       assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), desktopOrder.map(id => `Custom ${legacyOrder.indexOf(id)}`));
-      assert.deepEqual([...root.querySelector('.info-details').children], desktopOrder.slice(0, 4).map(id => original[id]));
+      assert.deepEqual([...root.querySelector('.info-details').children], desktopOrder.slice(0, 3).map(id => original[id]));
       assert.equal(root.querySelector('.info-side-section'), original.selectedClients);
       assert.equal(root.querySelector('.info-contact a').href, 'mailto:published@example.com');
       assert.equal(root.querySelectorAll('.info-columns > .info-column').length, 2);
@@ -297,7 +297,7 @@ test('optional News and Publications omit empty headings, preserve entry order a
       try {
         await app.settle(success(content({infoPage: doc('infoPage', {[id]: value})})));
         assert.equal(app.window.document.querySelector(`.info-${id}`), null);
-        assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(n => n.textContent), defaultLabels);
+        assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(n => n.textContent), []);
       } finally {app.dom.window.close();}
     }
     const app = setup();
@@ -336,19 +336,19 @@ test('seven-section order pins Clients on desktop, follows the saved sequence on
       await app.settle(success(content({infoPage: doc('infoPage', {
         sectionOrder: savedOrder(order), newsLabel: 'Updates', publicationsLabel: 'Books',
         news: [{title: 'A'}, {title: 'B'}], publications: [{title: 'Book', url: 'http://example.com/book'}],
-        cv: [{period: '2026', text: 'CV content'}], work: ['Work content'], skills: ['Skill'],
+        selectedClients: ['Client'], cv: [{period: '2026', text: 'CV content'}], work: ['Work content'], skills: ['Skill'],
         contactLinks: [{label: 'Write', destination: 'email'}],
       })})));
       const check = isMobile => {
         const root = app.window.document.querySelector('.info');
-        const expected = isMobile ? order : [...order.filter(id => id !== 'selectedClients'), 'selectedClients'];
+        const expected = isMobile ? order.filter(id => id !== 'cv') : [...order.filter(id => id !== 'selectedClients' && id !== 'cv'), 'selectedClients'];
         assert.deepEqual([...root.querySelectorAll('h2')].map(n => n.textContent), expected.map(id => labels[id]));
         if (!isMobile) {
           assert.ok(root.querySelector('.info-details > .info-news'));
           assert.ok(root.querySelector('.info-details > .info-publications'));
           assert.ok(root.querySelector('.info-columns > .info-clients.info-side-section'));
         }
-        assert.equal(root.querySelector('.info-cv p').textContent, '2026 CV content');
+        assert.equal(root.querySelector('.info-cv'), null);
         assert.equal(root.querySelector('.info-work p').textContent, 'Work content');
         assert.equal(root.querySelector('.info-contact a').href, 'mailto:published@example.com');
       };
@@ -398,8 +398,8 @@ test('custom Info labels render as plain text in existing headings and survive r
     const nodes = [...root.querySelectorAll('*')];
     const otherContent = app.window.document.querySelector('.main-nav').outerHTML;
     const info = content().infoPage;
-    await app.settle(success(content({infoPage: doc('infoPage', {...info, ...fields})})));
-    assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), labels);
+    await app.settle(success(content({infoPage: doc('infoPage', {...info, ...fields, selectedClients: ['Client']})})));
+    assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), labels.slice(1));
     assert.equal(root.querySelector('h2 b'), null);
     // Existing headings, columns and paragraphs retain their identity.
     for (const node of nodes.filter(node => node.matches('section, div, h2, p'))) assert.ok(root.contains(node));
@@ -408,7 +408,7 @@ test('custom Info labels render as plain text in existing headings and survive r
     assert.equal(root.querySelector('.info-contact a').href, 'mailto:published@example.com');
     assert.equal(app.window.document.querySelector('.main-nav').outerHTML, otherContent);
     app.window.renderInfo();
-    assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(node => node.textContent), labels);
+    assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(node => node.textContent), labels.slice(1));
   } finally {app.dom.window.close();}
 });
 
@@ -420,8 +420,34 @@ test('absent, undefined, null, empty and whitespace labels use defaults without 
       await app.settle(success(content({infoPage: doc('infoPage', {...fields,
         introduction: '', cv: [], work: [], skills: [], contactLinks: [], selectedClients: []})})));
       const root = app.window.document.querySelector('.info');
-      assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), defaultLabels);
+      assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), []);
       assert.ok([...root.querySelectorAll('p')].every(node => node.innerHTML === ''));
     } finally {app.dom.window.close();}
   }
+});
+
+
+test('all empty Info fields disappear, while URL-only entries and meaningful lines survive', async () => {
+  for (const empty of [undefined, null, '', '  ', [], [null, '', '  ']]) {
+    const app = setup();
+    try {
+      await app.settle(success(content({infoPage: doc('infoPage', {
+        cv: [{text: 'Historical CV'}], work: empty, skills: empty, selectedClients: empty,
+        contactLinks: empty, news: empty, publications: empty
+      })})));
+      assert.equal(app.window.document.querySelectorAll('.info h2').length, 0);
+      assert.equal(app.window.document.querySelector('.info-columns').hidden, true);
+      assert.equal(app.window.document.querySelectorAll('.project-footer').length, 1);
+    } finally {app.dom.window.close();}
+  }
+  const app = setup();
+  try {
+    await app.settle(success(content({infoPage: doc('infoPage', {
+      work: [null, ' ', 'First\nSecond'], news: [{url: 'https://example.com/news'}],
+      publications: [{additionalInfo: '2026'}]
+    })})));
+    assert.equal(app.window.document.querySelector('.info-work p').innerHTML, 'First<br>Second');
+    assert.equal(app.window.document.querySelector('.info-news a').textContent, 'https://example.com/news');
+    assert.equal(app.window.document.querySelector('.info-publications p').textContent, '2026');
+  } finally {app.dom.window.close();}
 });

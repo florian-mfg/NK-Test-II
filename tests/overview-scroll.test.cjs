@@ -11,6 +11,16 @@ const doc = (type, fields = {}) => ({_id: type, _type: type, ...fields});
 function setup(hash = '#project/ethereal-tides', mobile = false) {
   const dom = new JSDOM(read('index.html'), {url: `https://example.com/portfolio/${hash}`, runScripts: 'outside-only', pretendToBeVisual: true});
   const {window} = dom;
+  // Advance paint explicitly: wall-clock RAF can reveal the page before the
+  // pre-paint assertion when a busy test process yields to setImmediate.
+  let frameId = 0;
+  const frames = new Map();
+  window.requestAnimationFrame = callback => {frames.set(++frameId, callback); return frameId;};
+  window.cancelAnimationFrame = id => frames.delete(id);
+  window.advanceTestFrame = () => {
+    const callbacks = [...frames.values()]; frames.clear();
+    callbacks.forEach(callback => callback(window.performance.now()));
+  };
   const scrollCalls = [];
   window.scrollTo = (x, y) => {if (typeof x === "object") {y = x.top; x = x.left;} scrollCalls.push([x, y]); window.scrollY = y; window.scrollX = x;};
   window.matchMedia = () => ({matches: mobile, addEventListener() {}});
@@ -37,7 +47,12 @@ const snapshot = adapter.normalize({
   projects: [{_type: 'project', _id: 'p', slug: {current: 'scroll-project'}, title: 'Scroll project', category: 'Video', categories: ['video', 'commissioned', 'graphic'], modules: [{_type: 'full', type: 'full', height: 'large', slots: [null]}, {_type: 'spacer', type: 'spacer', size: 'large'}]}],
   selectedWork: doc('selectedWork', {video: [{_ref: 'p'}], commissioned: [{_ref: 'p'}], graphic: [{_ref: 'p'}]})
 });
-const frame = window => new Promise(resolve => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
+const frame = async window => {
+  for (let i = 0; i < 2; i++) {
+    window.advanceTestFrame();
+    await new Promise(resolve => setImmediate(resolve));
+  }
+};
 async function clickRoute(window, link) {
   // Exercise the delegated native click handlers; drive the same hash router
   // explicitly because jsdom queues anchor navigation separately.

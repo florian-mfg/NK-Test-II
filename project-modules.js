@@ -27,7 +27,7 @@ function moduleImagePosition(image) {
   const crop = image.crop || {left: 0, right: 0, top: 0, bottom: 0};
   const x = Math.max(0, Math.min(1, (image.hotspot.x - crop.left) / (1 - crop.left - crop.right)));
   const y = Math.max(0, Math.min(1, (image.hotspot.y - crop.top) / (1 - crop.top - crop.bottom)));
-  return ` style="object-position: ${x * 100}% ${y * 100}%"`;
+  return ` style="object-position: ${x * 100}% ${y * 100}%; --media-offset-x: ${x}; --media-offset-y: ${y}"`;
 }
 
 function renderProjectModule(module, title = "", mode = "detail") {
@@ -90,3 +90,60 @@ function renderProjectModule(module, title = "", mode = "detail") {
 function renderProjectModules(modules, title = "", mode = "detail") {
   return modules.map(module => renderProjectModule(module, title, mode)).join("");
 }
+
+// Keep Crop paint edges on physical pixels, independently of layout geometry.
+// Fitting the source proportionally first avoids object-fit rounding and fractional
+// overflow-mask antialiasing. Auto Height stays in native, unclipped document flow.
+(function () {
+  if (!document.documentElement || typeof ResizeObserver === "undefined") return;
+  let frame = 0;
+  const observed = new Set();
+  const observer = new ResizeObserver(schedule);
+  function schedule() {
+    if (!globalThis.document?.documentElement || (!observed.size && !document.querySelector('.project-module'))) return;
+    if (!frame) frame = requestAnimationFrame(update);
+  }
+  function update() {
+    frame = 0;
+    if (!globalThis.document?.documentElement) return;
+    const rows = new Set(document.querySelectorAll('.project-module'));
+    for (const row of observed) if (!rows.has(row)) { observer.unobserve?.(row); observed.delete(row); }
+    for (const row of rows) if (!observed.has(row)) { observer.observe(row); observed.add(row); }
+    const dpr = window.devicePixelRatio || 1;
+    const snap = value => Math.round(value * dpr) / dpr;
+    const writes = [];
+    for (const media of document.querySelectorAll('.project-slot > img, .project-video > video')) {
+      const slot = media.closest('.project-slot'), row = slot?.parentElement;
+      if (!row || row.classList.contains('height-auto') || slot.classList.contains('media-display-auto')) continue;
+      const video = media.tagName === 'VIDEO', host = video ? media.parentElement : slot;
+      const ratio = video ? media.videoWidth / media.videoHeight : media.naturalWidth / media.naturalHeight;
+      if (!Number.isFinite(ratio) || ratio <= 0) continue;
+      const box = host.getBoundingClientRect();
+      if (!box.width || !box.height) continue;
+      const left = snap(box.left), top = snap(box.top + scrollY) - scrollY;
+      const width = snap(box.right) - left, height = snap(box.bottom + scrollY) - scrollY - top;
+      const paintHeight = Math.max(height, width / ratio), paintWidth = paintHeight * ratio;
+      const position = getComputedStyle(media);
+      const x = video ? .5 : parseFloat(position.getPropertyValue('--media-offset-x'));
+      const y = video ? .5 : parseFloat(position.getPropertyValue('--media-offset-y'));
+      const cropLeft = (paintWidth - width) * (Number.isFinite(x) ? x : .5);
+      const cropTop = (paintHeight - height) * (Number.isFinite(y) ? y : .5);
+      writes.push({media, width:paintWidth, height:paintHeight, left:left-box.left-cropLeft, top:top-box.top-cropTop,
+        clip:`rect(${cropTop}px, ${cropLeft+width}px, ${cropTop+height}px, ${cropLeft}px)`});
+    }
+    for (const value of writes) {
+      value.media.classList.add('pixel-crop-media');
+      for (const key of ['width','height','left','top']) value.media.style[key] = `${value[key]}px`;
+      value.media.style.clip = value.clip;
+      // Override the inset shorthand used by the native-video fallback.
+      value.media.style.right = value.media.style.bottom = 'auto';
+    }
+  }
+  document.addEventListener('load', schedule, true);
+  document.addEventListener('loadedmetadata', schedule, true);
+  document.addEventListener('resize', schedule, true);
+  document.fonts?.addEventListener('loadingdone', schedule);
+  window.addEventListener('resize', schedule);
+  new MutationObserver(schedule).observe(document.documentElement, {childList:true,subtree:true});
+  schedule();
+})();

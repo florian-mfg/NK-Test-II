@@ -310,13 +310,14 @@
   }
   function infoEntries(value) {
     return (Array.isArray(value) ? value : []).flatMap(entry => {
-      if (!record(entry) || !text(entry.title)) return [];
+      if (!record(entry)) return [];
       let href = null;
       try {
         const url = new URL(text(entry.url));
         if (['http:', 'https:'].includes(url.protocol) && !url.username && !url.password && !/[\r\n]/.test(entry.url)) href = url.href;
       } catch { /* Missing or invalid optional URLs render as plain text. */ }
-      return [{title: entry.title, additionalInfo: string(entry.additionalInfo), href}];
+      if (!text(entry.title) && !text(entry.additionalInfo) && !href) return [];
+      return [{title: string(entry.title), additionalInfo: string(entry.additionalInfo), href}];
     });
   }
   function sharedLink(value, settings, allowed, issues, path) {
@@ -465,6 +466,7 @@
     navigation.categories.sort((a, b) => categories.indexOf(a.category) - categories.indexOf(b.category));
 
     const infoDoc = singleton(raw, 'infoPage', issues, availability);
+    const infoValue = value => typeof value === 'string' && !value.trim() ? undefined : value;
     const defaultInfoOrder = ['cv', 'work', 'skills', 'news', 'publications', 'contactLinks', 'selectedClients'];
     // Ignore unknown/duplicate identifiers and append omitted sections. Ordering
     // metadata must never suppress valid legacy Info content or contact links.
@@ -481,14 +483,14 @@
       publicationsLabel: text(infoDoc.publicationsLabel) || 'Publications',
       contactLabel: text(infoDoc.contactLabel) || 'Contact',
       selectedClientsLabel: text(infoDoc.selectedClientsLabel) || 'Selected Clients',
-      cv: array(infoDoc.cv, issues, 'infoPage.cv').flatMap((entry, index) => {
+      cv: array(infoValue(infoDoc.cv), issues, 'infoPage.cv').flatMap((entry, index) => {
         if (record(entry) && text(entry.text)) return [{period: string(entry.period), text: entry.text}];
         issue(issues, `infoPage.cv[${index}]`, 'invalid_cv', 'CV entry without text omitted.'); return [];
       }),
-      work: stringList(infoDoc.work, issues, 'infoPage.work'), skills: stringList(infoDoc.skills, issues, 'infoPage.skills'),
+      work: stringList(infoValue(infoDoc.work), issues, 'infoPage.work'), skills: stringList(infoValue(infoDoc.skills), issues, 'infoPage.skills'),
       news: infoEntries(infoDoc.news), publications: infoEntries(infoDoc.publications),
-      selectedClients: stringList(infoDoc.selectedClients, issues, 'infoPage.selectedClients'),
-      contactLinks: linkList(infoDoc.contactLinks, siteSettings, ['email', 'instagram', 'phone'], issues, 'infoPage.contactLinks')
+      selectedClients: stringList(infoValue(infoDoc.selectedClients), issues, 'infoPage.selectedClients'),
+      contactLinks: linkList(infoValue(infoDoc.contactLinks), siteSettings, ['email', 'instagram', 'phone'], issues, 'infoPage.contactLinks')
     } : null;
 
     const projects = [];

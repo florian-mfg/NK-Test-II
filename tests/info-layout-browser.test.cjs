@@ -1,10 +1,10 @@
 const test=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs');
-const root=path.join(__dirname,'..'),out=path.join(root,'reports','info-document-scroll');
+const root=path.join(__dirname,'..'),out=process.env.INFO_LAYOUT_OUTPUT_DIR||path.join(root,'reports','info-current-refinements');
 for(const engine of ['chromium','webkit'])test(`${engine}: Info document scrolling, intrinsic long text and preserved normal baselines`,{skip:!process.env.BROWSER_TEST,timeout:120000},async()=>{
  const pw=require(process.env.PLAYWRIGHT_MODULE_PATH||'playwright-core');
  const browser=await pw[engine].launch({headless:true,...(engine==='chromium'?{executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'}:{})});
  fs.mkdirSync(out,{recursive:true});const results=[];
- const order=['contactLinks','work','cv','skills','news','publications','selectedClients'];
+ const order=['contactLinks','work','skills','news','publications','selectedClients'];
  const labels={contactLinks:'Contact',work:'Teaching',cv:'CV',skills:'Services',news:'News',publications:'Publications',selectedClients:'Selected Clients'};
  const normal='A Berlin based multidisciplinary designer, working in various fields of photography, generativity, motion design and cgi.';
  try{
@@ -46,18 +46,21 @@ for(const engine of ['chromium','webkit'])test(`${engine}: Info document scrolli
       assert.ok(Math.abs(data.baselines[0]-before.baselines[0])<.1,'normal baseline unchanged');
     }
     for(const key of ['introFont','introLine','sectionFont','gap'])assert.equal(data[key],before[key],`${key} preserved`);
-    assert.deepEqual(data.contentX,before.contentX);assert.deepEqual(data.labelX,before.labelX);
+    assert.equal(data.contentX[0],before.contentX[0]);assert.equal(data.labelX[0],before.labelX[0]);
   }
   assert.equal(data.overflow,false,JSON.stringify({width,height,kind,data}));assert.equal(data.intro.x,data.pad);const previousFont=mobile?Math.min(40,Math.max(26,width*.068)):Math.min(64,Math.max(28,width*.032));assert.ok(Math.abs(data.introFont-(mobile?Math.max(22,Math.min(30,width*.056)):Math.max(14,previousFont*.5)))<.01,'responsive introduction size');assert.equal(data.weight,'300');assert.match(data.family,/WF Raglan Neue/);assert.ok(Math.abs(data.introLine/data.introFont-1.1)<.01);assert.ok(data.group.y>data.header.bottom,'visible introduction clears navigation');
-  assert.ok(Math.abs(data.intro.width-(width-2*data.pad)*(mobile?1:8/12))<.1,'existing track width');
+  assert.ok(Math.abs(data.intro.width-(mobile?width-2*data.pad:width*.49))<.1,'49vw desktop statement and existing mobile width');
   assert.ok(data.columns.y>=data.last.bottom+data.gap-.2,JSON.stringify({width,height,kind,data}));assert.equal(data.position,'static');
   if(!mobile){assert.ok(data.columns.y>=height/2+data.offset-.2);assert.ok(Math.abs(data.clients.x-(data.pad+(width-2*data.pad)*.51))<.1,'clients stays in existing right column');}
-  else {assert.ok(data.baselines[0]>=height/2-.2);assert.ok(Math.abs(data.columns.y-data.last.bottom-data.gap)<.2,'mobile introduction bottom anchor');}
+  else {assert.ok(data.baselines[0]>=height/2-.2);}
   assert.deepEqual(data.headingOrder,order.map(id=>labels[id]));assert.ok(data.contentX.every(x=>Math.abs(x-data.contentX[0])<.1));assert.ok(data.labelX.every(x=>Math.abs(x-data.pad)<.1));assert.equal(data.contact,'mailto:hello@example.com');assert.equal(data.news,'https://example.com/news');
-  assert.ok(data.docHeight>height,'content controls page height');await page.evaluate(()=>scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}));await page.waitForFunction(()=>scrollY>0);await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));await page.waitForFunction(()=>scrollY===0);
+  assert.equal(await page.locator('.info-cv').count(),0);
+  const footer=await page.locator('.project-footer').evaluate(n=>({top:n.getBoundingClientRect().top,position:getComputedStyle(n).position,links:[...n.querySelectorAll('a')].map(a=>a.getAttribute('href'))}));
+  assert.ok(footer.top>=data.info.bottom-.1);assert.equal(footer.position,'static');assert.ok(footer.links.includes('#imprint'));assert.ok(footer.links.includes('#privacy-policy'));
+  assert.ok(data.docHeight>height,'content controls page height');await page.evaluate(()=>scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}));await page.waitForFunction(()=>scrollY>0);assert.ok(await page.locator('.project-footer-links').evaluate(n=>{const r=n.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'footer links reachable by document scrolling');await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));await page.waitForFunction(()=>scrollY===0);
   if((width===1440&&height===900)||width===390)await page.screenshot({path:path.join(out,`${engine}-${width}x${height}-${kind}.png`),fullPage:true});
   {
-   assert.ok(Math.abs(data.last.bottom-(data.columns.y-data.gap))<.1,'last line stays on the fixed bottom anchor');
+   assert.ok(Math.abs(data.intro.y-data.group.y)<.1,'statement starts at top of content area');
    const prior=results.find(r=>r.width===width&&r.height===height&&r.kind==='short');
    if(prior && kind==='long') {
      assert.ok(data.columns.y>prior.columnsTop,'long text moves lower sections downward');

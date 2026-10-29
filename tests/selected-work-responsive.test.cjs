@@ -66,10 +66,10 @@ test('Selected Work compositions retain module geometry and responsive stacking 
           assert.ok(Math.abs(slot.width-expected)<1,`${row.type} at ${width}: slot width ${slot.width}, expected ${expected}`);
           if(width<=700) {assert.ok(Math.abs(slot.y-lastBottom)<1);lastBottom=slot.y+slot.height}
           else assert.ok(Math.abs(slot.y-row.y)<1);
-          if(slot.objectFit) assert.equal(slot.objectFit,'cover');
+          if(slot.objectFit) assert.equal(slot.objectFit,'fill');
           if(slot.frame) {
-            assert.ok(Math.abs(slot.frame.width-slot.video.width)<.1);
-            assert.ok(Math.abs(slot.frame.height-slot.video.height)<.1);
+            assert.ok(slot.frame.width>=slot.video.width-1.01);
+            assert.ok(slot.frame.height>=slot.video.height-1.01);
 
           }
         }
