@@ -24,6 +24,18 @@ for(const engine of ['chromium','webkit']) test(`${engine}: real loading, failur
  });
  await page.goto('https://preview.test/#home',{waitUntil:'domcontentloaded'});
  await page.waitForSelector('.frontpage-loading-indicator');
+ const bar = await page.locator('.frontpage-loading-indicator').evaluate(n => {
+  const s=getComputedStyle(n), r=n.getBoundingClientRect(), fill=n.firstElementChild;
+  fill.style.transform='scaleX(1)';const full=fill.getBoundingClientRect().width;
+  fill.style.transform='scaleX(.25)';const quarter=fill.getBoundingClientRect().width;
+  fill.style.transform='scaleX(.5)';
+  const halfway=fill.getBoundingClientRect().width;
+  fill.style.transform='scaleX(0)';
+  return {width:r.width,height:r.height,full,quarter,bottom:innerHeight-r.bottom,center:r.x+r.width/2,track:s.backgroundColor,fill:getComputedStyle(fill).backgroundColor,inset:getComputedStyle(n,'::before').content,border:s.borderWidth,shadow:s.boxShadow,origin:getComputedStyle(fill).transformOrigin,halfway};
+ });
+ assert.equal(bar.width,170);assert.equal(bar.height,3);assert.equal(bar.bottom,24);assert.equal(bar.center,720);
+ assert.equal(bar.track,'rgba(0, 0, 0, 0)');assert.equal(bar.fill,'rgb(0, 0, 0)');assert.equal(bar.inset,'none');assert.equal(bar.border,'0px');assert.equal(bar.shadow,'none');assert.ok(bar.origin.startsWith('0px'));assert.equal(bar.halfway,85);assert.equal(bar.quarter,42.5);assert.equal(bar.full,170);
+
  const geometry=()=>page.evaluate(()=>{const brand=document.querySelector('.site-header .brand'),a=brand.firstElementChild.getBoundingClientRect(),b=brand.lastElementChild.getBoundingClientRect();return {a:{x:a.x,y:a.y,right:a.right},b:{x:b.x,y:b.y,right:b.right},width:innerWidth,nav:getComputedStyle(document.querySelector('.main-nav')).visibility,ready:document.querySelector('.frontpage-fade').dataset.ready,overflow:document.documentElement.scrollWidth>innerWidth};});
  await page.waitForTimeout(100);const initial=await geometry();assert.ok(Math.abs(initial.a.x-12)<.1);assert.ok(initial.b.x>initial.a.right&&initial.b.x-initial.a.right<10);assert.equal(initial.a.y,initial.b.y);assert.equal(initial.nav,'visible');assert.equal(initial.ready,undefined);
  await page.evaluate(()=>{for(const [x,y] of [[500,200],[800,400]])document.querySelector('.home').dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:x,clientY:y,bubbles:true}));});assert.equal(await page.locator('.frontpage-fade-media').count(),0);
@@ -32,6 +44,12 @@ for(const engine of ['chromium','webkit']) test(`${engine}: real loading, failur
  assert.equal(await page.locator('.frontpage-loading-indicator').count(),0);
  await page.locator('.site-header .brand').evaluate(n=>n.click());await page.waitForSelector('.frontpage-loading-indicator');
  hold();await page.waitForFunction(()=>document.querySelector('.frontpage-fade').dataset.ready==='true');
+ // Capture a controlled half-progress visual after releasing fixture requests,
+ // so WebKit's font-loading barrier cannot deadlock behind the media gate.
+ await page.evaluate(()=>{const n=document.createElement('div');n.className='frontpage-loading-indicator';n.dataset.testSnapshot='true';n.innerHTML='<span style="transform:scaleX(.5)"></span>';document.body.append(n);});
+ await page.screenshot({path:`/tmp/nk-layout-loading-${engine}.png`});
+ await page.locator('[data-test-snapshot]').evaluate(n=>n.remove());
+
  assert.equal(await page.evaluate(()=>window.abandonedLayer.dataset.ready),undefined);
  const final=await geometry();assert.equal(final.a.x,initial.a.x);assert.equal(final.b.x,initial.b.x);assert.ok(Math.abs(final.a.y-initial.a.y)<.1,JSON.stringify({initial,final}));assert.equal(final.nav,'visible');assert.ok(final.b.x>final.a.right&&final.b.x-final.a.right<10);assert.equal(final.overflow,false);
  const result=await page.evaluate(()=>JSON.parse(document.querySelector('.frontpage-fade').dataset.preparation));assert.equal(result.filter(r=>r.status==='ready').length,19);assert.equal(result.filter(r=>r.status==='failed').length,1);

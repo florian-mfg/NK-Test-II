@@ -31,10 +31,10 @@
   const document = root.document, cache = new Map();
   const targets = '.site-header > a, .site-header .main-nav :is(a, .work-toggle), .mobile-menu-toggle, .project-title > span, .project-kind, .detail-back, .detail-info-label, .detail-sound-control, .archive-list, .project-video-toggle';
   let timer, cursorTimer, cursorPoint;
-  // Frontpage supplies already-decoded images during preparation. Store only
-  // the small luminance grid, avoiding a second image request during input.
+  // Keep the preparation API compatible with the media loader; fixed-color
+  // routes skip sampling, while other routes may cache a small luminance grid.
   api.prepareImage = (src, image) => {
-    if (cache.has(src)) return;
+    if (document.body.matches('.is-home, .is-index, .is-work') || cache.has(src)) return;
     const data = {grid: null, width: image.naturalWidth, height: image.naturalHeight};
     cache.set(src, data);
     if (cache.size > 64) cache.delete(cache.keys().next().value);
@@ -67,21 +67,6 @@
     return data;
   }
   function background(x, y, target) {
-    // Home composites its bounded trail over white using the existing binary colors.
-    if (document.body.matches('.is-home') && target.closest('.site-header')) {
-      let luminance = 1;
-      for (const node of document.querySelectorAll('.frontpage-fade-media')) {
-        const box = node.getBoundingClientRect(), opacity = Number(node.style.opacity);
-        if (!opacity || x < box.left || x > box.right || y < box.top || y > box.bottom || !node.matches('img, video')) continue;
-        const src = node.matches('video') ? node.poster : node.currentSrc || node.src;
-        if (!src) {luminance = .1 * opacity + luminance * (1-opacity); continue;}
-        const data = imageData(src);
-        if (!data.grid) continue;
-        const value = sample(data.grid, (x-box.left)/box.width, (y-box.top)/box.height);
-        luminance = value * opacity + luminance * (1-opacity);
-      }
-      return {setting:'auto', luminance};
-    }
     const light = !document.body.matches('.is-index') && (root.matchMedia('(max-width: 700px)').matches || document.body.matches('.is-work, .is-detail, .is-info'));
     const stack = document.elementsFromPoint(x, y);
     const media = stack.find(node => node.matches('img, video, .project-video, .home, .project-slot.is-empty, .project-slot-text'));
@@ -117,6 +102,7 @@
     if (color !== previous) target.style.setProperty('--contrast-color', color);
   }
   function cursorRefresh() {
+    if (document.body.matches('.is-home, .is-index, .is-work')) return;
     const cursor = document.querySelector('.open-cursor');
     if (cursorPoint && cursor && !cursor.hidden) apply(cursor, ...cursorPoint);
   }
@@ -126,6 +112,8 @@
   };
   function refresh() {
     timer = null;
+    // These routes use fixed CSS colors and never inspect background media.
+    if (document.body.matches('.is-home, .is-index, .is-work')) return;
     for (const target of document.querySelectorAll(targets)) {
       const rect = target.getBoundingClientRect();
       if (!rect.width || !rect.height || rect.bottom <= 0 || rect.top >= root.innerHeight) continue;

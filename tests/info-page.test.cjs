@@ -39,7 +39,7 @@ function setup(hash = '#info', mobile = false) {
 }
 const success = data => ({ok: true, data, error: null});
 
-test('Info Contact links only Site Settings values, leaving labels plain and opening only Instagram in a new tab', async () => {
+test('Info Contact links only Site Settings values, omitting contact labels and opening only Instagram in a new tab', async () => {
   const app = setup();
   try {
     const check = (email, instagram) => {
@@ -53,10 +53,10 @@ test('Info Contact links only Site Settings values, leaving labels plain and ope
       assert.equal(social.target, '_blank');
       assert.equal(social.rel, 'noopener noreferrer');
       assert.equal(mail.textContent, 'published@example.com');
-      assert.equal(social.textContent, 'example');
-      assert.equal(mail.previousSibling.textContent, 'Mail: ');
-      assert.equal(social.previousSibling.textContent, 'Instagram: ');
-      assert.equal(root.querySelector('p').textContent, 'Mail: published@example.comInstagram: exampleCall');
+      assert.equal(social.textContent, '@example');
+      assert.equal(mail.previousSibling, null);
+      assert.equal(social.previousSibling.nodeName, 'BR');
+      assert.equal(root.querySelector('p').textContent, 'published@example.com@exampleCall');
     };
     assert.equal(app.window.document.querySelector('.info-contact a'), null, 'No hardcoded contacts before Site Settings loads');
     await app.settle(success(content({
@@ -449,5 +449,25 @@ test('all empty Info fields disappear, while URL-only entries and meaningful lin
     assert.equal(app.window.document.querySelector('.info-work p').innerHTML, 'First<br>Second');
     assert.equal(app.window.document.querySelector('.info-news a').textContent, 'https://example.com/news');
     assert.equal(app.window.document.querySelector('.info-publications p').textContent, '2026');
+  } finally {app.dom.window.close();}
+});
+
+
+test('Info alone renders a fixed two-line Webdesign credit and preserves it through CMS hydration', async () => {
+  const app=setup();
+  try {
+    const check=()=>{
+      const credit=app.window.document.querySelector('.project-footer .info-footer-credit');
+      assert.equal(credit.querySelector('h2').textContent,'Webdesign');
+      assert.equal(credit.querySelector('h2 a'),null);
+      const a=credit.querySelector('a');
+      assert.equal(a.innerHTML,'MfG<br>Meisner Florian Gestaltung');
+      assert.equal(a.href,'https://meisnerfloriangestaltung.com/');
+      assert.equal(a.target,'_blank');assert.equal(a.rel,'noopener noreferrer');
+    };
+    check();await app.settle(success(content()));check();
+    app.window.renderInfo();check();
+    app.window.location.hash='#work/video';app.window.route();
+    assert.equal(app.window.document.querySelector('.info-footer-credit'),null);
   } finally {app.dom.window.close();}
 });

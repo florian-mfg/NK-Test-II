@@ -3,9 +3,9 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const path=require('node:path');
 
-test('shared contrast adapts real images, Index changes, cursor, MP4 overrides and mobile navigation', {skip:!process.env.BROWSER_TEST},async()=>{
- const {chromium}=require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
- const browser=await chromium.launch({headless:true,executablePath:process.env.BROWSER_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});
+for (const engine of ['chromium', 'webkit']) test(`${engine}: fixed Frontpage/Index colors and shared contrast on other pages`, {skip:!process.env.BROWSER_TEST},async()=>{
+ const pw=require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
+ const browser=await pw[engine].launch({headless:true,...(engine==='chromium'?{executablePath:process.env.BROWSER_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'}:{})});
  const image=id=>({asset:{_ref:`image-${id}-1200x800-png`}});
  const project=(id,textColor='auto',video=false)=>({_id:id,_type:'project',slug:{current:id},title:id,category:'Commissioned',textColor,description:'Project information',modules:[{type:'full',height:'viewport',slots:[{type:'image',image:image(id)}]}],
   selectedWorkPreview:{composition:[{_type:'preview-full',type:'full',height:'viewport',slots:[video?{type:'mp4',video:{asset:{_ref:'file-demo-mp4'}}}:{type:'image',image:image(id)}]}]}});
@@ -13,6 +13,8 @@ test('shared contrast adapts real images, Index changes, cursor, MP4 overrides a
  const projects=[project('light'),project('dark'),project('light','white'),project('video','black',true),project('videoauto','auto',true)];
  projects[2]._id='forced';projects[2].slug.current='forced';
  const raw=()=>({projects,homePage:{_id:'homePage',_type:'homePage',video:{asset:{_ref:'file-demo-mp4'}},textColor:homeColor},
+  siteSettings:{_id:'siteSettings',_type:'siteSettings',email:'mail@nicolas-kawohl.com',instagram:'https://www.instagram.com/nicocaw/'},
+  infoPage:{_id:'infoPage',_type:'infoPage',introduction:'Artist Statement',contactLinks:[{destination:'instagram',label:'Instagram'},{destination:'email',label:'Mail'}]},
   selectedWork:{_id:'selectedWork',_type:'selectedWork',commissioned:projects.map(p=>({_ref:p._id})),video:[],graphic:[]},
   indexPage:{_id:'indexPage',_type:'indexPage',entries:[{displayTitle:'Cycle',previewImages:[image('light'),image('dark')]},{displayTitle:'Next',textColor:'black',previewImages:[image('dark')]}]}});
  try {
@@ -38,7 +40,7 @@ test('shared contrast adapts real images, Index changes, cursor, MP4 overrides a
   const color=async(selector,expected)=>page.waitForFunction(({selector,expected})=>getComputedStyle(document.querySelector(selector)).color===expected,{selector,expected},{timeout:5000});
   await page.goto('https://preview.test/#work/commissioned');
   await page.waitForSelector('.project-title',{timeout:5000});
-  for(const [index,expected] of [[0,'rgb(0, 0, 0)'],[1,'rgb(255, 255, 255)'],[2,'rgb(255, 255, 255)'],[3,'rgb(0, 0, 0)'],[4,'rgb(255, 255, 255)']]) {
+  for(const [index,expected] of [0,1,2,3,4].map(i=>[i,'rgb(255, 255, 255)'])) {
    const article=page.locator('.project-preview').nth(index);
    await article.scrollIntoViewIfNeeded();
    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -49,33 +51,48 @@ test('shared contrast adapts real images, Index changes, cursor, MP4 overrides a
    if(index===0) await page.screenshot({path:'/tmp/nk-contrast-desktop.png'});
   }
   const reads=await page.evaluate(()=>window.pixelReads);
+  assert.equal(reads,0,'Overviews never sample media for contrast');
   for(let i=0;i<10;i++) await page.mouse.move(300+i,450);
   assert.equal(await page.evaluate(()=>window.pixelReads),reads);
   await page.goto('https://preview.test/#archive');
-  await color('.archive-list','rgb(0, 0, 0)');
+  const indexReads=await page.evaluate(()=>window.pixelReads);
+  await color('.archive-list','rgb(255, 255, 255)');
   await page.locator('.archive-row').first().click();
   await color('.archive-list','rgb(255, 255, 255)');
   await color('.brand','rgb(255, 255, 255)');
   await page.locator('.archive-row').nth(1).hover();
-  await color('.archive-list','rgb(0, 0, 0)');
-  await color('.brand','rgb(0, 0, 0)');
+  await color('.archive-list','rgb(255, 255, 255)');
+  await color('.brand','rgb(255, 255, 255)');
+  await page.evaluate(()=>window.Contrast.refresh());
+  assert.equal(await page.evaluate(()=>window.pixelReads),indexReads,'Index never samples media');
   for(const [setting,expected] of [['auto','rgb(0, 0, 0)'],['black','rgb(0, 0, 0)'],['white','rgb(0, 0, 0)']]) {
    homeColor=setting;await page.goto('https://preview.test/#home');await page.reload();
    await page.waitForFunction(()=>document.querySelector('.frontpage-fade')?.dataset.ready==='true');
    await color('.site-header .brand',expected);
    const preparedReads=await page.evaluate(()=>window.pixelReads);
-   assert.equal(preparedReads,20,'Frontpage samples its decoded images during preparation');
+   assert.equal(preparedReads,0,'Frontpage never samples media for contrast');
    await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
    await page.mouse.move(500,200);await page.mouse.move(501,200);
-   assert.equal(await page.evaluate(()=>window.pixelReads),preparedReads,'input reuses prepared contrast samples');
+   await page.evaluate(()=>window.Contrast.refresh());
+   await color('.site-header .brand',expected);
+   await color('.main-nav a',expected);
+   assert.equal(await page.evaluate(()=>window.pixelReads),preparedReads,'Frontpage input never samples media');
    assert.equal(await page.locator('.home iframe').count(),0);
    assert.equal(await page.locator('.frontpage-fade-media').count(),1);
   }
   await page.setViewportSize({width:390,height:844});
   await page.goto('https://preview.test/#archive');
-  await color('.archive-list','rgb(0, 0, 0)');
+  await color('.archive-list','rgb(255, 255, 255)');
   await page.waitForFunction(()=>getComputedStyle(document.querySelector('.archive-background img')).opacity==='1');
+  await color('.brand','rgb(255, 255, 255)');
+  await color('.mobile-menu-toggle','rgb(255, 255, 255)');
   await page.screenshot({path:'/tmp/nk-contrast-mobile-index.png'});
+  await page.goto('https://preview.test/#home');
+  await page.waitForFunction(()=>document.querySelector('.frontpage-fade')?.dataset.ready==='true');
+  await page.touchscreen.tap(200,400);
+  await page.evaluate(()=>window.Contrast.refresh());
+  await color('.brand','rgb(0, 0, 0)');
+  await color('.mobile-menu-toggle','rgb(0, 0, 0)');
   await page.setViewportSize({width:1440,height:900});
   await page.goto('https://preview.test/#project/dark');
   await color('.detail-back','rgb(255, 255, 255)');
@@ -100,10 +117,19 @@ test('shared contrast adapts real images, Index changes, cursor, MP4 overrides a
   await color('.project-title > span','rgb(255, 255, 255)');
   await page.evaluate(()=>window.Contrast.refresh());
   await color('.project-title > span','rgb(255, 255, 255)');
-  await page.setViewportSize({width:390,height:844});
+  for (const width of [1440,390]) {
+   await page.setViewportSize({width,height:844});
+   await page.goto('https://preview.test/#info');
+   await page.waitForSelector('.info-contact-value');
+   assert.equal(await page.locator('.info-contact p').textContent(),'@nicocawmail@nicolas-kawohl.com');
+   assert.equal(await page.locator('.info-contact p').evaluate(p=>[...p.childNodes].map(n=>n.nodeName).join(',')),'A,BR,A');
+  }
 
   await page.goto('https://preview.test/#info');
   await color('.site-header .brand','rgb(0, 0, 0)');
+  assert.equal(await page.locator('.info-contact p').textContent(),'@nicocawmail@nicolas-kawohl.com');
+  assert.equal(await page.locator('.info-contact a').first().getAttribute('href'),'https://www.instagram.com/nicocaw/');
+  assert.equal(await page.locator('.info-contact a').nth(1).getAttribute('href'),'mailto:mail@nicolas-kawohl.com');
   await page.locator('.mobile-menu-toggle').tap();
   assert.equal(await page.locator('.mobile-menu').evaluate(node=>node.open),true);
   assert.equal(await page.locator('.mobile-menu-header').evaluate(node=>getComputedStyle(node).color),'rgb(0, 0, 0)');

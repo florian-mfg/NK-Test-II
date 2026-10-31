@@ -43,11 +43,11 @@ for (const engine of (process.env.INFO_TEST_ENGINES?.split(',') || ['chromium', 
         const visible=[...info.querySelectorAll('.info-intro, .info-columns section')].filter(n=>n.getClientRects().length);
         const intro=info.querySelector('.info-intro'), style=getComputedStyle(intro), columns=info.querySelector('.info-columns');
         return {lastBottom:visible.length?Math.max(...visible.map(n=>rect(n).b)):rect(info).y+parseFloat(getComputedStyle(info).paddingTop),
-          info:rect(info),footer:rect(footer),links:rect(links),columns:rect(columns),intro:rect(intro),
+          credit:rect(footer.querySelector('.info-footer-credit')),creditLabel:rect(footer.querySelector('.info-footer-credit h2')),creditValue:rect(footer.querySelector('.info-footer-credit p')),reference:info.querySelector('.info-details section')?{label:rect(info.querySelector('.info-details section h2')),value:rect(info.querySelector('.info-details section p'))}:null,creditFont:getComputedStyle(footer.querySelector('.info-footer-credit')).font,linkFont:getComputedStyle(links.querySelector('a')).font,creditHref:footer.querySelector('.info-footer-credit a').href,creditTarget:footer.querySelector('.info-footer-credit a').target,creditRel:footer.querySelector('.info-footer-credit a').rel,info:rect(info),footer:rect(footer),links:rect(links),columns:rect(columns),intro:rect(intro),
           typography:[style.fontFamily,style.fontSize,style.fontWeight,style.lineHeight,style.letterSpacing],
           sections:visible.filter(n=>n.tagName==='SECTION').map(n=>({name:n.className,box:rect(n)})),
           pad:parseFloat(getComputedStyle(info).paddingBottom),position:getComputedStyle(footer).position,
-          paddingTop:parseFloat(getComputedStyle(footer).paddingTop),marginTop:getComputedStyle(footer).marginTop,
+          paddingBottom:parseFloat(getComputedStyle(footer).paddingBottom),paddingTop:parseFloat(getComputedStyle(footer).paddingTop),marginTop:getComputedStyle(footer).marginTop,
           introContentBottom:rect(info.querySelector('.info-intro-content')).b,introGap:parseFloat(getComputedStyle(info.querySelector('.info-introduction')).paddingBottom),baselineOffset:parseFloat(getComputedStyle(info).getPropertyValue('--info-baseline-offset'))||0,grid:getComputedStyle(columns).gridTemplateColumns,documentHeight:document.documentElement.scrollHeight,
           nested:[...info.querySelectorAll('*')].filter(n=>/(auto|scroll|hidden|clip)/.test(getComputedStyle(n).overflowY)).length,
           cv:!!info.querySelector('.info-cv'),overflow:document.documentElement.scrollWidth>innerWidth};
@@ -65,13 +65,22 @@ for (const engine of (process.env.INFO_TEST_ENGINES?.split(',') || ['chromium', 
         let prior=null;
         if(beforeRoot){before=true;await load();prior=await measure();if([1440,390].includes(width)&&['short','long'].includes(kind))await page.screenshot({path:path.join(out,`${engine}-${width}x${height}-${kind}-before.png`),fullPage:true});before=false;}
         await load();const after=await measure();
+        assert.equal(after.creditHref,'https://meisnerfloriangestaltung.com/');assert.equal(after.creditTarget,'_blank');assert.equal(after.creditRel,'noopener noreferrer');
+        assert.equal(after.creditFont,after.linkFont);
+        assert.ok(Math.abs(after.creditLabel.y-after.creditValue.y)<.03,'credit label/value top alignment');
+        assert.ok(Math.abs(after.credit.y-after.footer.y)<.03,'credit starts at footer top');
+        if(width>700)assert.ok(Math.abs(after.credit.y-after.links.y)<.03,'credit and links share desktop top alignment');
+        else assert.ok(after.links.y>=after.credit.b,'mobile rows never overlap');
+        if(after.reference){assert.ok(Math.abs(after.creditLabel.x-after.reference.label.x)<.03);assert.ok(Math.abs(after.creditValue.x-after.reference.value.x)<.03,'reuse Info text columns');}
         assert.equal(after.position,'static');assert.equal(after.marginTop,'0px');assert.equal(after.paddingTop,0);
         assert.ok(Math.abs(after.pad-height*.375)<.03,'single 37.5%-viewport spacing rule');
         assert.ok(Math.abs(after.footer.y-after.lastBottom-height*.375)<.2,JSON.stringify({engine,width,kind,after}));
         if(!empty){const expectedWidth=width<=700?width-2*after.intro.x:width*.49;assert.ok(Math.abs(after.intro.w-expectedWidth)<.04,'responsive statement width');}
         if(!introOnly)assert.ok(Math.abs(after.columns.y-Math.max(height/2+after.baselineOffset,after.introContentBottom+after.introGap))<.2,'existing half-viewport baseline or content-driven expansion');
         assert.equal(after.nested,0);assert.equal(after.cv,false);assert.equal(after.overflow,false);
-        assert.ok(after.footer.y>=after.lastBottom);assert.ok(after.footer.h<200,'footer has intrinsic content height');
+        assert.ok(after.footer.y>=after.lastBottom);assert.ok(after.footer.h-after.paddingBottom<200,'footer content retains intrinsic height');
+        assert.ok(Math.abs(after.paddingBottom-height*.5)<.03,'50%-viewport empty space after footer links');
+        assert.ok(Math.abs(after.footer.b-Math.max(after.credit.b,after.links.b)-height*.5)<.03,'bottom space follows all footer content');
         if(prior){
           assert.deepEqual(after.typography,prior.typography);assert.equal(after.intro.x,prior.intro.x);if(width<=700)assert.equal(after.intro.w,prior.intro.w);assert.equal(after.intro.y,prior.intro.y);
           assert.equal(after.grid,prior.grid);
@@ -80,6 +89,8 @@ for (const engine of (process.env.INFO_TEST_ENGINES?.split(',') || ['chromium', 
         }
         const positions=await page.evaluate(()=>{const n=document.querySelector('.project-footer');const y=n.getBoundingClientRect().top;scrollTo({top:Math.min(100,document.documentElement.scrollHeight-innerHeight),behavior:'instant'});return {before:y,after:n.getBoundingClientRect().top,scroll:scrollY};});
         assert.ok(Math.abs(positions.before-positions.after-positions.scroll)<.1,'footer moves with the document');
+        const bottomSpace=await page.evaluate(()=>{scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'});return innerHeight-document.querySelector('.project-footer-links').getBoundingClientRect().bottom;});
+        assert.ok(bottomSpace>=height*.5-1,JSON.stringify({message:'full empty area after scrolling, allowing integer scrollHeight rounding',engine,width,height,kind,bottomSpace,expected:height*.5}));
         await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
         if(width===1440||width===390)await page.screenshot({path:path.join(out,`${engine}-${width}x${height}-${kind}.png`),fullPage:true});
         results.push({width,height,kind,before:prior,after});
@@ -98,6 +109,19 @@ for (const engine of (process.env.INFO_TEST_ENGINES?.split(',') || ['chromium', 
           return {href:n.href,status:r.status,sizes:n.getAttribute('sizes'),dimensions,magic:[...bytes.slice(0,4)],cornerAlpha:ctx.getImageData(0,0,1,1).data[3],centerAlpha:ctx.getImageData(Math.floor(c.width/2),Math.floor(c.height/2),1,1).data[3]};
         })));
         assert.equal(icons.length,4);for(const icon of icons){assert.equal(icon.status,200);assert.equal(icon.cornerAlpha,0,'new circular icon retains transparent corners');assert.equal(icon.centerAlpha,255);assert.ok(icon.href.startsWith(origin+'/NK-Test-II/'));if(new URL(icon.href).pathname.endsWith('.ico')){assert.deepEqual(icon.magic,[0,0,1,0]);assert.ok([16,32].includes(icon.dimensions[0]));assert.equal(icon.dimensions[0],icon.dimensions[1]);}else assert.equal(icon.dimensions.join('x'),icon.sizes);}
+      }
+      assert.equal(await page.locator('.info-footer-credit').count(),0,'project detail never has Info credits');
+      // The installed headless WebKit also suppresses this target=_blank link
+      // in a minimal standalone page; verify actual popup behavior in Chrome.
+      if(width===390 && engine==='chromium'){
+        await page.goto(origin+'/NK-Test-II/#info');
+        await page.context().route('https://meisnerfloriangestaltung.com/**',r=>r.fulfill({contentType:'text/html',body:'<!doctype html><title>Credit destination fixture</title>'}));
+        const opened=page.context().waitForEvent('page');
+        await page.locator('.info-footer-credit a').click();
+        const destination=await opened;await destination.waitForLoadState();
+        assert.equal(destination.url(),'https://meisnerfloriangestaltung.com/');
+        assert.equal(await destination.evaluate(()=>window.opener===null),true);
+        await destination.close();
       }
       assert.deepEqual(errors,[]);await page.close();
     }

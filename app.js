@@ -130,27 +130,50 @@ function hideOpenCursor() {
   document.body.classList.remove("has-open-cursor");
 }
 
-function updateOpenCursor(event) {
-  const projectLink = event.target.closest?.(".is-work .project-link, .is-work a.project-title");
-  if (event.pointerType !== "mouse" || !projectLink) {
+let overviewPointer = null, overviewCursorFrame = 0;
+function refreshOpenCursor(target) {
+  const point = overviewPointer;
+  const hit = target || (point && document.elementFromPoint?.(point.x, point.y));
+  if (!point || !document.body.classList.contains("is-work") ||
+      !hit?.closest?.(".work") || hit.closest(".site-header, .mobile-menu")) {
     hideOpenCursor();
     return;
   }
   openCursor.hidden = false;
-  globalThis.Contrast?.cursor(event.clientX, event.clientY);
   const halfWidth = openCursor.offsetWidth / 2;
   const halfHeight = openCursor.offsetHeight / 2;
-  openCursor.style.left = `${Math.max(halfWidth, Math.min(event.clientX, document.documentElement.clientWidth - halfWidth))}px`;
-  openCursor.style.top = `${Math.max(halfHeight, Math.min(event.clientY, window.innerHeight - halfHeight))}px`;
+  openCursor.style.left = `${Math.max(halfWidth, Math.min(point.x, document.documentElement.clientWidth - halfWidth))}px`;
+  openCursor.style.top = `${Math.max(halfHeight, Math.min(point.y, window.innerHeight - halfHeight))}px`;
   document.body.classList.add("has-open-cursor");
 }
-
+function scheduleOpenCursor() {
+  if (!overviewPointer || !globalThis.document?.body?.classList.contains("is-work")) return;
+  if (!overviewCursorFrame) overviewCursorFrame = requestAnimationFrame(() => {
+    overviewCursorFrame = 0;
+    refreshOpenCursor();
+  });
+}
+function updateOpenCursor(event) {
+  overviewPointer = event.pointerType === "mouse" ? {x: event.clientX, y: event.clientY} : null;
+  refreshOpenCursor(event.target);
+}
+function suspendOpenCursor() {
+  overviewPointer = null;
+  hideOpenCursor();
+}
 document.addEventListener("pointermove", updateOpenCursor);
 document.addEventListener("pointerover", updateOpenCursor);
-document.documentElement.addEventListener("pointerleave", hideOpenCursor);
-document.addEventListener("keydown", hideOpenCursor);
-window.addEventListener("blur", hideOpenCursor);
-window.addEventListener("scroll", hideOpenCursor, { passive: true });
+document.documentElement.addEventListener("pointerleave", suspendOpenCursor);
+document.addEventListener("keydown", suspendOpenCursor);
+window.addEventListener("blur", suspendOpenCursor);
+// Re-hit-test the stationary pointer when scrolling, loading or navigation moves
+// content beneath it. Never tie visibility to an individual media/link node.
+window.addEventListener("scroll", scheduleOpenCursor, { passive: true, capture: true });
+window.addEventListener("resize", scheduleOpenCursor, { passive: true });
+document.addEventListener("load", scheduleOpenCursor, true);
+header.addEventListener("transitionend", scheduleOpenCursor);
+new MutationObserver(scheduleOpenCursor).observe(app, {childList: true, subtree: true});
+new MutationObserver(scheduleOpenCursor).observe(header, {attributes: true, subtree: true, attributeFilter: ["class", "style"]});
 let lastScrollY = window.scrollY;
 let headerFrame;
 let cleanupPage = () => {};
@@ -223,8 +246,9 @@ function setWorkMenu(open) {
   workSubmenu.inert = !open;
 }
 
-function renderGlobalFooter() {
+function renderGlobalFooter(info = false) {
   return `  <footer class="project-footer" aria-label="Contact and legal information">
+    ${info ? `<section class="info-footer-credit" aria-label="Webdesign credit"><h2>Webdesign</h2><p><a href="https://meisnerfloriangestaltung.com" target="_blank" rel="noopener noreferrer">MfG<br>Meisner Florian Gestaltung</a></p></section>` : ""}
     <nav class="project-footer-links" aria-label="Footer">
       <a href="mailto:mail@nicolas-kawohl.com">Mail</a>
       <a href="https://www.instagram.com/nicocaw/" target="_blank" rel="noopener noreferrer">Instagram</a>
@@ -498,6 +522,107 @@ function renderWork(category = "Video") {
   restoreOverviewPosition();
 }
 
+// Index keeps a small decoded working set across routes, never the entire CMS list.
+const indexMediaCache = new Map();
+let indexPreparationPaused = false, indexImagesRunning = 0, indexVideosRunning = 0;
+const indexPreparationQueue = [];
+let indexPreparationWanted = new Set();
+function trimIndexMediaCache() {
+  for (const type of ['image', 'mp4']) {
+    const limit = type === 'mp4' ? 2 : 8;
+    const candidates = [...indexMediaCache.entries()].filter(([, r]) => r.media.type === type);
+    while (candidates.length > limit) {
+      let i = candidates.findIndex(([key, r]) => r.settled && !r.node.isConnected && !indexPreparationWanted.has(key));
+      if (i < 0) i = candidates.findIndex(([, r]) => r.settled && !r.node.isConnected);
+      if (i < 0) break;
+      const [key, record] = candidates.splice(i, 1)[0];
+      indexMediaCache.delete(key);
+      if (type === 'mp4') {record.node.pause(); record.node.removeAttribute('src'); record.node.load();}
+    }
+  }
+}
+function pumpIndexPreparation() {
+  if (indexPreparationPaused) return;
+  for (let i = 0; i < indexPreparationQueue.length;) {
+    const record = indexPreparationQueue[i], video = record.media.type === 'mp4';
+    if (record.settled) {indexPreparationQueue.splice(i, 1); continue;}
+    if (video ? indexVideosRunning >= 1 : indexImagesRunning >= 2) {i++; continue;}
+    indexPreparationQueue.splice(i, 1);
+    if (video) indexVideosRunning++; else indexImagesRunning++;
+    record.start();
+  }
+}
+function indexMediaSource(media) {
+  if (media.type === 'mp4' || !media.src.startsWith('https://cdn.sanity.io/images/')) return media.src;
+  const wanted = Math.min(2560, Math.ceil(Math.max(innerWidth,innerHeight) * Math.min(devicePixelRatio || 1,2)));
+  const original = media.cropRect?.width || media.width;
+  if (original && original <= wanted) return media.src;
+  const url = new URL(media.src);
+  url.searchParams.set('w',String(wanted)); url.searchParams.set('fit','max');
+  url.searchParams.set('auto','format'); url.searchParams.set('q','80');
+  return url.href;
+}
+const indexMediaKey = media => `${media.type}:${indexMediaSource(media)}`;
+function prepareIndexMedia(media) {
+  const source = indexMediaSource(media), key = `${media.type}:${source}`;
+  if (indexMediaCache.has(key)) {
+    const record = indexMediaCache.get(key);
+    indexMediaCache.delete(key); indexMediaCache.set(key, record);
+    return record;
+  }
+  const video = media.type === 'mp4', node = document.createElement(video ? 'video' : 'img');
+  const record = {media, node, ready:false, failed:false, settled:false, waiters:[]};
+  indexMediaCache.set(key, record);
+  let timer, started = false;
+  const finish = success => {
+    if (record.settled) return;
+    record.settled = true; record.ready = success; record.failed = !success;
+    clearTimeout(timer);
+    node.onload = node.onerror = node.onloadeddata = node.onloadedmetadata = null;
+    if (started) {if (video) indexVideosRunning--; else indexImagesRunning--;}
+    if (!success) {if (video) node.pause(); node.removeAttribute('src'); if (video) node.load();}
+    const callbacks = record.waiters.splice(0);
+    callbacks.forEach(callback => callback());
+    // A waiter may synchronously attach/play the prepared node. Pausing before
+    // that handoff can strand WebKit's media clock at zero despite readyState 4.
+    // Only detached warm nodes should pause; the displayed player owns playback.
+    if (video && !node.isConnected) node.pause();
+    trimIndexMediaCache(); pumpIndexPreparation();
+  };
+  record.fail = () => finish(false);
+  record.cancel = () => {finish(false); indexMediaCache.delete(key);};
+  record.start = () => {
+    started = true;
+    timer = setTimeout(() => finish(false), 12000);
+    node.onerror = () => finish(false);
+    if (video) {
+      node.muted = true; node.defaultMuted = true; node.loop = true; node.playsInline = true;
+      node.setAttribute('muted',''); node.setAttribute('playsinline','');
+      node.preload = 'auto';
+      node.onloadeddata = () => finish(node.readyState >= 2);
+      // Readiness is a decoded initial frame, never a fully downloaded MP4.
+      // A deadline also covers browsers that defer detached video loading.
+      node.onloadedmetadata = () => {
+        if (node.readyState >= 2) finish(true);
+        else if (window.matchMedia('(pointer: coarse)').matches) node.play().catch(()=>{});
+      };
+      node.src = source; node.load();
+    } else {
+      node.alt = media.alt || ''; node.loading = 'eager';
+      const position = moduleImagePosition(media);
+      node.style.cssText = position ? position.slice(' style="'.length, -1) : '';
+      node.src = source;
+      if (node.decode) node.decode().then(() => finish(true), () => finish(false));
+      else node.onload = () => finish(true);
+    }
+  };
+  indexPreparationQueue.push(record); pumpIndexPreparation();
+  return record;
+}
+function whenIndexMediaReady(record, callback) {
+  if (record.settled) callback(); else record.waiters.push(callback);
+}
+
 function renderArchive() {
   document.body.className = "is-index";
   setCurrentPage("archive");
@@ -519,6 +644,7 @@ function renderArchive() {
   };
   app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true"></div><div class="archive-list"><div class="archive-list-track">${entries.map(entryMarkup).join("")}</div></div></section>`;
   renderedIndexPages.set(app.querySelector(".archive"), entries);
+  indexPreparationPaused = false;
   const bg = document.querySelector(".archive-background");
   let imageRequest = 0;
   const list = document.querySelector(".archive-list");
@@ -558,7 +684,6 @@ function renderArchive() {
   };
   const showEntryImage = (entry, imageIndex) => {
     const request = ++imageRequest;
-    stopVideo();
     const items = entry?.media || entry?.images?.map((src, i) => ({
       type: "image", src, ...entry.previewImages?.[i]
     })) || [];
@@ -569,69 +694,72 @@ function renderArchive() {
       bg.classList.remove("visible");
       return;
     }
-    if (media.type === "mp4") {
-      bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
-      if (activeVideo === media) return;
-      stopVideo();
-      bg.replaceChildren();
-      bg.classList.remove("half", "portrait-left", "portrait-center");
-      bg.classList.add("full", "visible", "is-video");
-      activeVideo = media;
-      {
-        const video = document.createElement("video");
-        video.autoplay = true;
-        video.muted = true;
-        video.defaultMuted = true;
-        video.loop = true;
-        video.playsInline = true;
-        video.controls = false;
-        video.preload = "auto";
-        const sizeVideo = () => video.classList.toggle("is-portrait-video",
-          video.videoWidth > 0 && video.videoHeight > video.videoWidth);
-        video.addEventListener("loadedmetadata", sizeVideo);
-        video.addEventListener("resize", sizeVideo);
-        video.dataset.projectNativeSrc = media.src;
-        bg.append(video);
-        // Autoplay policy or an unavailable file must not interrupt Index navigation.
-        const disposePlayer = initProjectVideos(bg, {index: true, audioState, soundButton});
-        cleanupVideo = () => {
-          disposePlayer();
-          video.removeEventListener("loadedmetadata", sizeVideo);
-          video.removeEventListener("resize", sizeVideo);
-          video.remove();
-        };
-      }
-      return;
-    }
-    // Keep the displayed bitmap and its layout together while the next image
-    // loads. Mutating a visible img.src can leave its old bitmap in the new layout.
-    const nextImage = document.createElement("img");
-    nextImage.loading = "eager";
-    nextImage.alt = media.alt ?? "";
-    const position = moduleImagePosition(media);
-    nextImage.style.cssText = position ? position.slice(' style="'.length, -1) : "";
-    nextImage.src = media.src;
-    nextImage.decode().then(() => {
+    const prepared = prepareIndexMedia(media);
+    whenIndexMediaReady(prepared, () => {
       if (request !== imageRequest || events.signal.aborted) return;
-      const width = media.cropRect?.width ?? media.width ?? nextImage.naturalWidth;
-      const height = media.cropRect?.height ?? media.height ?? nextImage.naturalHeight;
-      const portrait = width > 0 && height > width;
-      const half = !mobile.matches && portrait;
-      if (portrait) {
-        nextImage.classList.add("is-portrait-image");
-        nextImage.style.setProperty("--native-width", `${nextImage.naturalWidth / (window.devicePixelRatio || 1)}px`);
-        nextImage.style.setProperty("--native-height", `${nextImage.naturalHeight / (window.devicePixelRatio || 1)}px`);
+      if (prepared.failed) return; // Retain the current frame on failed later assets.
+      if (media.type === "mp4") {
+        bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
+        if (activeVideo === media) return;
+        stopVideo();
+        bg.replaceChildren();
+        bg.classList.remove("half", "portrait-left", "portrait-center");
+        bg.classList.add("full", "visible", "is-video");
+        activeVideo = media;
+        {
+          const video = prepared.node;
+          video.autoplay = true;
+          video.muted = true;
+          video.defaultMuted = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.controls = false;
+          video.preload = "auto";
+          const sizeVideo = () => video.classList.toggle("is-portrait-video",
+            video.videoWidth > 0 && video.videoHeight > video.videoWidth);
+          video.addEventListener("loadedmetadata", sizeVideo);
+          video.addEventListener("resize", sizeVideo);
+          sizeVideo();
+          video.dataset.projectNativeSrc = media.src;
+          bg.append(video);
+          // Autoplay policy or an unavailable file must not interrupt Index navigation.
+          const disposePlayer = initProjectVideos(bg, {index: true, audioState, soundButton, retainMedia:true});
+          cleanupVideo = () => {
+            disposePlayer();
+            video.removeEventListener("loadedmetadata", sizeVideo);
+            video.removeEventListener("resize", sizeVideo);
+            video.remove();
+          };
+        }
+        return;
       }
-      const portraitPosition = media.portraitPosition ||
-        ((entry.layout === "half") !== ((imageIndex % items.length) % 2 === 1) ? "right" : "center");
-      // All layout state and the decoded bitmap commit in one task, before paint.
-      stopVideo();
-      bg.className = `archive-background visible ${half ? "half" : "full"}${
-        half && portraitPosition === "left" ? " portrait-left" :
-        half && portraitPosition === "center" ? " portrait-center" : ""}`;
-      bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
-      bg.replaceChildren(nextImage);
-    }, () => {}); // Keep the current preview if the requested image cannot decode.
+      // Keep the displayed bitmap and its layout together while the next image
+      // loads. Mutating a visible img.src can leave its old bitmap in the new layout.
+      const nextImage = prepared.node;
+      const position = moduleImagePosition(media);
+      nextImage.style.cssText = position ? position.slice(' style="'.length, -1) : '';
+      nextImage.alt = media.alt || '';
+      {
+        const width = media.cropRect?.width ?? media.width ?? nextImage.naturalWidth;
+        const height = media.cropRect?.height ?? media.height ?? nextImage.naturalHeight;
+        const portrait = width > 0 && height > width;
+        const half = !mobile.matches && portrait;
+        if (portrait) {
+          nextImage.classList.add("is-portrait-image");
+          nextImage.style.setProperty("--native-width", `${nextImage.naturalWidth / (window.devicePixelRatio || 1)}px`);
+          nextImage.style.setProperty("--native-height", `${nextImage.naturalHeight / (window.devicePixelRatio || 1)}px`);
+        }
+        const portraitPosition = media.portraitPosition ||
+          ((entry.layout === "half") !== ((imageIndex % items.length) % 2 === 1) ? "right" : "center");
+        // All layout state and the decoded bitmap commit in one task, before paint.
+        stopVideo();
+        bg.className = `archive-background visible ${half ? "half" : "full"}${
+          half && portraitPosition === "left" ? " portrait-left" :
+          half && portraitPosition === "center" ? " portrait-center" : ""}`;
+        bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
+        bg.replaceChildren(nextImage);
+      }
+    }); // Prepared nodes commit only while this view/request is current.
   };
   const archive = list.closest(".archive");
   const track = list.querySelector(".archive-list-track");
@@ -662,7 +790,7 @@ function renderArchive() {
   };
   let mobileRequest = 0;
   let pendingMobileVideo = null;
-  const mobileImages = new Map();
+
   const preview = entry => (entry?.media || entry?.images?.map((src, i) => ({type:"image", src, ...entry.previewImages?.[i]})) || []).find(item => item.src);
   const alignMobileList = () => {
     if (!mobile.matches || activeRow < 0 || events.signal.aborted) return;
@@ -691,7 +819,7 @@ function renderArchive() {
     drainMobileQueue();
   };
   const drainMobileQueue = () => {
-    if (moving || !mobile.matches || events.signal.aborted || !mobileQueue.length) return;
+    if (!navigationReady || moving || !mobile.matches || events.signal.aborted || !mobileQueue.length) return;
     const selection = mobileQueue.shift();
     const next = selection === null ? (activeRow + 1) % rows.length : selection;
     const distance = selection === null ? 1 : (next - activeRow + rows.length) % rows.length;
@@ -700,38 +828,29 @@ function renderArchive() {
     activateMobileEntry(next, distance);
   };
   const enqueueMobile = selection => {
+    if (!navigationReady) return;
     mobileQueue.push(selection);
     drainMobileQueue();
   };
-  const prepareMobileImage = media => {
-    if (mobileImages.has(media.src)) return mobileImages.get(media.src);
-    const node = document.createElement("img");
-    const record = {node, ready:false, failed:false, waiters:[]};
-    mobileImages.set(media.src, record);
-    node.alt = media.alt || "";
-    node.loading = "eager";
-    const position = moduleImagePosition(media);
-    node.style.cssText = position ? position.slice(' style="'.length, -1) : "";
-    node.src = media.src;
-    node.decode().then(() => {
-      record.ready = true;
-      record.waiters.splice(0).forEach(callback => callback());
-    }, () => {record.failed = true; record.waiters.splice(0).forEach(callback => callback());});
-    return record;
-  };
+  const prepareMobileImage = prepareIndexMedia;
   const warmMobileImages = next => {
-    // Pin the first preview for wraparound and preload only nearby projects.
-    const wanted = new Set();
-    for (const i of [0, next, ...Array.from({length:4}, (_,n)=>(next+n+1)%rows.length)]) {
-      const media = preview(entries[i]);
-      if (!media || media.type === "mp4") continue;
-      wanted.add(media.src); prepareMobileImage(media);
-    }
-    for (const src of mobileImages.keys()) if (!wanted.has(src)) mobileImages.delete(src);
+    if (events.signal.aborted || !navigationReady) return;
+    let wanted = [next, ...Array.from({length:3}, (_,n)=>(next+n+1)%rows.length)]
+      .map(i=>preview(entries[i])).filter(Boolean);
+    if (!mobile.matches) wanted.push(...(entries[next]?.media || []));
+    let videoCount = 0;
+    wanted = wanted.filter(media=>media.type !== 'mp4' || ++videoCount <= 2);
+    const keys = new Set(wanted.map(indexMediaKey));
+    indexPreparationWanted = keys;
+    // Rapid desktop hovering must not build a queue for the entire CMS list.
+    indexPreparationPaused = true;
+    for (const [key, record] of [...indexMediaCache]) if (!record.settled && !keys.has(key)) record.cancel();
+    indexPreparationPaused = false;
+    wanted.forEach(prepareIndexMedia); pumpIndexPreparation(); trimIndexMediaCache();
   };
   const cancelPendingMobileVideo = () => {
     if (!pendingMobileVideo) return;
-    pendingMobileVideo.pause(); pendingMobileVideo.removeAttribute("src"); pendingMobileVideo.load();
+    pendingMobileVideo.pause();
     pendingMobileVideo = null;
   };
   const playMobileVideo = video => {
@@ -768,9 +887,14 @@ function renderArchive() {
     const commit = (node, video = false) => {
       if (committed || request !== mobileRequest || !mobile.matches || events.signal.aborted) return;
       committed = true;
-      stopVideo();
+      if (node) stopVideo();
+      if (node && !video) {
+        const position = moduleImagePosition(media);
+        node.style.cssText = position ? position.slice(' style="'.length, -1) : '';
+        node.alt = media.alt || '';
+      }
       bg.className = `archive-background visible full${video ? " is-video" : ""}`;
-      bg.replaceChildren(...(node ? [node] : []));
+      if (node) bg.replaceChildren(node);
       archive.dataset.textColor = entries[next].textColor || "auto";
       archive.dataset.activeProject = String(next);
       bg.dataset.projectIndex = String(next);
@@ -786,7 +910,7 @@ function renderArchive() {
         pendingMobileVideo = null;
         node.autoplay = true; node.muted = audioState.muted;
         activeVideo = media;
-        cleanupVideo = () => {node.pause(); node.removeAttribute("src"); node.load(); node.remove();};
+        cleanupVideo = () => {node.pause(); node.remove();};
         playMobileVideo(node);
       }
       warmMobileImages(next);
@@ -803,14 +927,9 @@ function renderArchive() {
       warmMobileImages(next);
       return;
     }
-    const video = document.createElement("video");
-    video.muted = true; video.defaultMuted = true; video.loop = true;
-    video.playsInline = true; video.controls = false; video.preload = "auto";
-    if (media.poster) video.poster = media.poster;
-    pendingMobileVideo = video;
-    video.addEventListener("loadeddata", () => commit(video,true), {once:true,signal:events.signal});
-    video.addEventListener("error", () => commit(null), {once:true,signal:events.signal});
-    video.src = media.src; video.load();
+    const record = prepareIndexMedia(media);
+    pendingMobileVideo = record.node;
+    whenIndexMediaReady(record, () => commit(record.failed ? null : record.node, !record.failed));
   };
   const advanceMobile = () => enqueueMobile(null);
   const controls = 'a, button, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
@@ -859,9 +978,10 @@ function renderArchive() {
       else row.removeAttribute("aria-current");
     });
     showEntryImage(entries[next], frame);
+    if (navigationReady) warmMobileImages(next);
   };
   window.addEventListener("mousemove", event => {
-    if (mobile.matches) return;
+    if (mobile.matches || !navigationReady) return;
     // Use each row's actual vertical area, independent of horizontal position.
     // Outside the list, keep the current preview and its cycling frame visible.
     const next = rows.findIndex(row => {
@@ -872,7 +992,7 @@ function renderArchive() {
   }, { passive: true, signal: events.signal });
   rows.forEach(row => {
     row.addEventListener("click", event => {
-      if (mobile.matches) return; // Mobile selection is delegated above.
+      if (mobile.matches || !navigationReady) return; // Mobile selection is delegated above.
       const rowIndex = Number(row.dataset.index);
       const entry = entries[rowIndex];
       if (activeRow === rowIndex) {
@@ -899,7 +1019,6 @@ function renderArchive() {
     });
     list.style.removeProperty("--archive-offset");
     ++mobileRequest; cancelPendingMobileVideo();
-    bg.classList.remove("visible");
     if (mobile.matches) activateMobileEntry(0);
     else {
       list.scrollTop = 0;
@@ -909,12 +1028,42 @@ function renderArchive() {
   mobile.addEventListener("change", syncLayout, { signal: events.signal });
   cleanupPage = () => {
     events.abort();
-    clearTimeout(movementTimer); mobileQueue.length = 0;
-    ++mobileRequest; cancelPendingMobileVideo(); mobileImages.clear(); listObserver.disconnect();
+    clearTimeout(movementTimer); clearTimeout(initialTimer); mobileQueue.length = 0;
+    ++mobileRequest; cancelPendingMobileVideo(); listObserver.disconnect();
     stopVideo();
     soundButton?.remove();
+    indexPreparationPaused = true;
+    for (const record of [...indexMediaCache.values()]) if (!record.settled) record.cancel();
+    indexPreparationQueue.length = 0;
+    trimIndexMediaCache();
+  };
+  // Keep real media readiness separate from the existing mobile tap queue.
+  let navigationReady = false, initialTimer;
+  rows.forEach(row=>row.setAttribute('aria-disabled','true'));
+  archive.setAttribute('aria-busy','true');
+  const indicator = document.createElement('div');
+  indicator.className = 'index-loading-indicator';
+  indicator.setAttribute('role','progressbar'); indicator.setAttribute('aria-label','Preparing Index media');
+  indicator.setAttribute('aria-valuemin','0'); indicator.setAttribute('aria-valuemax','100');
+  indicator.innerHTML = '<span></span>'; archive.append(indicator);
+  let initialVideos = 0;
+  const initial = [...new Map(entries.slice(0,3).map(entry=>preview(entry)).filter(Boolean).map(media=>[media.type+media.src,media])).values()].filter(media=>media.type !== 'mp4' || ++initialVideos <= 2).map(prepareIndexMedia);
+  let progressValue = 0;
+  const progress = () => {
+    if (events.signal.aborted || navigationReady) return;
+    progressValue = Math.max(progressValue, (initial.length ? initial.filter(r=>r.settled).length / initial.length : 1));
+    indicator.setAttribute('aria-valuenow',String(Math.round(progressValue*100)));
+    indicator.firstElementChild.style.transform = `scaleX(${progressValue})`;
+    if (initial.every(r=>r.settled)) {
+      navigationReady = true; clearTimeout(initialTimer);
+      track.querySelectorAll('.archive-row').forEach(row=>row.removeAttribute('aria-disabled'));
+      archive.setAttribute('aria-busy','false'); archive.dataset.prepared = 'true';
+      indicator.remove(); drainMobileQueue(); warmMobileImages(Math.max(0,activeRow));
+    }
   };
   syncLayout();
+  initial.forEach(record=>whenIndexMediaReady(record,progress)); progress();
+  if (!navigationReady) initialTimer = setTimeout(()=>initial.filter(r=>!r.settled).forEach(r=>r.fail()),20000);
 }
 
 function renderInfoContactLink(link) {
@@ -924,9 +1073,9 @@ function renderInfoContactLink(link) {
   const contact = sanityContent?.siteSettings?.contacts[link.destination];
   if (!contact) return "";
   const instagram = link.destination === "instagram";
-  const value = instagram ? new URL(contact.href).pathname.split("/").filter(Boolean)[0] || new URL(contact.href).hostname : contact.value;
+  const value = instagram ? "@" + (new URL(contact.href).pathname.split("/").filter(Boolean)[0] || new URL(contact.href).hostname) : contact.value;
   const escapedValue = escapeModuleAttribute(value);
-  return `${instagram ? "Instagram" : "Mail"}: <a class="info-contact-value" href="${escapeModuleAttribute(contact.href)}" data-value="${escapedValue}"${instagram ? ' target="_blank" rel="noopener noreferrer"' : ""}><span>${escapedValue}</span></a>`;
+  return `<a class="info-contact-value" href="${escapeModuleAttribute(contact.href)}" data-value="${escapedValue}"${instagram ? ' target="_blank" rel="noopener noreferrer"' : ""}><span>${escapedValue}</span></a>`;
 }
 
 function applySanityInfo() {
@@ -1109,7 +1258,7 @@ function renderInfo() {
         <p>Eps51<br>Welt<br>William Fan<br>DNA Club Munich<br>Fachhochschule Potsdam<br>Rethink<br>Icon Magazine<br>Richert Beil<br>European Month of Photography<br>Ahlberg ME<br>Gectalt Jewelry<br>German Press Days<br>Dawid Tomaszewski<br>Horror Vacui<br>On time PR<br>Uhren Magazin<br>CLAV<br>BFW<br>Henkel<br>Some Magazine<br>S/O Berlin Das Stue<br>Bacq Berlin<br>The Alqemist<br>Runtime<br>Friedman Berlin<br>Frederik Constantin Victor<br>MGUN Berlin<br>Zinnober Blumen<br>Suprema<br>Hong Bock<br>The Green Bean<br>Perfect Skin<br>Necklacy</p>
       </section>
     </div>
-  </section>${renderGlobalFooter()}`;
+  </section>${renderGlobalFooter(true)}`;
   applySanityFooter();
   cleanupPage = alignInfoBaseline(app.querySelector(".info"));
   applySanityInfo();

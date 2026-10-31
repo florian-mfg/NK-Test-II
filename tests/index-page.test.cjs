@@ -412,7 +412,7 @@ test('mobile activates only on click, measures rows, and ignores a duplicate com
  list.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));assert.equal(active(),1);
  }finally{app.dom.window.close();}
 });
-test('cold mobile images keep title/media together and later taps wait in order',async()=>{
+test('initial cold mobile images gate taps until preparation completes',async()=>{
  const app=setup('#archive',true);
  try{
  const decode=app.window.HTMLImageElement.prototype.decode;let resolveCold;
@@ -423,8 +423,79 @@ test('cold mobile images keep title/media together and later taps wait in order'
  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
  pointer('pointerdown');pointer('pointerup');assert.equal(active(),0);
  const trace=[];new app.window.MutationObserver(()=>trace.push(active())).observe(app.window.document.querySelector('.archive'),{attributes:true,attributeFilter:['data-active-project']});
- resolveCold();await new Promise(resolve=>setTimeout(resolve,10));assert.equal(active(),2);
+ assert.equal(app.window.document.querySelector('.archive').getAttribute('aria-busy'),'true');
+ resolveCold();await new Promise(resolve=>setTimeout(resolve,10));assert.equal(active(),0);
+ assert.deepEqual(trace,[]);
+ pointer('pointerdown');pointer('pointerup');await new Promise(resolve=>setTimeout(resolve,10));
+ pointer('pointerdown');pointer('pointerup');await new Promise(resolve=>setTimeout(resolve,10));assert.equal(active(),2);
  assert.deepEqual(trace,[1,2]);
  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
+ }finally{app.dom.window.close();}
+});
+
+
+test('Index display-sized derivatives preserve crops and leave source records untouched',async()=>{
+ const app=setup();
+ try{
+  await app.settle(success(content([])));
+  app.window.innerWidth=390;app.window.innerHeight=844;app.window.devicePixelRatio=3;
+  const media={type:'image',src:'https://cdn.sanity.io/images/ck6xe2er/production/large-6000x4000.jpg?rect=10,20,5000,3000',width:6000,cropRect:{width:5000,height:3000}};
+  const before=JSON.stringify(media),url=new URL(app.window.indexMediaSource(media));
+  assert.equal(url.searchParams.get('w'),'1688');assert.equal(url.searchParams.get('rect'),'10,20,5000,3000');
+  assert.equal(url.searchParams.get('fit'),'max');assert.equal(url.searchParams.get('auto'),'format');
+  assert.equal(JSON.stringify(media),before);
+  assert.equal(app.window.indexMediaSource({...media,width:800,cropRect:null}),media.src);
+  assert.equal(app.window.indexMediaSource({type:'mp4',src:'https://cdn.sanity.io/files/ck6xe2er/production/demo.mp4'}),'https://cdn.sanity.io/files/ck6xe2er/production/demo.mp4');
+ }finally{app.dom.window.close();}
+});
+
+test('later cold mobile entries keep the old frame and drain rapid taps in order',async()=>{
+ const app=setup('#archive',true);
+ try{
+  const decode=app.window.HTMLImageElement.prototype.decode;let resolveCold;
+  app.window.HTMLImageElement.prototype.decode=function(){if(this.src.includes('/cold-'))return new Promise(resolve=>{resolveCold=resolve;});return decode.call(this);};
+  await app.settle(success(content(['one','two','three','cold','five'].map(id=>entry(id,{previewImages:[img(id)]})))));
+  assert.equal(app.window.document.querySelector('.archive').dataset.prepared,'true');
+  const {pointer,active}=mobileGestureFixture(app),trace=[];
+  new app.window.MutationObserver(()=>trace.push(active())).observe(app.window.document.querySelector('.archive'),{attributes:true,attributeFilter:['data-active-project']});
+  for(let i=0;i<4;i++){pointer('pointerdown');pointer('pointerup');}
+  await new Promise(resolve=>setTimeout(resolve,20));assert.equal(active(),2);
+  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
+  resolveCold();await new Promise(resolve=>setTimeout(resolve,20));
+  assert.equal(active(),4);assert.deepEqual(trace,[1,2,3,4]);
+ }finally{app.dom.window.close();}
+});
+
+
+test('queued Index resources retain the URL represented by their cache key across resize',async()=>{
+ const app=setup();let jobs=[];
+ try{
+  await app.settle(success(content([])));
+  app.window.innerWidth=390;app.window.innerHeight=844;app.window.devicePixelRatio=1;
+  const resolves=[];
+  app.window.HTMLImageElement.prototype.decode=function(){return new Promise(resolve=>resolves.push(resolve));};
+  jobs=['a','b','c'].map(id=>app.window.prepareIndexMedia({type:'image',src:`https://cdn.sanity.io/images/ck6xe2er/production/${id}-6000x4000.jpg`,width:6000,height:4000}));
+  assert.equal(jobs[2].node.hasAttribute('src'),false);
+  app.window.innerWidth=1440;app.window.innerHeight=900;
+  resolves[0]();await flush();
+  assert.equal(new URL(jobs[2].node.src).searchParams.get('w'),'844');
+ }finally{jobs.forEach(job=>job.cancel());app.dom.window.close();}
+});
+
+test('prepared Index video hands playback to a connected consumer without a pause/play race',async()=>{
+ const app=setup('#archive',true);
+ try{
+  await app.settle(success(content([entry('Video',{previewImages:[{mediaType:'mp4',video:{asset:{_ref:'file-video-mp4'}}}]})])));
+  const record=app.window.prepareIndexMedia({type:'mp4',src:'https://cdn.sanity.io/files/ck6xe2er/production/video.mp4'}),calls=[];
+  record.node.pause=()=>calls.push('pause');record.node.play=()=>{calls.push('play');return Promise.resolve();};
+  Object.defineProperties(record.node,{readyState:{value:4},videoWidth:{value:160},videoHeight:{value:90}});
+  record.node.dispatchEvent(new app.window.Event('loadeddata'));
+  assert.equal(record.node.isConnected,true);assert.equal(record.ready,true);
+  assert.deepEqual(calls,['play'],'preparation never pauses a video consumed by the current view');
+  const warm=app.window.prepareIndexMedia({type:'mp4',src:'https://cdn.sanity.io/files/ck6xe2er/production/warm.mp4'});let pauses=0;
+  warm.node.pause=()=>pauses++;
+  Object.defineProperties(warm.node,{readyState:{value:4},videoWidth:{value:160},videoHeight:{value:90}});
+  warm.node.dispatchEvent(new app.window.Event('loadeddata'));
+  assert.equal(warm.node.isConnected,false);assert.equal(pauses,1,'detached preloaded videos still pause');
  }finally{app.dom.window.close();}
 });

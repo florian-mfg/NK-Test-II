@@ -84,7 +84,7 @@ test('native MP4 playback, posters, module geometry, navigation and cleanup on d
      assert.equal(typography.weight,typography.expectedWeight);assert.equal(typography.line,typography.expectedLine);
      assert.equal(typography.bottom,typography.pad);assert.equal(typography.right,typography.pad);
      if(width===390) assert.equal(typography.touchHeight,'44px');
-     await page.waitForFunction(({index,expected})=>[...document.querySelectorAll('.project-preview')][index].querySelector('.project-video-toggle')?.style.getPropertyValue('--contrast-color')===expected,{index,expected:index%2?'#000000':'#ffffff'});
+     await page.waitForFunction(({index,expected})=>getComputedStyle([...document.querySelectorAll('.project-preview')][index].querySelector('.project-video-toggle')).color===expected,{index,expected:'rgb(255, 255, 255)'});
      const point={x:buttonBox.x+buttonBox.width/2,y:buttonBox.y+buttonBox.height/2};
      assert.equal(await page.evaluate(({x,y})=>Boolean(document.elementFromPoint(x,y)?.closest('.project-video-toggle')),point),true,`control hit area at width ${width}, project ${index}`);
      if(width>700) await button.click();else await button.tap();

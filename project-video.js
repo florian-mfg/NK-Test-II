@@ -1,6 +1,6 @@
 /* Shared native MP4 playback and page audio controls. */
 // Adapt native media to the existing event-driven Play/Pause controller.
-function nativeProjectPlayer(video) {
+function nativeProjectPlayer(video, retainMedia = false) {
   return {
     on: (name, handler) => video.addEventListener(name, handler),
     off: (name, handler) => video.removeEventListener(name, handler),
@@ -10,8 +10,7 @@ function nativeProjectPlayer(video) {
     pause: () => video.pause(),
     destroy() {
       video.pause();
-      video.removeAttribute('src');
-      video.load();
+      if (!retainMedia) {video.removeAttribute('src'); video.load();}
     }
   };
 }
@@ -152,8 +151,8 @@ function initProjectVideos(root, options = {}) {
         if (detail) frame.autoplay = detailAutoplay;
         frame.style.visibility = box.querySelector('.project-video-poster') ? 'hidden' : '';
       }
-      frame.src = frame.dataset.projectNativeSrc;
-      const player = nativeProjectPlayer(frame);
+      if (!options.retainMedia || frame.getAttribute("src") !== frame.dataset.projectNativeSrc) frame.src = frame.dataset.projectNativeSrc;
+      const player = nativeProjectPlayer(frame, options.retainMedia);
       let playing = false;
       let busy = false;
       const observer = new ResizeObserver(() => { positionAudioControls(); });
@@ -304,7 +303,7 @@ function initProjectVideos(root, options = {}) {
         player.off('pause', onPause);
         player.off('ended', onPause);
         player.off('error', onError);
-        // Release the native source and stop playback on route/category changes.
+        // Ordinary players release their source; Index may retain it in its bounded cache.
         Promise.resolve(player.destroy()).catch(() => {});
       });
     }

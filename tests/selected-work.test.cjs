@@ -389,7 +389,7 @@ test('empty previews are intentional; malformed compositions use existing fallba
   }
 });
 
-test('all categories use the existing full-project link and cursor; disabled details and touch do not',async()=>{
+test('all categories use the existing full-project link and cursor; overview gaps keep the cursor and touch does not',async()=>{
  for(const category of ['Video','Commissioned','Graphic']) {
   const app=setup(`#work/${category.toLowerCase()}`);
   try {
@@ -408,7 +408,9 @@ test('all categories use the existing full-project link and cursor; disabled det
    }
    over(link,'touch');assert.equal(cursor.hidden,true);
    assert.equal(articles[1].querySelector('a'),null);
-   over(articles[1].querySelector('.project-slot'));assert.equal(cursor.hidden,true);
+   over(articles[1].querySelector('.project-slot'));assert.equal(cursor.hidden,false);
+   app.window.dispatchEvent(new app.window.Event('scroll'));
+   assert.equal(cursor.hidden,false,'scroll does not hide the cursor');
    over(link);over(app.window.document.body);assert.equal(cursor.hidden,true);
    const navigated=new Promise(resolve=>app.window.addEventListener('hashchange',resolve,{once:true}));
    link.click();await navigated;assert.equal(app.window.location.hash,'#project/enabled');

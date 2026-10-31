@@ -9,8 +9,11 @@ copy is not subject to image analysis.
 
 Sanity's optional **Text color** field is available on Frontpage, Project and
 individual Index entries. Values are Auto (default for missing/invalid values),
-Black and White. Project settings apply to overview and detail overlays. Index
-settings apply to every preview image in that entry. No migration is needed.
+Black and White. Project settings apply to detail overlays.
+Frontpage and Index settings are retained in CMS data for compatibility. Frontpage always renders black
+overlay text. Index and all three Selected Work overviews always render white
+overlay text, ignoring these settings on those routes. These routes never sample
+media for contrast. Project detail pages retain automatic and manual contrast. No migration is needed.
 
 `contrast.js` is the single overlay controller. It applies `--contrast-color`
 using exactly #000000 or #ffffff. It hit-tests behind each overlay and reads a
