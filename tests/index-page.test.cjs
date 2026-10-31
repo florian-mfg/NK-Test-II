@@ -113,20 +113,20 @@ test('desktop hover/click cycles only Index images and uses cropped orientation 
  }finally{app.dom.window.close();}
 });
 
-test('mobile taps advance one project despite multiple media; scrolling never selects an entry',async()=>{
+test('mobile swipes advance one project despite multiple media; scrolling never selects an entry',async()=>{
  const app=setup('#archive',true);
  try {
   await app.settle(success(content([entry('One',{previewImages:[img('one'),img('other')]}),entry('Two',{previewImages:[img('two')]})])));
   const list=app.window.document.querySelector('.archive-list');
   const {pointer}=mobileGestureFixture(app);
-  pointer('pointerdown');pointer('pointerup'); await new Promise(resolve=>setTimeout(resolve,10));
-  assert.equal(rows(app)[1].getAttribute('aria-current'),'true');
+  pointer('pointerdown');pointer('pointerup',{y:240}); await new Promise(resolve=>setTimeout(resolve,10));
+  assert.equal(app.window.document.querySelector('.archive-row[aria-current]').dataset.index,'1');
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/two-'));
   list.scrollTop=30;list.dispatchEvent(new app.window.Event('scroll'));
   await new Promise(setImmediate);
-  assert.equal(rows(app)[1].getAttribute('aria-current'),'true');
-  pointer('pointerdown');pointer('pointerup'); await new Promise(resolve=>setTimeout(resolve,10));
-  assert.equal(rows(app)[0].getAttribute('aria-current'),'true');
+  assert.equal(app.window.document.querySelector('.archive-row[aria-current]').dataset.index,'1');
+  pointer('pointerdown');pointer('pointerup',{y:240}); await new Promise(resolve=>setTimeout(resolve,10));
+  assert.equal(app.window.document.querySelector('.archive-row[aria-current]').dataset.index,'0');
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
  }finally{app.dom.window.close();}
 });
@@ -326,7 +326,7 @@ function mobileGestureFixture(app) {
  return {list,scrolls,pointer,tick,active};
 }
 
-test('mobile background taps advance, never scroll and wrap; previews remain full width',async()=>{
+test('mobile swipes advance, never scroll and wrap; previews remain full width',async()=>{
  const app=setup('#archive',true);
  try {
   await app.settle(success(content([entry('One',{previewImages:[portrait('one','left')]}),entry('Two'),entry('Three')])));
@@ -334,7 +334,7 @@ test('mobile background taps advance, never scroll and wrap; previews remain ful
   assert.equal(active(),0);
   assert.ok(app.window.document.querySelector('.archive-background.visible.full'));
   for(const next of [1,2,0]) {
-   pointer('pointerdown');pointer('pointerup');await tick();
+   pointer('pointerdown');pointer('pointerup',{y:240});await tick();
    assert.equal(active(),next);
    assert.equal(scrolls.length,0);
    assert.ok(app.window.document.querySelector('.archive-background.visible.full'));
@@ -349,7 +349,7 @@ test('mobile drags, cancelled gestures, multitouch, controls and manual scrollin
   const {list,pointer,tick,active,scrolls}=mobileGestureFixture(app);
   pointer('pointerdown');pointer('pointermove',{y:320});pointer('pointermove',{y:300});pointer('pointerup');
   pointer('pointerdown');pointer('pointercancel');pointer('pointerup');
-  pointer('pointerdown');pointer('pointerdown',{id:2,primary:false});pointer('pointerup');
+  pointer('pointerdown');pointer('pointerdown',{id:2,primary:false});pointer('pointerup');pointer('pointerup',{id:2,primary:false});
   for(const target of [rows(app)[0],rows(app)[0].firstElementChild]) {
    pointer('pointerdown',{target});pointer('pointerup',{target});
   }
@@ -362,7 +362,7 @@ test('mobile drags, cancelled gestures, multitouch, controls and manual scrollin
   pointer('pointerup');await tick();
   assert.equal(scrolls.length,0);
   assert.equal(active(),0);
-  pointer('pointerdown');pointer('pointerup');await tick();
+  pointer('pointerdown');pointer('pointerup',{y:240});await tick();
   assert.equal(active(),1);
  }finally{app.dom.window.close();}
 });
@@ -386,7 +386,7 @@ test('mobile title selection starts selected project at its first media without 
   originalRows[0].click();
   originalRows[1].firstElementChild.click();
   await new Promise(resolve=>setTimeout(resolve,10));
-  assert.equal(originalRows[1].getAttribute('aria-current'),'true');
+  assert.equal(app.window.document.querySelector('.archive-row[aria-current]').dataset.index,'1');
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
   originalRows[1].click();
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
@@ -399,7 +399,7 @@ test('mobile title selection starts selected project at its first media without 
  }finally{app.dom.window.close();}
 });
 
-test('mobile activates only on click, measures rows, and ignores a duplicate compatibility click',async()=>{
+test('mobile activates on swipe completion, measures rows, and ignores compatibility clicks',async()=>{
  const app=setup('#archive',true);
  try{
  await app.settle(success(content([entry('One'),entry('Two'),entry('Three')])));
@@ -407,27 +407,28 @@ test('mobile activates only on click, measures rows, and ignores a duplicate com
  // Initial layout unlocks input on the next animation frame, not a wall-clock delay.
  await tick();
  pointer('pointerdown');pointer('pointerup',{click:false});assert.equal(active(),0);
+ pointer('pointerdown');pointer('pointerup',{y:240,click:false});assert.equal(active(),1);
  list.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));assert.equal(active(),1);
- assert.equal(list.style.getPropertyValue('--archive-offset'),'37px');
+ assert.equal(list.style.getPropertyValue('--archive-offset'),'148px');
  list.dispatchEvent(new app.window.MouseEvent('click',{bubbles:true,detail:1}));assert.equal(active(),1);
  }finally{app.dom.window.close();}
 });
-test('initial cold mobile images gate taps until preparation completes',async()=>{
+test('initial cold mobile images gate swipes until preparation completes',async()=>{
  const app=setup('#archive',true);
  try{
  const decode=app.window.HTMLImageElement.prototype.decode;let resolveCold;
  app.window.HTMLImageElement.prototype.decode=function(){if(this.src.includes('/cold-'))return new Promise(resolve=>{resolveCold=resolve;});return decode.call(this);};
  await app.settle(success(content([entry('One',{previewImages:[img('one')]}),entry('Cold',{previewImages:[img('cold')]}),entry('Three',{previewImages:[img('three')]})])));
  const {pointer,active}=mobileGestureFixture(app);
- pointer('pointerdown');pointer('pointerup');assert.equal(active(),0);
+ pointer('pointerdown');pointer('pointerup',{y:240});assert.equal(active(),0);
  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/one-'));
- pointer('pointerdown');pointer('pointerup');assert.equal(active(),0);
+ pointer('pointerdown');pointer('pointerup',{y:240});assert.equal(active(),0);
  const trace=[];new app.window.MutationObserver(()=>trace.push(active())).observe(app.window.document.querySelector('.archive'),{attributes:true,attributeFilter:['data-active-project']});
  assert.equal(app.window.document.querySelector('.archive').getAttribute('aria-busy'),'true');
  resolveCold();await new Promise(resolve=>setTimeout(resolve,10));assert.equal(active(),0);
  assert.deepEqual(trace,[]);
- pointer('pointerdown');pointer('pointerup');await new Promise(resolve=>setTimeout(resolve,10));
- pointer('pointerdown');pointer('pointerup');await new Promise(resolve=>setTimeout(resolve,10));assert.equal(active(),2);
+ pointer('pointerdown');pointer('pointerup',{y:240});await new Promise(resolve=>setTimeout(resolve,10));
+ pointer('pointerdown');pointer('pointerup',{y:240});await new Promise(resolve=>setTimeout(resolve,10));assert.equal(active(),2);
  assert.deepEqual(trace,[1,2]);
  assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
  }finally{app.dom.window.close();}
@@ -449,7 +450,7 @@ test('Index display-sized derivatives preserve crops and leave source records un
  }finally{app.dom.window.close();}
 });
 
-test('later cold mobile entries keep the old frame and drain rapid taps in order',async()=>{
+test('later cold mobile entries keep the old frame and drain rapid swipes in order',async()=>{
  const app=setup('#archive',true);
  try{
   const decode=app.window.HTMLImageElement.prototype.decode;let resolveCold;
@@ -458,7 +459,7 @@ test('later cold mobile entries keep the old frame and drain rapid taps in order
   assert.equal(app.window.document.querySelector('.archive').dataset.prepared,'true');
   const {pointer,active}=mobileGestureFixture(app),trace=[];
   new app.window.MutationObserver(()=>trace.push(active())).observe(app.window.document.querySelector('.archive'),{attributes:true,attributeFilter:['data-active-project']});
-  for(let i=0;i<4;i++){pointer('pointerdown');pointer('pointerup');}
+  for(let i=0;i<4;i++){pointer('pointerdown');pointer('pointerup',{y:240});}
   await new Promise(resolve=>setTimeout(resolve,20));assert.equal(active(),2);
   assert.ok(app.window.document.querySelector('.archive-background img').src.includes('/three-'));
   resolveCold();await new Promise(resolve=>setTimeout(resolve,20));

@@ -3,7 +3,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const path=require('node:path');
 
-for (const engine of ['chromium', 'webkit']) test(`${engine}: fixed Frontpage/Index colors and shared contrast on other pages`, {skip:!process.env.BROWSER_TEST},async()=>{
+for (const engine of ['chromium', 'webkit']) test(`${engine}: dynamic Frontpage, fixed Index/overview and shared detail contrast`, {skip:!process.env.BROWSER_TEST},async()=>{
  const pw=require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright-core');
  const browser=await pw[engine].launch({headless:true,...(engine==='chromium'?{executablePath:process.env.BROWSER_EXECUTABLE || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'}:{})});
  const image=id=>({asset:{_ref:`image-${id}-1200x800-png`}});
@@ -32,7 +32,7 @@ for (const engine of ['chromium', 'webkit']) test(`${engine}: fixed Frontpage/In
     const file=path.join(__dirname,'..',url.pathname==='/'?'index.html':url.pathname);
     return route.fulfill({path:file,headers:{'content-security-policy':"frame-src 'none'"},contentType:({'.html':'text/html','.js':'application/javascript','.css':'text/css','.svg':'image/svg+xml','.otf':'font/otf','.woff':'font/woff'})[path.extname(file)]||'application/octet-stream'});
    }
-   if(url.pathname.endsWith('.mp4'))return route.fulfill({body:mp4Bytes,contentType:'video/mp4'});
+   if(url.pathname.endsWith('.mp4'))return route.fulfill({body:mp4Bytes,contentType:'video/mp4',headers:{'access-control-allow-origin':'*'}});
         if(url.pathname.includes('/data/query/')) return route.fulfill({json:{result:raw()}});
    if(url.hostname==='cdn.sanity.io') return route.fulfill({headers:allowImageCors?{'access-control-allow-origin':'*'}:{},contentType:'image/svg+xml',body:`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"><rect width="1200" height="800" fill="${url.pathname.includes('dark-')?'black':'white'}"/></svg>`});
    return route.fulfill({contentType:'text/html',body:'<!doctype html><html></html>'});
@@ -70,13 +70,13 @@ for (const engine of ['chromium', 'webkit']) test(`${engine}: fixed Frontpage/In
    await page.waitForFunction(()=>document.querySelector('.frontpage-fade')?.dataset.ready==='true');
    await color('.site-header .brand',expected);
    const preparedReads=await page.evaluate(()=>window.pixelReads);
-   assert.equal(preparedReads,0,'Frontpage never samples media for contrast');
+   // Decoded images may now prepare luminance grids for the Frontpage.
    await page.evaluate(()=>window.dispatchEvent(new Event('blur')));
    await page.mouse.move(500,200);await page.mouse.move(501,200);
    await page.evaluate(()=>window.Contrast.refresh());
    await color('.site-header .brand',expected);
    await color('.main-nav a',expected);
-   assert.equal(await page.evaluate(()=>window.pixelReads),preparedReads,'Frontpage input never samples media');
+   assert.ok(await page.evaluate(()=>window.pixelReads)<=preparedReads+4,'Frontpage input reuses image grids and bounds video readbacks');
    assert.equal(await page.locator('.home iframe').count(),0);
    assert.equal(await page.locator('.frontpage-fade-media').count(),1);
   }

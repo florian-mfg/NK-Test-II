@@ -1,4 +1,4 @@
-/* Shared binary overlay contrast. Native video pixels are never read. */
+/* Shared binary overlay contrast; Frontpage video sampling is throttled. */
 (function (root) {
   'use strict';
   const BLACK = '#000000', WHITE = '#ffffff', SIZE = 64;
@@ -31,10 +31,10 @@
   const document = root.document, cache = new Map();
   const targets = '.site-header > a, .site-header .main-nav :is(a, .work-toggle), .mobile-menu-toggle, .project-title > span, .project-kind, .detail-back, .detail-info-label, .detail-sound-control, .archive-list, .project-video-toggle';
   let timer, cursorTimer, cursorPoint;
-  // Keep the preparation API compatible with the media loader; fixed-color
-  // routes skip sampling, while other routes may cache a small luminance grid.
+  // Reuse decoded images from the loader as small luminance grids.
+  // Index and overview routes keep their fixed colors and skip preparation.
   api.prepareImage = (src, image) => {
-    if (document.body.matches('.is-home, .is-index, .is-work') || cache.has(src)) return;
+    if (document.body.matches('.is-index, .is-work') || cache.has(src)) return;
     const data = {grid: null, width: image.naturalWidth, height: image.naturalHeight};
     cache.set(src, data);
     if (cache.size > 64) cache.delete(cache.keys().next().value);
@@ -66,7 +66,49 @@
     image.src = src;
     return data;
   }
+  const videoSamples = new WeakMap();
+  let lastHomeRefresh = -Infinity;
+  function homeBackground(x, y) {
+    if (document.body.classList.contains('mobile-menu-open')) return {setting: 'auto', luminance: 1};
+    // Brush media ignore pointer events, so hit-test their painted rectangles
+    // explicitly, newest first, rather than relying on elementsFromPoint.
+    const media = [...document.querySelectorAll('.frontpage-fade-media')].reverse().find(node => {
+      const r = node.getBoundingClientRect();
+      return x >= r.left && x < r.right && y >= r.top && y < r.bottom && getComputedStyle(node).visibility !== 'hidden';
+    });
+    if (!media) return {setting: 'auto', luminance: 1};
+    let data;
+    if (media.tagName === 'VIDEO') {
+      data = videoSamples.get(media);
+      if (!data) {
+        const canvas = document.createElement('canvas'); canvas.width = canvas.height = SIZE;
+        data = {canvas, context: canvas.getContext('2d', {willReadFrequently: true}), grid: null, stamp: -Infinity};
+        videoSamples.set(media, data);
+      }
+      if (!data.blocked && media.readyState >= 2 && performance.now() - data.stamp >= 250) {
+        data.stamp = performance.now();
+        try {
+          data.context.drawImage(media, 0, 0, SIZE, SIZE);
+          data.grid = data.context.getImageData(0, 0, SIZE, SIZE).data;
+        } catch { data.blocked = true; } // Cache CORS failures; never retry every frame.
+      }
+      data.width = media.videoWidth; data.height = media.videoHeight;
+    } else data = imageData(media.currentSrc || media.src);
+    if (!data.grid) return {setting: 'auto', luminance: NaN};
+    const box = media.getBoundingClientRect(), style = getComputedStyle(media);
+    let width = box.width, height = box.height, left = box.left, top = box.top;
+    if (style.objectFit === 'cover' || style.objectFit === 'contain') {
+      const scale = (style.objectFit === 'cover' ? Math.max : Math.min)(width / data.width, height / data.height);
+      width = data.width * scale; height = data.height * scale;
+      const position = style.objectPosition.split(' ').map(value => parseFloat(value) / 100);
+      left += (box.width - width) * (position[0] || 0);
+      top += (box.height - height) * (position[1] || 0);
+    }
+    if (x < left || x > left + width || y < top || y > top + height) return {setting: 'auto', luminance: 1};
+    return {setting: 'auto', luminance: sample(data.grid, (x - left) / width, (y - top) / height, 1, 1)};
+  }
   function background(x, y, target) {
+    if (document.body.classList.contains('is-home')) return homeBackground(x, y);
     const light = !document.body.matches('.is-index') && (root.matchMedia('(max-width: 700px)').matches || document.body.matches('.is-work, .is-detail, .is-info'));
     const stack = document.elementsFromPoint(x, y);
     const media = stack.find(node => node.matches('img, video, .project-video, .home, .project-slot.is-empty, .project-slot-text'));
@@ -112,8 +154,13 @@
   };
   function refresh() {
     timer = null;
-    // These routes use fixed CSS colors and never inspect background media.
-    if (document.body.matches('.is-home, .is-index, .is-work')) return;
+    // Index and overviews keep fixed white colors.
+    if (document.body.matches('.is-index, .is-work')) return;
+    if (document.body.classList.contains('is-home')) {
+      const now = performance.now();
+      if (now - lastHomeRefresh < 120) { schedule(); return; }
+      lastHomeRefresh = now;
+    }
     for (const target of document.querySelectorAll(targets)) {
       const rect = target.getBoundingClientRect();
       if (!rect.width || !rect.height || rect.bottom <= 0 || rect.top >= root.innerHeight) continue;
@@ -125,6 +172,12 @@
   }
   function schedule() { if (!timer) timer = setTimeout(refresh, 120); }
   api.refresh = refresh;
+  // Moving frames can change behind stationary text. Four checks per second,
+  // only on a visible Frontpage with active video; no animation-frame readback.
+  setInterval(() => {
+    if (!document.hidden && document.body.classList.contains('is-home') &&
+        [...document.querySelectorAll('.frontpage-fade-media')].some(n => n.tagName === 'VIDEO' && !n.paused)) schedule();
+  }, 250);
   document.addEventListener('load', schedule, true);
   document.addEventListener('scroll', schedule, {capture: true, passive: true});
   root.addEventListener('resize', schedule, {passive: true});

@@ -153,12 +153,13 @@
         if (source.poster && !initial.prepared) node.poster = source.poster;
         if(!initial.prepared) node.addEventListener('loadedmetadata',()=>{if (node.videoHeight) {ratios.set(index,node.videoWidth/node.videoHeight); sizes.delete(index);}},{once:true, ...options});
       } else {node.alt = ''; node.draggable = false; node.decoding = 'async';}
-      if (!initial.prepared) node.src = source.src;
+      if (!initial.prepared) { if (video) node.crossOrigin = 'anonymous'; node.src = source.src; }
       records.push({node,rect}); layer.append(node); serial++;
       layer.dataset.progress = String(serial);
       if (video) {
         node.onerror = () => {
           node.dataset.playbackError = String(node.error?.code || 'unknown');
+          if (!initial.prepared && node.crossOrigin === 'anonymous') {node.removeAttribute('crossorigin'); node.src = source.src; node.load(); node.play().catch(()=>{}); return;}
           console.warn('Frontpage video playback failed', source.src, node.error?.code, node.error?.message);
         };
         if (!root.document.hidden) node.play().then(()=>{delete node.dataset.autoplay;}).catch(error=>{

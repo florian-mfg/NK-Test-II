@@ -1,0 +1,36 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),path=require('node:path');
+for(const engine of ['webkit','chromium'])test(`${engine}: white mobile canvas, bidirectional Index swipe queue and cache bounds`,{skip:!process.env.BROWSER_TEST,timeout:120000},async()=>{
+ const pw=require(process.env.PLAYWRIGHT_MODULE_PATH||'playwright-core');const b=await pw[engine].launch({headless:true,...(engine==='chromium'?{executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'}:{})});
+ try{
+ const p=await b.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const video=await require('./native-media-fixture.cjs').recordMP4(p),root=path.join(__dirname,'..');
+ const entries=Array.from({length:12},(_,i)=>({displayTitle:'Project '+i,previewImages:[i===2||i===8?{mediaType:'mp4',video:{asset:{_ref:`file-video${i}-mp4`}}}:{asset:{_ref:`image-p${i}-800x1200-jpg`}}]}));
+ let release,hold=true;const gate=new Promise(r=>release=r),requested=[];
+ await p.route('**/*',async r=>{const u=new URL(r.request().url());if(u.hostname==='preview.test')return r.fulfill({path:path.join(root,u.pathname==='/'?'index.html':u.pathname)});if(u.pathname.includes('/data/query/'))return r.fulfill({json:{result:{projects:[],indexPage:{_id:'indexPage',_type:'indexPage',entries}}}});if(u.hostname==='cdn.sanity.io'){requested.push(u.href);if(u.pathname.includes('/p5-')&&hold)await gate;await new Promise(resolve=>setTimeout(resolve,40));return u.pathname.endsWith('.mp4')?r.fulfill({body:video,contentType:'video/mp4'}):r.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200"><rect width="800" height="1200" fill="#555"/></svg>'});}return r.fulfill({body:''});});
+ await p.goto('https://preview.test/#archive');await p.waitForSelector('.archive[data-prepared="true"]');
+ const current=()=>p.locator('.archive').getAttribute('data-active-project');
+ const wait=i=>p.waitForFunction(i=>document.querySelector('.archive').dataset.activeProject===String(i),i);
+ const gesture=(dx=0,dy=-100,extra={})=>p.evaluate(({dx,dy,extra})=>{const n=document.querySelector('.archive'),event=(type,x,y,id=1,primary=true)=>n.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerType:'touch',pointerId:id,isPrimary:primary,clientX:x,clientY:y,button:0}));event('pointerdown',200,450);if(extra.multi)event('pointerdown',240,450,2,false);if(extra.outside)document.querySelector('.site-header').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch',pointerId:2,isPrimary:false}));for(let t=1;t<=5;t++)event('pointermove',200+dx*t/5,450+dy*t/5);if(extra.cancel)event('pointercancel',200+dx,450+dy);else event('pointerup',200+dx,450+dy);if(extra.multi||extra.outside)event('pointerup',240,450,2,false);},{dx,dy,extra});
+ assert.equal(await current(),'0');
+ for(const [dx,dy,extra]of [[0,0,{}],[0,-44,{}],[140,-60,{}],[0,-100,{cancel:true}],[0,-100,{multi:true}],[0,-100,{outside:true}]]){await gesture(dx,dy,extra);await p.waitForTimeout(100);assert.equal(await current(),'0');}
+ await p.touchscreen.tap(200,450);await p.locator('.archive-row[aria-current]').tap();await p.waitForTimeout(100);assert.equal(await current(),'0');
+ await gesture(0,-45);await wait(1);await p.waitForTimeout(450);await gesture(0,45);await wait(0);await p.waitForTimeout(450);await gesture(0,100);await wait(11);await p.waitForTimeout(450);await gesture();await wait(0);await p.waitForTimeout(450);
+ if(engine==='chromium'){
+ const cdp=await p.context().newCDPSession(p);
+ for(const direction of [1,-1]){await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:200,y:450}]});for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:200,y:450-direction*i*20}]});await p.waitForTimeout(140);}await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await wait(direction===1?1:0);await p.waitForTimeout(450);}await cdp.detach();
+ }
+ await p.evaluate(()=>{window.commits=[];new MutationObserver(rs=>{for(const r of rs)if(r.attributeName==='data-active-project')commits.push(+r.target.dataset.activeProject);}).observe(document.querySelector('.archive'),{attributes:true});});
+ for(const dy of [-300,-100,100,-100])await gesture(0,dy);
+ await p.waitForFunction(()=>commits.length===4);await wait(2);await p.waitForTimeout(450);assert.deepEqual(await p.evaluate(()=>commits),[1,2,1,2]);
+ await p.waitForFunction(()=>{const v=document.querySelector('.archive-background video');return v&&v.readyState>=2&&!v.paused;});
+ await p.locator('.detail-sound-control').tap();assert.equal(await p.locator('.detail-sound-control').getAttribute('aria-pressed'),'true');assert.equal(await current(),'2');await p.locator('.detail-sound-control').tap();
+ for(const dy of [-100,-100,-100,100,-100,100])await gesture(0,dy);
+ await wait(4);await p.waitForTimeout(1100);assert.equal(await current(),'4','pending cold load retains the matching old title/frame');assert.equal(await p.locator('.archive-background').getAttribute('data-project-index'),'4');hold=false;release();await p.waitForFunction(()=>commits.length===10);assert.deepEqual(await p.evaluate(()=>commits),[1,2,1,2,3,4,5,4,5,4]);
+ for(const dy of [100,100,-100,-100])await gesture(0,dy);await p.waitForFunction(()=>commits.length===14);assert.deepEqual(await p.evaluate(()=>commits.slice(10)),[3,2,3,4]);
+ assert.ok(requested.some(s=>s.includes('/p11-')),'previous neighbor prepares at start');assert.ok(new Set(requested).size<12,'bounded lookahead does not preload all entries');
+ const cache=await p.evaluate(()=>({images:[...indexMediaCache.values()].filter(r=>r.media.type==='image').length,videos:[...indexMediaCache.values()].filter(r=>r.media.type==='mp4').length,running:[indexImagesRunning,indexVideosRunning]}));assert.ok(cache.images<=8&&cache.videos<=2);assert.ok(cache.running[0]<=2&&cache.running[1]<=1);
+ await p.locator('.mobile-menu-toggle').tap();await p.waitForSelector('.mobile-menu[open]');await p.locator('.mobile-menu-close').tap();
+ for(const width of [320,390,430]){await p.setViewportSize({width,height:844});for(const route of ['home','archive','work/video','work/commissioned','work/graphic','project/ethereal-tides','info','imprint','privacy-policy']){await p.evaluate(r=>location.hash='#'+r,route);await p.waitForTimeout(80);const colors=await p.evaluate(()=>[document.documentElement,document.body,document.querySelector('#app'),document.querySelector('#app').firstElementChild].map(n=>getComputedStyle(n).backgroundColor));assert.deepEqual(colors,Array(4).fill('rgb(255, 255, 255)'),route);assert.equal(await p.locator('meta[name="theme-color"]').getAttribute('content'),'#ffffff');}}
+ await p.setViewportSize({width:1440,height:900});await p.evaluate(()=>location.hash='#archive');await p.waitForSelector('.archive[data-prepared="true"]');assert.equal(await p.locator('.archive').evaluate(n=>getComputedStyle(n).backgroundColor),'rgb(0, 0, 0)');const row=p.locator('.archive-row').nth(3),box=await row.boundingBox();await p.mouse.move(300,box.y+box.height/2);await p.waitForFunction(()=>document.querySelector('.archive-row[aria-current]').dataset.index==='3');
+ }finally{await b.close();}
+});

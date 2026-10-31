@@ -1,3 +1,4 @@
+async function swipe(page) { await page.evaluate(()=>{const n=document.querySelector('.archive');for(const [type,y] of [['pointerdown',600],['pointermove',500],['pointerup',500]])n.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:1,isPrimary:true,pointerType:'touch',button:0,clientX:350,clientY:y}));}); }
 const test=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),fs=require('node:fs');
 for(const engine of ['chromium','webkit'])test(`${engine}: bounded Index preparation, real progress, cache reuse and mobile spacing`,{skip:!process.env.BROWSER_TEST,timeout:120000},async()=>{
  const pw=require(process.env.PLAYWRIGHT_MODULE_PATH||'playwright-core');
@@ -35,7 +36,7 @@ for(const engine of ['chromium','webkit'])test(`${engine}: bounded Index prepara
   await page.waitForSelector('.archive-background img');
   assert.ok(requests.length<=3,'only the first three primary assets load initially');
   const current=()=>page.locator('.archive-row[aria-current]').getAttribute('data-index');
-  if(mobile)await page.touchscreen.tap(350,600);else {const box=await page.locator('.archive-row').nth(4).boundingBox();await page.mouse.move(box.x+20,box.y+box.height/2);await page.mouse.click(box.x+20,box.y+box.height/2);}
+  if(mobile)await swipe(page);else {const box=await page.locator('.archive-row').nth(4).boundingBox();await page.mouse.move(box.x+20,box.y+box.height/2);await page.mouse.click(box.x+20,box.y+box.height/2);}
   assert.equal(await current(),'0','startup input cannot select unprepared projects');
   held=false;release();await page.waitForSelector('.archive[data-prepared="true"]');
   assert.equal(await page.locator('.index-loading-indicator').count(),0);assert.equal(await current(),'0');
@@ -52,8 +53,8 @@ for(const engine of ['chromium','webkit'])test(`${engine}: bounded Index prepara
   if(mobile){assert.ok(Math.abs(after.gap/before.gap-.75)<.015);assert.ok(Math.abs(after.multiPadding/before.multiPadding-.75)<.015);}else assert.deepEqual(after,before);
   assert.equal(after.overflow,false);
   if(mobile){
-   for(let i=0;i<8;i++)await page.touchscreen.tap(350,600);
-   await page.waitForFunction(()=>document.querySelector('.archive').dataset.activeProject==='8'&&!document.querySelector('.archive-list-track').classList.contains('is-moving'));
+   for(let i=0;i<8;i++)await swipe(page);
+   await page.waitForFunction(()=>document.querySelector('.archive').dataset.activeProject==='9'&&!document.querySelector('.archive-list-track').classList.contains('is-moving'));
   }else{
    await page.locator('.archive-row').nth(2).hover();await page.waitForSelector('.archive-background video');
    await page.waitForFunction(()=>document.querySelector('.archive-background video')?.readyState>=2);
@@ -63,17 +64,19 @@ for(const engine of ['chromium','webkit'])test(`${engine}: bounded Index prepara
   const cache=await page.evaluate(()=>[...indexMediaCache.values()].map(r=>({type:r.media.type,settled:r.settled,connected:r.node.isConnected})));
   assert.ok(cache.filter(r=>r.type==='image'&&r.settled).length<=8);assert.ok(cache.filter(r=>r.type==='mp4'&&r.settled).length<=2);
   const residentFirst=await page.evaluate(()=>[...indexMediaCache.values()].some(r=>r.ready&&r.node.src.includes('/p0-')));
-  await page.goto('https://preview.test/#info');
+  await page.goto('https://preview.test/#info');await page.waitForSelector('.info');
   const firstRequests=requests.filter(s=>s.includes('/p0-')).length;
   await page.goto('https://preview.test/#archive',{waitUntil:'domcontentloaded'});await page.waitForSelector('.archive[data-prepared="true"]');
   if(residentFirst)assert.equal(requests.filter(s=>s.includes('/p0-')).length,firstRequests,'resident first preview is reused across routes');
   // Drop resident preparation, then leave while a real image request is held.
-  await page.goto('https://preview.test/#info');
-  await page.evaluate(()=>indexMediaCache.clear());held=true;
+  await page.goto('https://preview.test/#info');await page.waitForSelector('.info');
+  // Force a distinct browser resource as well as clearing the application cache;
+  // Image.decode may otherwise reuse the already-decoded bitmap without a fetch.
+  await page.evaluate(()=>{indexMediaCache.clear();sanityContent.indexPage.entries[1].media[0].src+='?late=1';});held=true;
   let releaseLate;const late=new Promise(r=>releaseLate=r);
   await page.route('**/p1-*',async r=>{await late;await r.abort().catch(()=>{});});
   await page.goto('https://preview.test/#archive',{waitUntil:'domcontentloaded'});await page.waitForSelector('.index-loading-indicator');
-  await page.goto('https://preview.test/#info');releaseLate();
+  await page.goto('https://preview.test/#info');await page.waitForSelector('.info');releaseLate();
   await page.waitForTimeout(50);assert.equal(await page.locator('.archive').count(),0);assert.equal(await page.locator('.index-loading-indicator').count(),0);assert.deepEqual(errors,[]);
   results.push({mobile,bar,before,after,progress,requestCount:requests.length,cache});await page.close();
  }
@@ -124,7 +127,7 @@ for(const engine of ['chromium','webkit'])test(`${engine}: consecutive MP4 entri
   await page.waitForSelector('.archive[data-prepared="true"]');
   assert.equal(new Set(requests).size,2,'initial preparation respects the two-video budget');
   for(const i of [1,2]){
-   await page.touchscreen.tap(350,600);
+   await swipe(page);
    await page.waitForFunction(i=>document.querySelector('.archive').dataset.activeProject===String(i)&&!document.querySelector('.archive-list-track').classList.contains('is-moving'),i);
    await page.waitForFunction(()=>document.querySelector('.archive-background video')?.paused===false);
    assert.ok(await page.locator('.archive-background video').getAttribute('src').then(src=>src.includes(`video${i}.mp4`)));

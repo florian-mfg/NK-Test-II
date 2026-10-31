@@ -76,6 +76,11 @@
         );
         signal?.addEventListener("abort", abort, { once: true });
         node.onerror = () => {
+          // A server may allow playback without granting canvas access. Retry
+          // once without CORS so contrast enhancement cannot remove its video.
+          if (video && node.crossOrigin === "anonymous") {
+            node.removeAttribute("crossorigin"); node.src = job.source.src; node.load(); return;
+          }
           if (video) console.warn("Frontpage video failed", job.source.src, node.error?.code, node.error?.message);
           job.error = node.error ? {code: node.error.code, message: node.error.message} : undefined;
           finish("failed");
@@ -85,6 +90,7 @@
           node.defaultMuted = true;
           node.setAttribute("muted", "");
           node.setAttribute("playsinline", "");
+          node.crossOrigin = "anonymous";
           node.loop = true;
           node.playsInline = true;
           // iOS may defer decoded frames on detached, non-playing videos.

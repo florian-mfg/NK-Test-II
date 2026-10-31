@@ -53,3 +53,16 @@ background fill or overlap was introduced to conceal these lines. Crop continues
 to crop intentionally; Auto Height remains intrinsic and unclipped. The known
 raster failures are accepted release limitations, not a claim of pixel-perfect
 rendering. New functional failures or materially worse defects require review.
+
+## Current unresolved compositions
+
+Thermik's two Auto Height videos have different column widths and proportional
+heights. The shorter grayscale video leaves white unused row space on desktop.
+The project-specific black-background experiment and its targeting plumbing were
+removed; original dimensions, order and Auto Height remain unchanged.
+
+A reported Safari overlap on Taipei Biennale Trailer has not been reproduced.
+Container geometry alone is insufficient to exclude a compositor defect. Checks
+of actual Crop paint regions and sampled published videos have found correct
+containment in automated Chrome/WebKit, without a speculative layout correction.
+The exact reported Safari state and physical iPhone/iPad output remain unverified.

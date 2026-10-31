@@ -449,10 +449,6 @@ body:is(.is-home, .is-work, .is-detail, .is-info) { --contrast-color: #000000; }
   color: var(--contrast-color);
 }
 /* Fixed route colors also override any inline sample left on the shared header. */
-body:is(.is-home, .is-index) :is(.site-header > a, .site-header .main-nav a,
-  .site-header .work-toggle, .mobile-menu-toggle, .archive-list, .open-cursor) {
-  --contrast-color: #000000 !important;
-}
 body:is(.is-index, .is-work) :is(.site-header > a, .site-header .main-nav a,
   .site-header .work-toggle, .mobile-menu-toggle, .archive-list, .open-cursor,
   .project-title > span, .project-kind, .project-video-toggle) {
@@ -632,3 +628,20 @@ body.is-home { background: #fff; }
   /* Reduce only whitespace between entries; multiline text retains 1.28. */
   .is-index .archive-row { min-height: calc(1.28 * var(--text-size) + .75 * (1.52rem - 1.28 * var(--text-size))); padding: .09rem 0; }
 }
+
+/* Only project details opt into directional mobile navigation. Info and Sound
+   remain in their existing fixed positions outside the header. */
+@media (max-width: 700px) {
+  body.is-detail .site-header.is-hidden { opacity: 0; transform: translateY(calc(-100% - var(--pad))); pointer-events: none; visibility: hidden; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.is-detail .site-header, body.is-detail .detail-back { transition: none; }
+}
+
+/* Mobile page canvas, including the root exposed by Safari rubber-band scrolling.
+   Component surfaces (video hosts, popups, controls) keep their own backgrounds. */
+@media (max-width: 700px) {
+  html, body, body.is-index, #app, #app > :is(.home, .archive, .work, .detail, .info, .legal-page), .is-index .archive-background { background-color: #FFFFFF; }
+}
+
+.index-retry { position: fixed; z-index: 51; left: var(--pad); bottom: max(var(--pad), env(safe-area-inset-bottom)); border: 0; padding: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }

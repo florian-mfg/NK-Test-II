@@ -103,6 +103,8 @@ mobileMenuToggle.addEventListener("click", () => {
   mobileMenu.scrollTop = 0;
   mobileMenuToggle.setAttribute("aria-expanded", "true");
   document.body.classList.add("mobile-menu-open");
+  header.classList.remove("is-hidden");
+  document.querySelector(".detail-back")?.classList.remove("is-hidden");
   syncViewportBackground();
 });
 mobileMenu.querySelector(".mobile-menu-close").addEventListener("click", closeMobileMenu);
@@ -115,6 +117,9 @@ mobileMenu.addEventListener("click", event => {
   if (event.target.closest("a")) closeMobileMenu();
 });
 mobileMenuBreakpoint.addEventListener("change", () => {
+  header.classList.remove("is-hidden");
+  document.querySelector(".detail-back")?.classList.remove("is-hidden");
+  lastScrollY = window.scrollY;
   closeMobileMenu();
   setWorkMenu(false);
 });
@@ -181,7 +186,8 @@ let cleanupPage = () => {};
 function image(src, alt = "") { return `<img src="${src}" alt="${alt}" loading="lazy">`; }
 let currentPageRoute = "";
 function syncViewportBackground() {
-  const dark = document.body.classList.contains("is-index") && !mobileMenu.open;
+  const index = document.body.classList.contains("is-index");
+  const dark = !mobileMenuBreakpoint.matches && index && !mobileMenu.open;
   document.documentElement.style.backgroundColor = dark ? "#000000" : "#ffffff";
   document.querySelector('meta[name="theme-color"]').content = dark ? "#000000" : "#ffffff";
 }
@@ -527,17 +533,25 @@ const indexMediaCache = new Map();
 let indexPreparationPaused = false, indexImagesRunning = 0, indexVideosRunning = 0;
 const indexPreparationQueue = [];
 let indexPreparationWanted = new Set();
+function releaseIndexMedia(record) {
+  if (!record.settled && record.cancel) { record.cancel(); return; }
+  // Drop ownership before releasing the native player; queued descriptors own no node.
+  if (indexMediaCache.get(record.key) === record) indexMediaCache.delete(record.key);
+  if (record.node && record.media.type === 'mp4') {
+    record.node.pause(); record.node.removeAttribute('src'); record.node.load();
+  }
+  record.released = true;
+}
 function trimIndexMediaCache() {
   for (const type of ['image', 'mp4']) {
     const limit = type === 'mp4' ? 2 : 8;
     const candidates = [...indexMediaCache.entries()].filter(([, r]) => r.media.type === type);
     while (candidates.length > limit) {
-      let i = candidates.findIndex(([key, r]) => r.settled && !r.node.isConnected && !indexPreparationWanted.has(key));
-      if (i < 0) i = candidates.findIndex(([, r]) => r.settled && !r.node.isConnected);
+      let i = candidates.findIndex(([key, r]) => r.settled && !r.node?.isConnected && !indexPreparationWanted.has(key));
+      if (i < 0) i = candidates.findIndex(([, r]) => r.settled && !r.node?.isConnected);
       if (i < 0) break;
       const [key, record] = candidates.splice(i, 1)[0];
-      indexMediaCache.delete(key);
-      if (type === 'mp4') {record.node.pause(); record.node.removeAttribute('src'); record.node.load();}
+      releaseIndexMedia(record);
     }
   }
 }
@@ -547,6 +561,14 @@ function pumpIndexPreparation() {
     const record = indexPreparationQueue[i], video = record.media.type === 'mp4';
     if (record.settled) {indexPreparationQueue.splice(i, 1); continue;}
     if (video ? indexVideosRunning >= 1 : indexImagesRunning >= 2) {i++; continue;}
+    if (video) {
+      const owners = [...indexMediaCache.values()].filter(r => r.media.type === 'mp4' && r.node?.hasAttribute('src'));
+      if (owners.length >= 2) {
+        const victim = owners.find(r => r.settled && !r.node?.isConnected);
+        if (!victim) { i++; continue; }
+        releaseIndexMedia(victim);
+      }
+    }
     indexPreparationQueue.splice(i, 1);
     if (video) indexVideosRunning++; else indexImagesRunning++;
     record.start();
@@ -570,29 +592,31 @@ function prepareIndexMedia(media) {
     indexMediaCache.delete(key); indexMediaCache.set(key, record);
     return record;
   }
-  const video = media.type === 'mp4', node = document.createElement(video ? 'video' : 'img');
-  const record = {media, node, ready:false, failed:false, settled:false, waiters:[]};
+  const video = media.type === 'mp4';
+  let node = video ? null : document.createElement('img');
+  const record = {key, media, node, ready:false, failed:false, settled:false, waiters:[]};
   indexMediaCache.set(key, record);
   let timer, started = false;
   const finish = success => {
     if (record.settled) return;
     record.settled = true; record.ready = success; record.failed = !success;
     clearTimeout(timer);
-    node.onload = node.onerror = node.onloadeddata = node.onloadedmetadata = null;
+    if (node) node.onload = node.onerror = node.onloadeddata = node.onloadedmetadata = null;
     if (started) {if (video) indexVideosRunning--; else indexImagesRunning--;}
-    if (!success) {if (video) node.pause(); node.removeAttribute('src'); if (video) node.load();}
+    if (!success && node) {if (video) node.pause(); node.removeAttribute('src'); if (video) node.load();}
     const callbacks = record.waiters.splice(0);
     callbacks.forEach(callback => callback());
     // A waiter may synchronously attach/play the prepared node. Pausing before
     // that handoff can strand WebKit's media clock at zero despite readyState 4.
     // Only detached warm nodes should pause; the displayed player owns playback.
-    if (video && !node.isConnected) node.pause();
+    if (video && node && !node.isConnected) node.pause();
     trimIndexMediaCache(); pumpIndexPreparation();
   };
   record.fail = () => finish(false);
-  record.cancel = () => {finish(false); indexMediaCache.delete(key);};
+  record.cancel = () => {finish(false); releaseIndexMedia(record);};
   record.start = () => {
     started = true;
+    if (video) { node = document.createElement('video'); record.node = node; }
     timer = setTimeout(() => finish(false), 12000);
     node.onerror = () => finish(false);
     if (video) {
@@ -644,6 +668,7 @@ function renderArchive() {
   };
   app.innerHTML = `<section class="archive" data-source="${unavailable ? "local" : "sanity"}"><div class="archive-background" aria-hidden="true"></div><div class="archive-list"><div class="archive-list-track">${entries.map(entryMarkup).join("")}</div></div></section>`;
   renderedIndexPages.set(app.querySelector(".archive"), entries);
+  for (const record of [...indexMediaCache.values()]) if (record.failed) releaseIndexMedia(record);
   indexPreparationPaused = false;
   const bg = document.querySelector(".archive-background");
   let imageRequest = 0;
@@ -788,7 +813,7 @@ function renderArchive() {
     }
     mobileRows = [...track.querySelectorAll(".archive-row")];
   };
-  let mobileRequest = 0;
+  let mobileRequest = 0, recoveryTimer = 0;
   let pendingMobileVideo = null;
 
   const preview = entry => (entry?.media || entry?.images?.map((src, i) => ({type:"image", src, ...entry.previewImages?.[i]})) || []).find(item => item.src);
@@ -811,9 +836,9 @@ function renderArchive() {
     clearTimeout(movementTimer);
     track.classList.remove("is-moving");
     // Equivalent copies occupy exactly the same pixels: normalize between moves.
-    visualRow %= rows.length;
+    visualRow = rows.length + Math.max(0, activeRow);
     if (stripNeedsResize) { rebuildMobileStrip(); stripNeedsResize = false; }
-    markMobileEntry(activeRow);
+    if (activeRow >= 0) markMobileEntry(activeRow);
     void track.offsetHeight;
     moving = false;
     drainMobileQueue();
@@ -821,8 +846,8 @@ function renderArchive() {
   const drainMobileQueue = () => {
     if (!navigationReady || moving || !mobile.matches || events.signal.aborted || !mobileQueue.length) return;
     const selection = mobileQueue.shift();
-    const next = selection === null ? (activeRow + 1) % rows.length : selection;
-    const distance = selection === null ? 1 : (next - activeRow + rows.length) % rows.length;
+    const distance = selection.direction ?? ((selection.index - activeRow + rows.length) % rows.length);
+    const next = (Math.max(0, activeRow) + distance + rows.length) % rows.length;
     if (!distance) { drainMobileQueue(); return; }
     moving = true;
     activateMobileEntry(next, distance);
@@ -835,7 +860,9 @@ function renderArchive() {
   const prepareMobileImage = prepareIndexMedia;
   const warmMobileImages = next => {
     if (events.signal.aborted || !navigationReady) return;
-    let wanted = [next, ...Array.from({length:3}, (_,n)=>(next+n+1)%rows.length)]
+    let wanted = (mobile.matches
+      ? [next, (next-1+rows.length)%rows.length, (next+1)%rows.length, (next-2+rows.length)%rows.length, (next+2)%rows.length]
+      : [next, ...Array.from({length:3}, (_,n)=>(next+n+1)%rows.length)])
       .map(i=>preview(entries[i])).filter(Boolean);
     if (!mobile.matches) wanted.push(...(entries[next]?.media || []));
     let videoCount = 0;
@@ -878,15 +905,36 @@ function renderArchive() {
     if (video) {if (document.hidden) video.pause(); else playMobileVideo(video);}
   }, {signal:events.signal});
   const activateMobileEntry = (next, distance = 0) => {
+    const initialNext = next, initialDistance = distance;
+    const direction = distance < 0 ? -1 : 1;
+    const visited = new Set(activeRow >= 0 ? [activeRow] : []);
     const request = ++mobileRequest;
     ++imageRequest; // Invalidate any pending desktop decode during a resize.
     cancelPendingMobileVideo();
-    bg.querySelector("video")?.pause();
-    const media = preview(entries[next]);
+    clearTimeout(recoveryTimer);
+    archive.querySelector('.index-retry')?.remove();
+    let media;
     let committed = false;
+    const currentRequest = () => !committed && request === mobileRequest && mobile.matches && !events.signal.aborted;
+    const exhausted = () => {
+      if (!currentRequest()) return;
+      committed = true; clearTimeout(recoveryTimer);
+      cancelPendingMobileVideo();
+      const retry = document.createElement('button');
+      retry.className = 'index-retry'; retry.type = 'button'; retry.textContent = '(Retry)';
+      retry.setAttribute('aria-label', 'Retry unavailable Index media');
+      retry.addEventListener('click', () => {
+        for (const record of [...indexMediaCache.values()]) if (record.failed) releaseIndexMedia(record);
+        moving = true; activateMobileEntry(initialNext, initialDistance);
+      }, {signal:events.signal});
+      archive.append(retry);
+      movementTimer = setTimeout(finishMobileMovement, 0);
+    };
+    recoveryTimer = setTimeout(exhausted, 20000);
     const commit = (node, video = false) => {
       if (committed || request !== mobileRequest || !mobile.matches || events.signal.aborted) return;
-      committed = true;
+      committed = true; clearTimeout(recoveryTimer);
+      track.style.removeProperty("visibility");
       if (node) stopVideo();
       if (node && !video) {
         const position = moduleImagePosition(media);
@@ -899,9 +947,9 @@ function renderArchive() {
       archive.dataset.activeProject = String(next);
       bg.dataset.projectIndex = String(next);
       visualRow += distance;
-      track.classList.toggle("is-moving", distance > 0 && !reducedMotion.matches);
+      track.classList.toggle("is-moving", distance !== 0 && !reducedMotion.matches);
       markMobileEntry(next);
-      if (distance > 0 && !reducedMotion.matches) {
+      if (distance !== 0 && !reducedMotion.matches) {
         movementTimer = setTimeout(finishMobileMovement, 420);
       } else {
         movementTimer = setTimeout(finishMobileMovement, 0);
@@ -915,49 +963,61 @@ function renderArchive() {
       }
       warmMobileImages(next);
     };
-    // Initial typography appears immediately; later changes commit atomically
-    // with ready media, keeping the old matching title/frame during a cold load.
-    if (activeRow < 0) markMobileEntry(next);
-    if (!media) {commit(null); return;}
-    if (media.type !== "mp4") {
+    // A failed candidate never updates the title or touches the displayed player.
+    // Each queued request visits an entry at most once, in its original direction.
+    const attempt = () => {
+      if (!currentRequest()) return;
+      if (visited.has(next)) { exhausted(); return; }
+      visited.add(next);
+      media = preview(entries[next]);
+      const unavailable = () => {
+        if (!currentRequest()) return;
+        next = (next + direction + rows.length) % rows.length;
+        distance += direction;
+        queueMicrotask(attempt);
+      };
+      if (!media) { unavailable(); return; }
       const record = prepareMobileImage(media);
-      if (record.ready) commit(record.node);
-      else if (record.failed) commit(null);
-      else record.waiters.push(() => commit(record.failed ? null : record.node));
-      warmMobileImages(next);
-      return;
-    }
-    const record = prepareIndexMedia(media);
-    pendingMobileVideo = record.node;
-    whenIndexMediaReady(record, () => commit(record.failed ? null : record.node, !record.failed));
+      pendingMobileVideo = media.type === 'mp4' ? record.node : null;
+      whenIndexMediaReady(record, () => {
+        if (!currentRequest()) return;
+        if (record.failed || record.released) unavailable();
+        else commit(record.node, media.type === 'mp4');
+      });
+    };
+    attempt();
   };
-  const advanceMobile = () => enqueueMobile(null);
+
   const controls = 'a, button, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
-  let tap = null;
-  archive.addEventListener("pointerdown", event => {
-    tap = null;
-    if (!mobile.matches || !event.isPrimary || event.button !== 0) return;
-    tap = {id:event.pointerId,x:event.clientX,y:event.clientY,time:event.timeStamp,
-      scrollTop:list.scrollTop,pageY:window.scrollY,moved:false,ended:false};
+  let swipe = null;
+  const pointers = new Set();
+  document.addEventListener("pointerdown", event => {
+    if (!mobile.matches || event.pointerType === 'mouse') return;
+    pointers.add(event.pointerId);
+    if (pointers.size !== 1 || !event.isPrimary || !archive.contains(event.target)) { swipe = null; return; }
+    const control = event.target.closest(controls);
+    if ((control && !control.matches('.archive-row')) || event.clientX < 20 || event.clientX > innerWidth - 20) { swipe = null; return; }
+    swipe = {id:event.pointerId, x:event.clientX, y:event.clientY};
   }, {passive:true,signal:events.signal});
-  archive.addEventListener("pointermove", event => {
-    if (tap && event.pointerId === tap.id && Math.hypot(event.clientX-tap.x,event.clientY-tap.y)>10) tap.moved = true;
+  document.addEventListener("pointercancel", event => {
+    pointers.delete(event.pointerId); swipe = null;
   }, {passive:true,signal:events.signal});
-  archive.addEventListener("pointercancel", () => {tap = null;}, {passive:true,signal:events.signal});
-  archive.addEventListener("pointerup", event => {
-    if (!tap || tap.id !== event.pointerId) return;
-    tap.ended = true;
-    tap.moved ||= Math.hypot(event.clientX-tap.x,event.clientY-tap.y)>10 || event.timeStamp-tap.time>500 ||
-      list.scrollTop !== tap.scrollTop || window.scrollY !== tap.pageY;
+  document.addEventListener("pointerup", event => {
+    pointers.delete(event.pointerId);
+    const gesture = swipe; swipe = null;
+    if (!gesture || gesture.id !== event.pointerId || pointers.size) return;
+    const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
+    // One completed, deliberately vertical gesture produces one signed queue item.
+    if (Math.abs(dy) >= 45 && Math.abs(dy) >= Math.abs(dx) * 1.5)
+      enqueueMobile({direction:dy < 0 ? 1 : -1});
   }, {passive:true,signal:events.signal});
-  // One activation path: no list mutation before Safari dispatches its click.
   archive.addEventListener("click", event => {
     if (!mobile.matches) return;
-    const gesture = tap; tap = null;
-    if (event.detail && (!gesture || !gesture.ended || gesture.moved)) return;
-    const row = event.target.closest(".archive-row");
-    if (row) {event.preventDefault(); enqueueMobile(Number(row.dataset.index));}
-    else if (!event.target.closest(controls)) advanceMobile();
+    const row = event.target.closest('.archive-row');
+    if (!row) return;
+    event.preventDefault();
+    // Retain explicit keyboard/assistive activation; touch taps never select.
+    if (event.detail === 0) enqueueMobile({index:Number(row.dataset.index)});
   }, {signal:events.signal});
   const resizeMobileStrip = () => {
     if (!mobile.matches || events.signal.aborted) return;
@@ -1007,7 +1067,11 @@ function renderArchive() {
     clearTimeout(movementTimer);
     mobileQueue.length = 0;
     moving = mobile.matches;
-    visualRow = 0;
+    visualRow = mobile.matches ? rows.length : 0;
+    track.style.visibility = mobile.matches ? "hidden" : "";
+    clearTimeout(recoveryTimer);
+    archive.querySelector(".index-retry")?.remove();
+    swipe = null; pointers.clear();
     track.classList.remove("is-moving");
     rebuildMobileStrip();
     activeRow = -1;
@@ -1028,7 +1092,7 @@ function renderArchive() {
   mobile.addEventListener("change", syncLayout, { signal: events.signal });
   cleanupPage = () => {
     events.abort();
-    clearTimeout(movementTimer); clearTimeout(initialTimer); mobileQueue.length = 0;
+    clearTimeout(movementTimer); clearTimeout(initialTimer); clearTimeout(recoveryTimer); mobileQueue.length = 0;
     ++mobileRequest; cancelPendingMobileVideo(); listObserver.disconnect();
     stopVideo();
     soundButton?.remove();
@@ -1037,7 +1101,7 @@ function renderArchive() {
     indexPreparationQueue.length = 0;
     trimIndexMediaCache();
   };
-  // Keep real media readiness separate from the existing mobile tap queue.
+  // Keep real media readiness separate from the directional mobile queue.
   let navigationReady = false, initialTimer;
   rows.forEach(row=>row.setAttribute('aria-disabled','true'));
   archive.setAttribute('aria-busy','true');
@@ -1047,7 +1111,7 @@ function renderArchive() {
   indicator.setAttribute('aria-valuemin','0'); indicator.setAttribute('aria-valuemax','100');
   indicator.innerHTML = '<span></span>'; archive.append(indicator);
   let initialVideos = 0;
-  const initial = [...new Map(entries.slice(0,3).map(entry=>preview(entry)).filter(Boolean).map(media=>[media.type+media.src,media])).values()].filter(media=>media.type !== 'mp4' || ++initialVideos <= 2).map(prepareIndexMedia);
+  const initial = [...new Map((mobile.matches ? [entries[0], entries.at(-1), entries[1]] : entries.slice(0,3)).map(entry=>preview(entry)).filter(Boolean).map(media=>[media.type+media.src,media])).values()].filter(media=>media.type !== 'mp4' || ++initialVideos <= 2).map(prepareIndexMedia);
   let progressValue = 0;
   const progress = () => {
     if (events.signal.aborted || navigationReady) return;
@@ -1441,12 +1505,19 @@ window.addEventListener("scroll", () => {
   if (headerFrame) return;
   headerFrame = requestAnimationFrame(() => {
     headerFrame = null;
-    const currentScrollY = window.scrollY;
+    const currentScrollY = Math.max(0, window.scrollY);
+    const mobileDetail = mobileMenuBreakpoint.matches && document.body.classList.contains("is-detail");
+    if (mobileDetail && (currentScrollY <= 20 || mobileMenu.open)) {
+      header.classList.remove("is-hidden");
+      document.querySelector(".detail-back")?.classList.remove("is-hidden");
+      lastScrollY = currentScrollY;
+      return;
+    }
     const difference = currentScrollY - lastScrollY;
     if (Math.abs(difference) < 4) return;
     const footer = document.querySelector(".project-footer");
     const footerVisible = footer && footer.getBoundingClientRect().top <= window.innerHeight / 2;
-    const hideInterface = !footerVisible && difference > 0 && currentScrollY > 20 && !workMenu.classList.contains("is-open") && !header.contains(document.activeElement);
+    const hideInterface = !(footerVisible && !mobileDetail) && !mobileMenu.open && difference > 0 && currentScrollY > 20 && !workMenu.classList.contains("is-open") && !header.contains(document.activeElement);
     header.classList.toggle("is-hidden", hideInterface);
     document.querySelectorAll(".detail-back").forEach(control => control.classList.toggle("is-hidden", hideInterface));
     lastScrollY = currentScrollY;
