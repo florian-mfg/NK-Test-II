@@ -58,7 +58,7 @@ test('Info Contact links only Site Settings values, omitting contact labels and 
       assert.equal(social.previousSibling.nodeName, 'BR');
       assert.equal(root.querySelector('p').textContent, 'published@example.com@exampleCall');
     };
-    assert.equal(app.window.document.querySelector('.info-contact a'), null, 'No hardcoded contacts before Site Settings loads');
+    assert.equal(app.window.document.querySelector('.info-contact a').href, 'mailto:mail@nicolas-kawohl.com');
     await app.settle(success(content({
       siteSettings: doc('siteSettings', {email: 'published@example.com', instagram: 'https://www.instagram.com/example/', phone: '+49301234567'}),
       infoPage: doc('infoPage', {contactLinks: [
@@ -123,7 +123,7 @@ test('failed requests and missing or malformed Info retain the exact local fallb
   } finally {app.dom.window.close();}
 });
 
-test('missing settings do not invent contact destinations while published Info wins', async () => {
+test('missing settings retain restored contacts while published Info wins', async () => {
   const app = setup();
   try {
     const contacts = app.window.document.querySelector('.info-contact p').innerHTML;
@@ -131,16 +131,18 @@ test('missing settings do not invent contact destinations while published Info w
     assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
     assert.equal(app.window.document.querySelector('.info-work p').textContent, 'Eps51');
     assert.equal(app.window.document.querySelector('.info-skills p').textContent, 'Tattooboss');
-    assert.equal(app.window.document.querySelector('.info-contact'), null);
+    assert.equal(app.window.document.querySelector('.info-contact a').href, 'mailto:mail@nicolas-kawohl.com');
+    assert.equal(app.window.document.querySelector('.info-contact a[href^="https:"]').textContent, '@nicocaw');
   } finally {app.dom.window.close();}
 });
 
-test('CMS contact emptiness is respected; settings are optional when no contacts need them', async () => {
+test('empty CMS contacts retain restored local contacts', async () => {
   const app = setup();
   try {
     await app.settle(success(content({siteSettings: null, infoPage: doc('infoPage', {introduction: 'Berliner Boy', contactLinks: []})})));
     assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
-    assert.equal(app.window.document.querySelector('.info-contact'), null);
+    assert.equal(app.window.document.querySelector('.info-contact a').href, 'mailto:mail@nicolas-kawohl.com');
+    assert.equal(app.window.document.querySelector('.info-contact a[href^="https:"]').textContent, '@nicocaw');
   } finally {app.dom.window.close();}
 });
 
@@ -297,7 +299,7 @@ test('optional News and Publications omit empty headings, preserve entry order a
       try {
         await app.settle(success(content({infoPage: doc('infoPage', {[id]: value})})));
         assert.equal(app.window.document.querySelector(`.info-${id}`), null);
-        assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(n => n.textContent), []);
+        assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(n => n.textContent), ['Contact']);
       } finally {app.dom.window.close();}
     }
     const app = setup();
@@ -420,8 +422,8 @@ test('absent, undefined, null, empty and whitespace labels use defaults without 
       await app.settle(success(content({infoPage: doc('infoPage', {...fields,
         introduction: '', cv: [], work: [], skills: [], contactLinks: [], selectedClients: []})})));
       const root = app.window.document.querySelector('.info');
-      assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), []);
-      assert.ok([...root.querySelectorAll('p')].every(node => node.innerHTML === ''));
+      assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), ['Contact']);
+      assert.ok([...root.querySelectorAll('p:not(.info-contact p)')].every(node => node.innerHTML === ''));
     } finally {app.dom.window.close();}
   }
 });
@@ -435,8 +437,8 @@ test('all empty Info fields disappear, while URL-only entries and meaningful lin
         cv: [{text: 'Historical CV'}], work: empty, skills: empty, selectedClients: empty,
         contactLinks: empty, news: empty, publications: empty
       })})));
-      assert.equal(app.window.document.querySelectorAll('.info h2').length, 0);
-      assert.equal(app.window.document.querySelector('.info-columns').hidden, true);
+      assert.equal(app.window.document.querySelectorAll('.info h2').length, 1);
+      assert.equal(app.window.document.querySelector('.info-columns').hidden, false);
       assert.equal(app.window.document.querySelectorAll('.project-footer').length, 1);
     } finally {app.dom.window.close();}
   }

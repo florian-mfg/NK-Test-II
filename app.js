@@ -1157,11 +1157,16 @@ function renderArchive() {
   if (!navigationReady) initialTimer = setTimeout(()=>initial.filter(r=>!r.settled).forEach(r=>r.fail()),20000);
 }
 
+const defaultInfoContacts = [
+  {destination: "email", value: "mail@nicolas-kawohl.com", href: "mailto:mail@nicolas-kawohl.com"},
+  {destination: "instagram", value: "https://www.instagram.com/nicocaw/", href: "https://www.instagram.com/nicocaw/"}
+];
+
 function renderInfoContactLink(link) {
   if (!["email", "instagram"].includes(link.destination)) {
     return `<a href="${escapeModuleAttribute(link.href)}">${escapeModuleAttribute(link.label)}</a>`;
   }
-  const contact = sanityContent?.siteSettings?.contacts[link.destination];
+  const contact = sanityContent?.siteSettings?.contacts[link.destination] || defaultInfoContacts.find(contact => contact.destination === link.destination);
   if (!contact) return "";
   const instagram = link.destination === "instagram";
   const value = instagram ? "@" + (new URL(contact.href).pathname.split("/").filter(Boolean)[0] || new URL(contact.href).hostname) : contact.value;
@@ -1174,8 +1179,10 @@ function applySanityInfo() {
   const info = sanityContent?.infoPage;
   if (!section || !info || hydratedInfoPages.has(section)) return;
   const issues = sanityContent.issues || [];
-  const needsSettings = info.contactLinks.length > 0 || issues.some(issue =>
-    issue.path.startsWith("infoPage.contactLinks") && issue.code === "missing_contact");
+  const contactLinks = [...info.contactLinks];
+  for (const contact of defaultInfoContacts) {
+    if (!contactLinks.some(link => link.destination === contact.destination)) contactLinks.push(contact);
+  }
   // Malformed content is different from intentionally empty published arrays.
   // Ignore empty entries, but retain the fallback for malformed field containers.
   if (issues.some(issue => issue.path.startsWith("infoPage") && ["invalid_array", "invalid_document"].includes(issue.code))) return;
@@ -1193,12 +1200,10 @@ function applySanityInfo() {
     ".info-intro": lines([info.introduction]),
     ".info-work p": lines(info.work),
     ".info-skills p": lines(info.skills),
-    ".info-contact p": info.contactLinks.map(renderInfoContactLink).join("<br>"),
+    ".info-contact p": contactLinks.map(renderInfoContactLink).join("<br>"),
     ".info-clients p": lines(info.selectedClients)
   };
   for (const [selector, html] of Object.entries(content)) {
-    // A settings failure affects contacts only, never valid published Info text.
-    if (selector === ".info-contact p" && needsSettings && !sanityContent.siteSettings) continue;
     const paragraph = section.querySelector(selector);
     if (paragraph.innerHTML !== html) paragraph.innerHTML = html;
   }
@@ -1231,7 +1236,7 @@ function applySanityInfo() {
   // Remove empty sections themselves, including their grid slots and spacing.
   section.querySelector('.info-cv')?.remove();
   for (const [id, selector] of Object.entries(sectionSelectors)) {
-    if (id !== 'cv' && !info[id]?.length) section.querySelector(selector)?.remove();
+    if (id !== 'cv' && id !== 'contactLinks' && !info[id]?.length) section.querySelector(selector)?.remove();
   }
   if (!info.introduction.trim()) section.querySelector('.info-intro').hidden = true;
   const orderedSections = info.sectionOrder.filter(id => id !== 'cv').map(id => section.querySelector(sectionSelectors[id])).filter(Boolean);
@@ -1342,7 +1347,7 @@ function renderInfo() {
       <div class="info-column info-details">
         <section class="info-work"><h2>Work</h2><p>EPS51<br>Berlin<br>Artistic Director of Der Fahrende Raum<br>Buchhandlung Walther König at Haus der Kunst, Munich</p></section>
         <section class="info-skills"><h2>Skills</h2><p>Video<br>Graphic<br>Animation</p></section>
-        <section class="info-contact"><h2>Contact</h2><p></p></section>
+        <section class="info-contact"><h2>Contact</h2><p>${defaultInfoContacts.map(renderInfoContactLink).join("<br>")}</p></section>
       </div>
       <section class="info-column info-side-section info-clients">
         <h2>Selected Clients</h2>
