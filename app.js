@@ -1158,8 +1158,8 @@ function renderArchive() {
 }
 
 const defaultInfoContacts = [
-  {destination: "email", value: "mail@nicolas-kawohl.com", href: "mailto:mail@nicolas-kawohl.com"},
-  {destination: "instagram", value: "https://www.instagram.com/nicocaw/", href: "https://www.instagram.com/nicocaw/"}
+  {destination: "instagram", value: "https://www.instagram.com/nicocaw/", href: "https://www.instagram.com/nicocaw/"},
+  {destination: "email", value: "mail@nicolas-kawohl.com", href: "mailto:mail@nicolas-kawohl.com"}
 ];
 
 function renderInfoContactLink(link) {
@@ -1183,6 +1183,8 @@ function applySanityInfo() {
   for (const contact of defaultInfoContacts) {
     if (!contactLinks.some(link => link.destination === contact.destination)) contactLinks.push(contact);
   }
+  const contactOrder = {instagram: 0, email: 1};
+  contactLinks.sort((a, b) => (contactOrder[a.destination] ?? 2) - (contactOrder[b.destination] ?? 2));
   // Malformed content is different from intentionally empty published arrays.
   // Ignore empty entries, but retain the fallback for malformed field containers.
   if (issues.some(issue => issue.path.startsWith("infoPage") && ["invalid_array", "invalid_document"].includes(issue.code))) return;

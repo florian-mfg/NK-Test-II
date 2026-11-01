@@ -54,11 +54,11 @@ test('Info Contact links only Site Settings values, omitting contact labels and 
       assert.equal(social.rel, 'noopener noreferrer');
       assert.equal(mail.textContent, 'published@example.com');
       assert.equal(social.textContent, '@example');
-      assert.equal(mail.previousSibling, null);
-      assert.equal(social.previousSibling.nodeName, 'BR');
-      assert.equal(root.querySelector('p').textContent, 'published@example.com@exampleCall');
+      assert.equal(social.previousSibling, null);
+      assert.equal(mail.previousSibling.nodeName, 'BR');
+      assert.equal(root.querySelector('p').textContent, '@examplepublished@example.comCall');
     };
-    assert.equal(app.window.document.querySelector('.info-contact a').href, 'mailto:mail@nicolas-kawohl.com');
+    assert.equal(app.window.document.querySelector('.info-contact a[href^="mailto:"]').href, 'mailto:mail@nicolas-kawohl.com');
     await app.settle(success(content({
       siteSettings: doc('siteSettings', {email: 'published@example.com', instagram: 'https://www.instagram.com/example/', phone: '+49301234567'}),
       infoPage: doc('infoPage', {contactLinks: [
@@ -90,7 +90,7 @@ test('Info updates only existing paragraphs and respects published empty arrays'
     assert.equal(document.querySelector('.info-skills p').textContent, 'Tattooboss');
     assert.equal(document.querySelector('.info-cv'), null);
     assert.equal(document.querySelector('.info-clients'), null);
-    assert.equal(document.querySelector('.info-contact a').href, 'mailto:published@example.com');
+    assert.equal(document.querySelector('.info-contact a[href^="mailto:"]').href, 'mailto:published@example.com');
     assert.ok([...root.querySelectorAll('section, div, h2, p')].every(node => wrappers.includes(node)));
     assert.equal(document.querySelector('.main-nav').outerHTML, header);
     assert.equal(document.querySelector('.mobile-menu nav').outerHTML, menu);
@@ -131,7 +131,7 @@ test('missing settings retain restored contacts while published Info wins', asyn
     assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
     assert.equal(app.window.document.querySelector('.info-work p').textContent, 'Eps51');
     assert.equal(app.window.document.querySelector('.info-skills p').textContent, 'Tattooboss');
-    assert.equal(app.window.document.querySelector('.info-contact a').href, 'mailto:mail@nicolas-kawohl.com');
+    assert.equal(app.window.document.querySelector('.info-contact a[href^="mailto:"]').href, 'mailto:mail@nicolas-kawohl.com');
     assert.equal(app.window.document.querySelector('.info-contact a[href^="https:"]').textContent, '@nicocaw');
   } finally {app.dom.window.close();}
 });
@@ -141,7 +141,7 @@ test('empty CMS contacts retain restored local contacts', async () => {
   try {
     await app.settle(success(content({siteSettings: null, infoPage: doc('infoPage', {introduction: 'Berliner Boy', contactLinks: []})})));
     assert.equal(app.window.document.querySelector('.info-intro').textContent, 'Berliner Boy');
-    assert.equal(app.window.document.querySelector('.info-contact a').href, 'mailto:mail@nicolas-kawohl.com');
+    assert.equal(app.window.document.querySelector('.info-contact a[href^="mailto:"]').href, 'mailto:mail@nicolas-kawohl.com');
     assert.equal(app.window.document.querySelector('.info-contact a[href^="https:"]').textContent, '@nicocaw');
   } finally {app.dom.window.close();}
 });
@@ -266,7 +266,7 @@ test('legacy section orders keep Clients right on desktop and preserve labels an
       assert.deepEqual([...root.querySelectorAll('h2')].map(node => node.textContent), desktopOrder.map(id => `Custom ${legacyOrder.indexOf(id)}`));
       assert.deepEqual([...root.querySelector('.info-details').children], desktopOrder.slice(0, 3).map(id => original[id]));
       assert.equal(root.querySelector('.info-side-section'), original.selectedClients);
-      assert.equal(root.querySelector('.info-contact a').href, 'mailto:published@example.com');
+      assert.equal(root.querySelector('.info-contact a[href^="mailto:"]').href, 'mailto:published@example.com');
       assert.equal(root.querySelectorAll('.info-columns > .info-column').length, 2);
       app.window.renderInfo();
       assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(node => node.textContent), desktopOrder.map(id => `Custom ${legacyOrder.indexOf(id)}`));
@@ -352,7 +352,7 @@ test('seven-section order pins Clients on desktop, follows the saved sequence on
         }
         assert.equal(root.querySelector('.info-cv'), null);
         assert.equal(root.querySelector('.info-work p').textContent, 'Work content');
-        assert.equal(root.querySelector('.info-contact a').href, 'mailto:published@example.com');
+        assert.equal(root.querySelector('.info-contact a[href^="mailto:"]').href, 'mailto:published@example.com');
       };
       check(mobile);
       app.setMobile(!mobile); check(!mobile);
@@ -407,7 +407,7 @@ test('custom Info labels render as plain text in existing headings and survive r
     for (const node of nodes.filter(node => node.matches('section, div, h2, p'))) assert.ok(root.contains(node));
     assert.equal(root.querySelector('.info-work p').textContent, 'Eps51');
     assert.equal(root.querySelector('.info-skills p').textContent, 'Tattooboss');
-    assert.equal(root.querySelector('.info-contact a').href, 'mailto:published@example.com');
+    assert.equal(root.querySelector('.info-contact a[href^="mailto:"]').href, 'mailto:published@example.com');
     assert.equal(app.window.document.querySelector('.main-nav').outerHTML, otherContent);
     app.window.renderInfo();
     assert.deepEqual([...app.window.document.querySelectorAll('.info h2')].map(node => node.textContent), labels.slice(1));
