@@ -17,6 +17,7 @@
 }
 
 :root {
+  --frontpage-background: #ffffff; /* Edit this color to change the front page background. */
   --ink: #ededed;
   --dark: #000;
   --pad: 12px;
@@ -68,7 +69,7 @@ body.mobile-menu-open { overflow: hidden; }
 .brand { justify-self: start; }
 .header-overview { display: none; grid-column: 1; grid-row: 2; justify-self: start; align-items: center; gap: calc(.25 * var(--menu-font-size)); margin-top: calc(.35 * var(--menu-font-size)); font: inherit; }
 .is-detail .header-overview { display: inline-flex; }
-.header-overview img { display: block; width: var(--menu-font-size); height: calc(.7 * var(--menu-font-size)); object-fit: contain; }
+.header-overview .overview-arrow { display: inline-flex; align-items: center; justify-content: center; width: var(--menu-font-size); height: calc(.7 * var(--menu-font-size)); font: inherit; font-style: normal; line-height: 1; }
 /* Keep em-based navigation columns at their original widths. */
 .main-nav {
   font-size: var(--menu-font-size);
@@ -105,6 +106,30 @@ body.mobile-menu-open { overflow: hidden; }
 .frontpage-fade-media { position: absolute; display: block; max-width: none; object-fit: contain; pointer-events: none; transform: none; transition: none; animation: none; }
 /* Frontpage navigation overlays the composition without a backing surface. */
 .is-home .site-header, .is-home .site-header a, .is-home .mobile-menu-toggle { background: transparent; }
+
+/* Frontpage only: keep navigation sharp above a pointer-transparent glass layer.
+   Revert by removing this block; the pre-change stylesheet is in backups/. */
+body.is-home .site-header :is(a, .work-toggle, .mobile-menu-toggle) { color: #000; }
+@media (min-width: 701px) and (hover: hover) and (pointer: fine) {
+  body.is-home::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 40;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.35);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+  /* The navigation box includes submenu descendants, padding and row gaps. */
+  body.is-home:has(.site-header .brand:hover, .site-header .main-nav:hover)::after {
+    opacity: 1;
+  }
+}
 
 .work { background: var(--dark); color: var(--ink); }
 
@@ -268,7 +293,7 @@ body.mobile-menu-open { overflow: hidden; }
   .legal-page { grid-template-columns: 1fr; gap: 3rem; padding-top: 6rem; }
 }
 
-.detail { position: relative; min-height: 100svh; background: var(--dark); color: var(--ink); }
+.detail { position: relative; overflow: clip; background: var(--dark); color: var(--ink); }
 .project-footer {
   height: 100dvh;
   padding: calc(50dvh - .5rem) var(--pad) var(--pad);
@@ -458,13 +483,6 @@ body:is(.is-index, .is-work) :is(.site-header > a, .site-header .main-nav a,
 /* These surfaces have fixed white backgrounds, so never sample media for them. */
 body.is-detail :is(.detail-info-popup, .detail-info-close, .detail-info-popup p,
   .project-slot-text p, .project-footer-links) { color: #000000; }
-.header-overview img { visibility: hidden; }
-.header-overview { position: relative; }
-.header-overview::before {
-  content: ""; position: absolute; left: 0; width: var(--menu-font-size); height: calc(.7 * var(--menu-font-size));
-  background: currentColor;
-  mask: url("material/Arrow-back-1.svg") center / contain no-repeat;
-}
 
 /* Project audio shares Info's fixed baseline; playback remains within each video. */
 .detail-sound-control { left: auto; right: var(--pad); }
@@ -478,6 +496,11 @@ body.is-detail :is(.detail-info-popup, .detail-info-close, .detail-info-popup p,
 /* Index backdrop and intrinsic portrait positioning. */
 body.is-index { --dark: #000; --ink: #fff; color: var(--ink); }
 body.is-index, .is-index .archive, .is-index .archive-background { background-color: #000; }
+@media (min-width: 701px) {
+  /* Include the root and app canvas exposed at the viewport's top edge. */
+  html:has(body.is-index), body.is-index #app { background-color: #000000; }
+  .is-index .archive[data-prepared="true"] .index-loading-indicator { display: none; }
+}
 .is-index .archive-background { display: flex; align-items: center; justify-content: center; }
 .is-index .archive-background.half { left: 0; right: 0; justify-content: flex-end; }
 .is-index .archive-background.half.portrait-left { justify-content: flex-start; }
@@ -620,13 +643,14 @@ body.is-home { background: #fff; }
 .project-slot:has(> .project-video > .pixel-crop-media),
 .project-video:has(> .pixel-crop-media) { overflow: visible; }
 .project-module .pixel-crop-media { position: absolute; max-width: none; object-fit: fill; transform: none; }
+.work .project-module .pixel-crop-media { position: absolute; }
 
 /* The Index uses the same track-free line as Frontpage, in white. */
 .index-loading-indicator { position: fixed; z-index: 51; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: 170px; max-width: calc(100vw - 32px); height: 3px; pointer-events: none; }
 .index-loading-indicator > span { display: block; width: 100%; height: 100%; background: #ffffff; transform: scaleX(0); transform-origin: left; }
 @media (max-width: 700px) {
   /* Reduce only whitespace between entries; multiline text retains 1.28. */
-  .is-index .archive-row { min-height: calc(1.28 * var(--text-size) + .75 * (1.52rem - 1.28 * var(--text-size))); padding: .09rem 0; }
+  .is-index .archive-row { font-family: inherit; font-size: var(--menu-text-size); font-weight: 300; min-height: calc(1.28 * var(--text-size) + .75 * (1.52rem - 1.28 * var(--text-size))); padding: .09rem 0; }
 }
 
 /* Only project details opt into directional mobile navigation. Info and Sound
@@ -645,3 +669,11 @@ body.is-home { background: #fff; }
 }
 
 .index-retry { position: fixed; z-index: 51; left: var(--pad); bottom: max(var(--pad), env(safe-area-inset-bottom)); border: 0; padding: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+
+/* Front page canvas, including loading and the mobile viewport. */
+html.home-pending,
+html:has(body.is-home),
+.home-pending body,
+body.is-home,
+body.is-home #app,
+#app > .home { background-color: var(--frontpage-background); }

@@ -1,3 +1,4 @@
+/* global structuredClone */
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {InfoSectionContentField} from '../components/InfoSectionContentField.tsx'

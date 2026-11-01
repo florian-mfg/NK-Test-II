@@ -45,7 +45,7 @@ const titles = app => rows(app).map(row=>row.firstElementChild.textContent);
 const fire = (app, row, name) => {
  if (name === 'mousemove') {
   rows(app).forEach((item,index)=>{item.getBoundingClientRect=()=>({top:100+index*40,bottom:140+index*40});});
-  app.window.dispatchEvent(new app.window.MouseEvent('mousemove',{clientY:120+Number(row.dataset.index)*40}));
+  row.dispatchEvent(new app.window.MouseEvent('mousemove',{bubbles:true,clientY:120+Number(row.dataset.index)*40}));
  } else row.dispatchEvent(new app.window.MouseEvent(name,{bubbles:true}));
 };
 const flush = () => new Promise(resolve=>setImmediate(resolve));
@@ -264,42 +264,24 @@ test('legacy portrait positions preserve first-cycle alignment and remain stable
  }
 });
 
-test('desktop starts on the first preview and changes only inside actual vertical row bounds', async()=>{
+test('desktop starts black, reveals only hit-tested rows and clears media over navigation', async()=>{
  const app=setup();
  try {
-  await app.settle(success(content([
-   entry('First',{previewImages:[portrait('first','left'),portrait('cycle','center')]}),
-   entry('Second',{previewImages:[img('landscape')]}),
-   entry('Third',{previewImages:[portrait('third','right')]})
-  ])));
-  const bg=app.window.document.querySelector('.archive-background');
-  const image=()=>bg.querySelector('img');
+  await app.settle(success(content([entry('First',{previewImages:[portrait('first','left'),portrait('cycle','center')]}),entry('Second',{previewImages:[img('landscape')]})])));
+  const d=app.window.document,bg=d.querySelector('.archive-background');
   const selected=()=>rows(app).findIndex(row=>row.getAttribute('aria-current')==='true');
-  const move=(y,x=0)=>app.window.dispatchEvent(new app.window.MouseEvent('mousemove',{clientY:y,clientX:x}));
-  rows(app).forEach((row,index)=>{row.getBoundingClientRect=()=>({top:100+index*50,bottom:150+index*50});});
-  assert.equal(selected(),0);
-  assert.ok(bg.classList.contains('visible'));
-  assert.ok(bg.classList.contains('portrait-left'));
-  assert.ok(image().src.includes('/first-'));
-  for(const y of [0,100,125,149.99]) {move(y);assert.equal(selected(),0);}
-  rows(app)[0].click();
-  assert.ok(image().src.includes('/cycle-'));
-  move(149,1200);
-  assert.ok(image().src.includes('/cycle-')); // Moving within a row never resets cycling.
-  move(150);
-  assert.equal(selected(),1);
-  assert.ok(image().src.includes('/landscape-'));
-  assert.ok(bg.classList.contains('full'));
-  move(199.99);assert.equal(selected(),1);
-  move(200);assert.equal(selected(),2);
-  assert.ok(image().src.includes('/third-'));
-  assert.ok(bg.classList.contains('half'));
-  move(300);assert.equal(selected(),2);
-  assert.ok(bg.classList.contains('visible'));
-  move(149.99);
-  assert.equal(selected(),0);
-  assert.ok(image().src.includes('/first-'));
-  assert.ok(bg.classList.contains('portrait-left'));
+  assert.equal(selected(),-1);assert.equal(bg.children.length,0);
+  app.window.dispatchEvent(new app.window.MouseEvent('mousemove',{clientY:120}));
+  assert.equal(bg.children.length,0,'row coordinates without a row target cannot reveal media');
+  fire(app,rows(app)[0],'mousemove');assert.equal(selected(),0);
+  rows(app)[0].click();assert.ok(bg.querySelector('img').src.includes('/cycle-'));
+  fire(app,rows(app)[0],'mousemove');assert.ok(bg.querySelector('img').src.includes('/cycle-'),'same row preserves cycling');
+  d.querySelector('.work-toggle').dispatchEvent(new app.window.MouseEvent('mousemove',{bubbles:true,clientY:120}));
+  assert.equal(bg.children.length,0);assert.equal(selected(),-1);
+  d.querySelector('.work-submenu').dispatchEvent(new app.window.MouseEvent('mousemove',{bubbles:true,clientY:160}));
+  assert.equal(bg.children.length,0,'submenu gaps stay black');
+  fire(app,rows(app)[0],'mousemove');assert.ok(bg.querySelector('img').src.includes('/first-'));
+  fire(app,rows(app)[1],'mousemove');assert.equal(selected(),1);assert.ok(bg.querySelector('img').src.includes('/landscape-'));
  }finally{app.dom.window.close();}
 });
 
@@ -373,7 +355,7 @@ test('desktop ignores background tap gestures',async()=>{
   await app.settle(success(content([entry('One'),entry('Two')])));
   const {pointer,tick,active,scrolls}=mobileGestureFixture(app);
   pointer('pointerdown');pointer('pointerup');await tick();
-  assert.equal(active(),0);assert.equal(scrolls.length,0);
+  assert.equal(active(),-1);assert.equal(scrolls.length,0);
  }finally{app.dom.window.close();}
 });
 

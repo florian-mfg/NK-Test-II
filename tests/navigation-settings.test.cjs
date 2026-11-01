@@ -61,7 +61,7 @@ test('fixed category order, compatible labels, stable routes and existing menu n
  }finally{app.dom.window.close();}
 });
 
-test('brand, contacts, metadata and ordered footer bind on initial and subsequent detail renders',async()=>{
+test('brand, contacts and metadata bind while Info keeps legal links and details have no footer',async()=>{
  const app=setup('#info'),d=app.window.document;
  try{
   await app.settle(success(adapter.normalize({siteSettings:settings(),navigation:nav({homeLabel:'Home name'})})));
@@ -71,7 +71,7 @@ test('brand, contacts, metadata and ordered footer bind on initial and subsequen
   assert.equal(d.querySelector('.mobile-menu-mail').getAttribute('href'),'tel:+4912345678');
   const id=vm.runInContext('WORK_PROJECTS.find(p=>p.detailPageEnabled !== false).id',app.dom.getInternalVMContext());
   app.window.renderProject(id);
-  assert.deepEqual([...d.querySelectorAll('.project-footer-links a')].map(n=>n.getAttribute('href')),['mailto:hello@example.com','https://instagram.com/example','#imprint','#privacy-policy']);
+  assert.equal(d.querySelector('.project-footer'),null);
   const detail=d.querySelector('.detail');app.window.applySanityGlobals();assert.equal(d.querySelector('.detail'),detail);
  }finally{app.dom.window.close();}
 });
@@ -85,6 +85,8 @@ test('published optional emptiness stays empty and schema title fallback uses CM
   assert.equal(visible(d.querySelector('.main-nav')).length,0);
   assert.deepEqual(categories(d),[['Video','Photography','Graphic'],['Video','Photography','Graphic']]);
   const id=vm.runInContext('WORK_PROJECTS.find(p=>p.detailPageEnabled !== false).id',app.dom.getInternalVMContext());app.window.renderProject(id);
+  assert.equal(d.querySelector('.project-footer'),null);
+  app.window.renderInfo();
   assert.deepEqual([...d.querySelectorAll('.project-footer-links a')].map(a=>a.textContent),['Imprint','Privacy Policy']);
  }finally{app.dom.window.close();}
 });
@@ -134,33 +136,37 @@ test('optional Home item is routed safely and duplicate destinations never add m
 });
 
 
-test('valid settings cannot remove the four fixed footer destinations or move the footer',async()=>{
+test('optional footer settings cannot remove Info legal destinations or add a project footer',async()=>{
  for(const footerLinks of [undefined,[],[{destination:'email',label:'Duplicate'},{destination:'email',label:'Mail'},{destination:'instagram',label:'Social'},{destination:'privacy-policy',label:'Privacy'}],[{destination:'email',label:'Mail'}],[{destination:'imprint',label:'Imprint'},{destination:'privacy-policy',label:'Privacy Policy'}]]){
   const app=setup(),d=app.window.document;
   try{
    await app.settle(success(adapter.normalize({siteSettings:settings({footerLinks})})));
    const id=vm.runInContext('WORK_PROJECTS.find(p=>p.detailPageEnabled !== false).id',app.dom.getInternalVMContext());
    app.window.renderProject(id);
-   const footer=d.querySelector('.project-footer'),detail=d.querySelector('.detail');
+   assert.equal(d.querySelector('.project-footer'),null);
+   app.window.renderInfo();
+   const footer=d.querySelector('.project-footer'),info=d.querySelector('.info');
    assert.equal(d.querySelector('#app').lastElementChild,footer);
-   assert.ok(detail.compareDocumentPosition(footer)&app.window.Node.DOCUMENT_POSITION_FOLLOWING);
+   assert.ok(info.compareDocumentPosition(footer)&app.window.Node.DOCUMENT_POSITION_FOLLOWING);
    app.window.applySanityFooter();
    assert.equal(d.querySelector('.project-footer'),footer);
-   assert.deepEqual([...footer.querySelectorAll('a')].map(a=>a.textContent),['Mail','Instagram','Imprint','Privacy Policy']);
-   for(const href of ['mailto:hello@example.com','https://instagram.com/example','#imprint','#privacy-policy'])assert.equal(footer.querySelectorAll(`a[href="${href}"]`).length,1);
+   assert.deepEqual([...footer.querySelectorAll('.project-footer-links a')].map(a=>a.textContent),['Imprint','Privacy Policy']);
+   for(const href of ['#imprint','#privacy-policy'])assert.equal(footer.querySelectorAll(`a[href="${href}"]`).length,1);
   }finally{app.dom.window.close();}
  }
 });
 
 
-test('unset or invalid CMS contacts omit only their own footer links',async()=>{
+test('Info footer stays legal-only regardless of valid or invalid CMS contacts',async()=>{
  for(const contacts of [{email:'',instagram:''},{email:'invalid',instagram:'javascript:alert(1)'},{email:'',instagram:'https://instagram.com/example'},{email:'hello@example.com',instagram:''}]){
   const app=setup(),d=app.window.document;
   try{
    const normalized=adapter.normalize({siteSettings:settings(contacts)});
    await app.settle(success(normalized));
    const id=vm.runInContext('WORK_PROJECTS.find(p=>p.detailPageEnabled !== false).id',app.dom.getInternalVMContext());app.window.renderProject(id);
-   const expected=[normalized.siteSettings.contacts.email&&'Mail',normalized.siteSettings.contacts.instagram&&'Instagram','Imprint','Privacy Policy'].filter(Boolean);
+   assert.equal(d.querySelector('.project-footer'),null);
+   app.window.renderInfo();
+   const expected=['Imprint','Privacy Policy'];
    assert.deepEqual([...d.querySelectorAll('.project-footer-links a')].map(a=>a.textContent),expected);
   }finally{app.dom.window.close();}
  }

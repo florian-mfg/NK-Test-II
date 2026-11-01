@@ -111,10 +111,41 @@ function renderProjectModules(modules, title = "", mode = "detail") {
     for (const row of rows) if (!observed.has(row)) { observer.observe(row); observed.add(row); }
     const dpr = window.devicePixelRatio || 1;
     const snap = value => Math.round(value * dpr) / dpr;
+    // Overview layout and media must share one raster grid. Previously only Crop
+    // paint was snapped, leaving fractional Auto Height rows beside rounded clips.
+    const overviewRows = [...document.querySelectorAll('.work .project-module')];
+    for (const row of overviewRows) {
+      row.style.removeProperty('height');
+      for (const slot of row.children) {
+        slot.style.removeProperty('height');
+        const video = slot.querySelector('.project-video');
+        video?.style.removeProperty('height');
+      }
+      for (const media of row.querySelectorAll('.pixel-crop-media')) {
+        media.classList.remove('pixel-crop-media');
+        for (const key of ['width','height','left','top','right','bottom','clip']) media.style.removeProperty(key);
+      }
+    }
+    const overviewSizes = overviewRows.map(row => ({row,
+      height: snap(row.getBoundingClientRect().height),
+      slots: [...row.children].map(slot => ({slot, height: snap(slot.getBoundingClientRect().height)}))
+    }));
+    const stacked = window.matchMedia('(max-width: 700px)').matches;
+    for (const {row, height, slots} of overviewSizes) {
+      if (!height) continue;
+      row.style.height = `${slots.length ? (stacked
+        ? slots.reduce((sum, s) => sum + s.height, 0)
+        : Math.max(...slots.map(s => s.height))) : height}px`;
+      for (const {slot, height} of slots) {
+        slot.style.height = `${height}px`;
+        const video = slot.querySelector('.project-video');
+        if (video) video.style.height = '100%';
+      }
+    }
     const writes = [];
     for (const media of document.querySelectorAll('.project-slot > img, .project-video > video')) {
       const slot = media.closest('.project-slot'), row = slot?.parentElement;
-      if (!row || row.classList.contains('height-auto') || slot.classList.contains('media-display-auto')) continue;
+      if (!row || (!row.closest('.work') && (row.classList.contains('height-auto') || slot.classList.contains('media-display-auto')))) continue;
       const video = media.tagName === 'VIDEO', host = video ? media.parentElement : slot;
       const ratio = video ? media.videoWidth / media.videoHeight : media.naturalWidth / media.naturalHeight;
       if (!Number.isFinite(ratio) || ratio <= 0) continue;

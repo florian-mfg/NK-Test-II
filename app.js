@@ -256,8 +256,8 @@ function renderGlobalFooter(info = false) {
   return `  <footer class="project-footer" aria-label="Contact and legal information">
     ${info ? `<section class="info-footer-credit" aria-label="Webdesign credit"><h2>Webdesign</h2><p><a href="https://meisnerfloriangestaltung.com" target="_blank" rel="noopener noreferrer">MfG<br>Meisner Florian Gestaltung</a></p></section>` : ""}
     <nav class="project-footer-links" aria-label="Footer">
-      <a href="mailto:mail@nicolas-kawohl.com">Mail</a>
-      <a href="https://www.instagram.com/nicocaw/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      ${info ? "" : `<a href="mailto:mail@nicolas-kawohl.com">Mail</a>
+      <a href="https://www.instagram.com/nicocaw/" target="_blank" rel="noopener noreferrer">Instagram</a>`}
       <a href="#imprint">Imprint</a>
       <a href="#privacy-policy">Privacy Policy</a>
     </nav>
@@ -269,11 +269,13 @@ function applySanityFooter() {
   const settings = sanityContent?.siteSettings;
   const footer = app.querySelector(".project-footer-links");
   if (!settings || !footer) return;
-  // These four destinations belong to the fixed project footer, independently of
-  // the optional editorial footerLinks array. Missing contacts are safely omitted.
+  // Info already lists contacts in its content; keep its footer legal-only.
+  // Other footers retain their contact destinations independently of footerLinks.
   const links = [
-    {href: settings.contacts.email?.href, label: "Mail"},
-    {href: settings.contacts.instagram?.href, label: "Instagram", newTab: true},
+    ...(!document.body.classList.contains("is-info") ? [
+      {href: settings.contacts.email?.href, label: "Mail"},
+      {href: settings.contacts.instagram?.href, label: "Instagram", newTab: true}
+    ] : []),
     {href: "#imprint", label: "Imprint"},
     {href: "#privacy-policy", label: "Privacy Policy"}
   ].filter(link => link.href);
@@ -723,6 +725,7 @@ function renderArchive() {
     whenIndexMediaReady(prepared, () => {
       if (request !== imageRequest || events.signal.aborted) return;
       if (prepared.failed) return; // Retain the current frame on failed later assets.
+      if (soundButton) soundButton.hidden = false;
       if (media.type === "mp4") {
         bg.closest(".archive").dataset.textColor = entry.textColor || "auto";
         if (activeVideo === media) return;
@@ -990,14 +993,23 @@ function renderArchive() {
 
   const controls = 'a, button, input, select, textarea, summary, [role="button"], [role="link"], [contenteditable]:not([contenteditable="false"])';
   let swipe = null;
+  let suppressPointerClick = false;
   const pointers = new Set();
   document.addEventListener("pointerdown", event => {
-    if (!mobile.matches || event.pointerType === 'mouse') return;
+    if (!mobile.matches) return;
+    suppressPointerClick = event.pointerType !== 'mouse';
+    if (event.pointerType === 'mouse') return;
     pointers.add(event.pointerId);
     if (pointers.size !== 1 || !event.isPrimary || !archive.contains(event.target)) { swipe = null; return; }
     const control = event.target.closest(controls);
-    if ((control && !control.matches('.archive-row')) || event.clientX < 20 || event.clientX > innerWidth - 20) { swipe = null; return; }
-    swipe = {id:event.pointerId, x:event.clientX, y:event.clientY};
+    if (control && !control.matches('.archive-row')) { swipe = null; return; }
+    swipe = {id:event.pointerId, x:event.clientX, y:event.clientY, travel:0,
+      index:control ? Number(control.dataset.index) : null,
+      edge:event.clientX < 20 || event.clientX > innerWidth - 20};
+  }, {passive:true,signal:events.signal});
+  document.addEventListener("pointermove", event => {
+    if (!swipe || swipe.id !== event.pointerId) return;
+    swipe.travel = Math.max(swipe.travel, Math.hypot(event.clientX - swipe.x, event.clientY - swipe.y));
   }, {passive:true,signal:events.signal});
   document.addEventListener("pointercancel", event => {
     pointers.delete(event.pointerId); swipe = null;
@@ -1008,16 +1020,19 @@ function renderArchive() {
     if (!gesture || gesture.id !== event.pointerId || pointers.size) return;
     const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
     // One completed, deliberately vertical gesture produces one signed queue item.
-    if (Math.abs(dy) >= 45 && Math.abs(dy) >= Math.abs(dx) * 1.5)
+    if (!gesture.edge && Math.abs(dy) >= 45 && Math.abs(dy) >= Math.abs(dx) * 1.5)
       enqueueMobile({direction:dy < 0 ? 1 : -1});
+    else if (gesture.index !== null && Math.max(gesture.travel, Math.hypot(dx, dy)) <= 10)
+      enqueueMobile({index:gesture.index});
   }, {passive:true,signal:events.signal});
   archive.addEventListener("click", event => {
     if (!mobile.matches) return;
     const row = event.target.closest('.archive-row');
     if (!row) return;
     event.preventDefault();
-    // Retain explicit keyboard/assistive activation; touch taps never select.
-    if (event.detail === 0) enqueueMobile({index:Number(row.dataset.index)});
+    // Touch/pen is handled once at pointerup; ignore its compatibility click.
+    // Retain native mouse, keyboard and assistive activation.
+    if (event.detail === 0 || !suppressPointerClick) enqueueMobile({index:Number(row.dataset.index)});
   }, {signal:events.signal});
   const resizeMobileStrip = () => {
     if (!mobile.matches || events.signal.aborted) return;
@@ -1040,15 +1055,24 @@ function renderArchive() {
     showEntryImage(entries[next], frame);
     if (navigationReady) warmMobileImages(next);
   };
+  const hideDesktopMedia = () => {
+    if (mobile.matches) return;
+    ++imageRequest; // A pending decode must not reveal media over navigation.
+    stopVideo();
+    bg.replaceChildren();
+    bg.className = "archive-background";
+    activeRow = -1;
+    frame = 0;
+    rows.forEach(row => row.removeAttribute("aria-current"));
+    if (soundButton) soundButton.hidden = true;
+  };
+  header.addEventListener("pointerenter", hideDesktopMedia, {signal: events.signal});
   window.addEventListener("mousemove", event => {
     if (mobile.matches || !navigationReady) return;
-    // Use each row's actual vertical area, independent of horizontal position.
-    // Outside the list, keep the current preview and its cycling frame visible.
-    const next = rows.findIndex(row => {
-      const bounds = row.getBoundingClientRect();
-      return event.clientY >= bounds.top && event.clientY < bounds.bottom;
-    });
-    activateDesktopEntry(next);
+    if (event.target.closest?.(".site-header")) { hideDesktopMedia(); return; }
+    // Hit-test the row itself: submenu gaps can occupy the same vertical area.
+    const row = event.target.closest?.(".archive-row");
+    if (row && list.contains(row)) activateDesktopEntry(Number(row.dataset.index));
   }, { passive: true, signal: events.signal });
   rows.forEach(row => {
     row.addEventListener("click", event => {
@@ -1083,10 +1107,13 @@ function renderArchive() {
     });
     list.style.removeProperty("--archive-offset");
     ++mobileRequest; cancelPendingMobileVideo();
-    if (mobile.matches) activateMobileEntry(0);
+    if (mobile.matches) {
+      if (soundButton) soundButton.hidden = false;
+      activateMobileEntry(0);
+    }
     else {
       list.scrollTop = 0;
-      activateDesktopEntry(0);
+      hideDesktopMedia();
     }
   };
   mobile.addEventListener("change", syncLayout, { signal: events.signal });
@@ -1454,20 +1481,10 @@ function renderProject(id) {
       <button class="detail-info-close" type="button">(Close)</button>
       ${infoMarkup}
     </section>
-  </div>
-  ${renderGlobalFooter()}`;
-  applySanityFooter();
+  </div>`;
   renderedDetailProjects.set(app.querySelector(".detail"), project);
-  // The fixed, vertically centered title has no flow height. Reserve its actual
-  // lower half above the mobile footer links, including font/width-driven wraps.
-  const title = app.querySelector(".detail-back");
-  const footer = app.querySelector(".project-footer");
-  const titleSize = new ResizeObserver(() => {
-    footer.style.setProperty("--detail-title-height", `${title.getBoundingClientRect().height}px`);
-  });
-  titleSize.observe(title);
   const cleanupVideos = initProjectVideos(app);
-  cleanupPage = () => { titleSize.disconnect(); cleanupVideos(); };
+  cleanupPage = cleanupVideos;
 }
 
 function route() {
